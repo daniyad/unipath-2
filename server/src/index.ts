@@ -1,14 +1,36 @@
 import 'dotenv/config'
 import express from 'express'
+import type { ErrorRequestHandler } from 'express'
+import { ZodError } from 'zod'
+import shortlistRouter from './routes/shortlist.js'
+import planRouter from './routes/plan.js'
 
 const app = express()
 const PORT = process.env.PORT ?? 4000
 
 app.use(express.json())
 
+// Health check — no auth required
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' })
 })
+
+// Feature routes
+app.use('/api', shortlistRouter)
+app.use('/api', planRouter)
+
+// Global error handler
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  if (err instanceof ZodError) {
+    res.status(400).json({ success: false, error: err.issues[0]?.message ?? 'Validation error' })
+    return
+  }
+  console.error('Unhandled error:', err)
+  res.status(500).json({ success: false, error: 'Internal server error' })
+}
+
+app.use(errorHandler)
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
