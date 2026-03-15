@@ -15,10 +15,12 @@ pnpm install
 
 Each package has its own `.env` that is git-ignored. If missing, copy from `.env.example`:
 
-| Package  | File          | Required vars      |
-| -------- | ------------- | ------------------ |
-| `client` | `client/.env` | `VITE_API_URL`     |
-| `server` | `server/.env` | `PORT`, `NODE_ENV` |
+| Package  | File          | Required vars                                                                        |
+| -------- | ------------- | ------------------------------------------------------------------------------------ |
+| `client` | `client/.env` | `VITE_API_URL`                                                                       |
+| `server` | `server/.env` | `PORT`, `NODE_ENV`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY` |
+
+Copy `server/.env.example` to `server/.env` and fill in the values.
 
 ## Running
 
