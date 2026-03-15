@@ -34,3 +34,7 @@ See `agent_docs/running.md` for environment setup and troubleshooting.
 ## Adding features
 
 Before writing code for a new feature, read `agent_docs/adding-features.md`.
+
+## Frontend
+
+All frontend work lives in `client/`. Follow `client/STYLEGUIDE.md` for design decisions — colors, typography, spacing, motion, and voice.
