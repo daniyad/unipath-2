@@ -12,33 +12,80 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
+  padding: 0 24px;
+  height: 56px;
   background: var(--bg-base);
-  border-bottom: 1.5px solid var(--border-default);
+  border-bottom: 0.5px solid var(--border-default);
   z-index: 10;
 }
 
 .logo {
-  font-family: var(--font-display);
-  font-size: 20px;
+  font-family: var(--font-body);
+  font-size: 18px;
   font-weight: 700;
-  color: var(--primary-700);
+  color: var(--primary-900);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
 .topBarRight {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+}
+
+.profileBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  transition: background var(--duration-fast) var(--ease-default);
+}
+
+.profileBtn:hover {
+  background: var(--bg-subtle);
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--primary-900);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.profileName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .logoutBtn {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-secondary);
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  transition: color var(--duration-fast) var(--ease-default);
 }
 
 .logoutBtn:hover {
@@ -46,19 +93,18 @@
 }
 
 .container {
-  max-width: 600px;
+  max-width: 680px;
   margin: 0 auto;
 }
 
 .header {
-  margin-bottom: 32px;
+  margin-bottom: 40px;
 }
 
 .greeting {
-  font-family: var(--font-display);
   font-size: 40px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: var(--text-primary);
   margin-bottom: 8px;
 }
@@ -66,69 +112,24 @@
 .subtitle {
   color: var(--text-secondary);
   font-size: 16px;
-  margin-bottom: 16px;
 }
 
-.nudge {
-  background: var(--accent-100);
-  border: 1.5px solid #F5D68A;
-  border-radius: var(--radius-md);
-  padding: 12px 16px;
-  font-size: 14px;
-  color: #7A5200;
-  font-weight: 500;
-}
-
-.profileCard {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: var(--bg-surface);
-  border-radius: var(--radius-lg);
-  border: 1.5px solid var(--border-default);
-  padding: 20px 24px;
-  margin-bottom: 32px;
-}
-
-.avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
-  color: #fff;
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.profileInfo {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.profileName {
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--text-primary);
-}
-
-.profileMeta {
-  font-size: 13px;
-  color: var(--text-secondary);
+.sectionHeader {
+  margin-bottom: 20px;
 }
 
 .sectionTitle {
-  font-family: var(--font-display);
   font-size: 22px;
   font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
-  margin-bottom: 16px;
+  margin-bottom: 6px;
+}
+
+.sectionSummary {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .uniList {
@@ -140,18 +141,19 @@
 .uniCard {
   background: var(--bg-surface);
   border-radius: var(--radius-lg);
-  border: 1.5px solid var(--border-default);
+  border: 0.5px solid var(--border-default);
   padding: 20px 24px;
   display: flex;
   align-items: center;
   gap: 16px;
+  cursor: pointer;
   transition: transform var(--duration-default) var(--ease-default),
               box-shadow var(--duration-default) var(--ease-default);
 }
 
 .uniCard:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(61, 47, 160, 0.07);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .uniCardLeft {
@@ -160,27 +162,37 @@
 }
 
 .uniCardTop {
-  margin-bottom: 8px;
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
 .uniName {
   font-weight: 700;
-  font-size: 16px;
+  font-size: 17px;
   color: var(--text-primary);
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 .uniProgram {
   font-size: 13px;
   color: var(--text-secondary);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+}
+
+.uniWhyFit {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-style: italic;
 }
 
 .progressBar {
-  height: 4px;
+  height: 3px;
   background: var(--border-default);
   border-radius: var(--radius-full);
-  margin-bottom: 6px;
+  margin-top: 10px;
+  margin-bottom: 4px;
   overflow: hidden;
 }
 
@@ -188,10 +200,20 @@
   height: 100%;
   background: var(--success);
   border-radius: var(--radius-full);
-  transition: width var(--duration-default) var(--ease-default);
 }
 
 .taskCount {
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+.uniArrow {
+  font-size: 18px;
+  color: var(--text-disabled);
+  flex-shrink: 0;
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+.uniCard:hover .uniArrow {
+  color: var(--primary-900);
 }

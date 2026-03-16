@@ -14,7 +14,7 @@ export function ProtectedRoute({ children, requireProfile = false }: Props) {
 
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
-  if (requireProfile && !profile?.name) return <Navigate to="/profile" replace />
+  if (requireProfile && !profile?.name) return <Navigate to="/setup" replace />
 
   return <>{children}</>
 }

@@ -14,7 +14,7 @@
   justify-content: space-between;
   padding: 16px 24px;
   background: var(--bg-base);
-  border-bottom: 1.5px solid var(--border-default);
+  border-bottom: 0.5px solid var(--border-default);
   z-index: 10;
 }
 
@@ -27,7 +27,7 @@
 .backBtn {
   font-size: 14px;
   font-weight: 600;
-  color: var(--primary-700);
+  color: var(--text-secondary);
   background: none;
   border: none;
   cursor: pointer;
@@ -35,7 +35,7 @@
 }
 
 .backBtn:hover {
-  color: var(--primary-500);
+  color: var(--primary-900);
 }
 
 .container {
@@ -48,18 +48,18 @@
 }
 
 .uniName {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 40px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: var(--text-primary);
   margin-bottom: 6px;
 }
 
 .programLine {
   font-size: 16px;
-  font-weight: 600;
-  color: var(--primary-700);
+  font-weight: 500;
+  color: var(--text-secondary);
   margin-bottom: 12px;
 }
 
@@ -75,7 +75,7 @@
 .section {
   background: var(--bg-surface);
   border-radius: var(--radius-lg);
-  border: 1.5px solid var(--border-default);
+  border: 0.5px solid var(--border-default);
   margin-bottom: 12px;
   overflow: hidden;
 }
@@ -98,16 +98,16 @@
 }
 
 .sectionTitle {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   flex: 1;
 }
 
 .sectionProgress {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-secondary);
 }
 
@@ -118,7 +118,7 @@
 
 .sectionBody {
   padding: 0 24px 24px;
-  border-top: 1.5px solid var(--border-default);
+  border-top: 0.5px solid var(--border-default);
   padding-top: 20px;
 }
 
@@ -129,7 +129,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 12px 0;
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 0.5px solid var(--border-default);
 }
 
 .docRow:last-child {
@@ -156,11 +156,11 @@
 .urgencyBadge {
   flex-shrink: 0;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   padding: 4px 10px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
 }
 
 .urgencyHigh {
@@ -181,7 +181,7 @@
 /* Tests */
 .testRow {
   padding: 12px 0;
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 0.5px solid var(--border-default);
 }
 
 .testRow:last-child { border-bottom: none; }
@@ -221,8 +221,8 @@
   flex-shrink: 0;
   width: 24px;
   height: 24px;
-  background: var(--primary-100);
-  color: var(--primary-700);
+  background: var(--primary-900);
+  color: #fff;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -237,10 +237,10 @@
 }
 
 .monthLabel {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: var(--text-disabled);
   margin-bottom: 10px;
 }
@@ -250,7 +250,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 0.5px solid var(--border-default);
   cursor: pointer;
 }
 
@@ -259,7 +259,7 @@
 .checkbox {
   width: 18px;
   height: 18px;
-  accent-color: var(--primary-700);
+  accent-color: var(--primary-900);
   flex-shrink: 0;
   cursor: pointer;
 }
@@ -290,5 +290,5 @@
   font-size: 14px;
   color: var(--text-primary);
   line-height: 1.5;
-  border-left: 3px solid var(--primary-500);
+  border-left: 3px solid var(--accent-500);
 }
