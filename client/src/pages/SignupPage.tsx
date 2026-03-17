@@ -1,42 +1,18 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { LanguageToggle } from '../components/LanguageToggle'
-import { useLang } from '../contexts/LangContext'
 import styles from './AuthPage.module.css'
-
-const t = {
-  ru: {
-    title: 'Создай аккаунт',
-    subtitle: 'Начни свой путь в университет',
-    email: 'Email',
-    password: 'Пароль',
-    submit: 'Зарегистрироваться',
-    hasAccount: 'Уже есть аккаунт?',
-    login: 'Войти',
-    error: 'Что-то пошло не так. Попробуй ещё раз?',
-  },
-  en: {
-    title: 'Create your account',
-    subtitle: 'Start your path to university',
-    email: 'Email',
-    password: 'Password',
-    submit: 'Sign up',
-    hasAccount: 'Already have an account?',
-    login: 'Sign in',
-    error: 'Something went wrong. Try again?',
-  },
-}
 
 export function SignupPage() {
   const { signup } = useAuth()
-  const { lang } = useLang()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const copy = t[lang]
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -44,9 +20,9 @@ export function SignupPage() {
     setLoading(true)
     try {
       await signup(email)
-      navigate('/profile')
+      navigate('/setup')
     } catch {
-      setError(copy.error)
+      setError(t('signup.error'))
     } finally {
       setLoading(false)
     }
@@ -55,17 +31,19 @@ export function SignupPage() {
   return (
     <div className={styles.page}>
       <div className={styles.topBar}>
-        <span className={styles.logo}>Unipath</span>
+        <button className={styles.logo} onClick={() => navigate('/login')}>
+          Unipath
+        </button>
         <LanguageToggle />
       </div>
       <div className={styles.card}>
-        <h1 className={styles.title}>{copy.title}</h1>
-        <p className={styles.subtitle}>{copy.subtitle}</p>
+        <h1 className={styles.title}>{t('signup.title')}</h1>
+        <p className={styles.subtitle}>{t('signup.subtitle')}</p>
         {error && <div className={styles.error}>{error}</div>}
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.field}>
             <label className={styles.label} htmlFor="email">
-              {copy.email}
+              {t('signup.email')}
             </label>
             <input
               id="email"
@@ -79,7 +57,7 @@ export function SignupPage() {
           </div>
           <div className={styles.field}>
             <label className={styles.label} htmlFor="password">
-              {copy.password}
+              {t('signup.password')}
             </label>
             <input
               id="password"
@@ -97,11 +75,11 @@ export function SignupPage() {
             className={`btn btn-primary ${styles.submitBtn}`}
             disabled={loading}
           >
-            {loading ? '...' : copy.submit}
+            {loading ? '...' : t('signup.submit')}
           </button>
         </form>
         <p className={styles.footer}>
-          {copy.hasAccount} <Link to="/login">{copy.login}</Link>
+          {t('signup.hasAccount')} <Link to="/login">{t('signup.login')}</Link>
         </p>
       </div>
     </div>

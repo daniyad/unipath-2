@@ -2,51 +2,54 @@
 
 ## Design Language — Student × University Platform
 
-> **One line:** Feels like campus life built it, not an IT department.
+> **One line:** Campus life, built with precision. Not an IT department.
 
 ---
 
 ## Design Principles
 
-**People over platform** — Faces, names, and communities lead. Data supports.
+**High contrast, low noise** — Black, white, and one accent. Every element earns its place.
 
-**Warm, not sterile** — Off-white backgrounds, soft shadows, a little texture. Lived-in, not clinical.
+**Data at scale** — Lead with numbers, stats, and real proof. People trust platforms that show their work.
 
-**Expressive but grounded** — Bold typography and confident color, but every screen has one clear focus. No visual noise.
+**Flat and fast** — No gradients, no heavy shadows, no decoration for its own sake. Speed is a feature.
 
-**Delightful in the details** — Hover states, empty states, and transitions are not afterthoughts. They're where personality lives.
+**Expressive but grounded** — Bold typography does the heavy lifting. Color is reserved for action.
 
-**Knows when to be serious** — Casual in social spaces, clear and calm in transactional ones.
+**Knows when to be serious** — Clean and calm in transactional spaces, confident in social ones.
 
 ---
 
 ## Colors
 
-Anchored in a **warm cream base**, a **deep indigo** as the brand primary, and **amber** for moments of delight.
+Black, white, and Tiger Yellow. That's the palette. No exceptions.
 
 ```css
 /* Backgrounds */
---bg-base: #f7f4ef; /* Warm cream — never use pure white as a page bg */
+--bg-base: #ffffff; /* Pure white — always the page background */
 --bg-surface: #ffffff; /* Cards, modals */
---bg-subtle: #efece6; /* Sidebar, input backgrounds */
+--bg-subtle: #f5f5f5; /* Alt sections, input fills, sidebar */
 
-/* Primary — Indigo */
---primary-700: #3d2fa0; /* Buttons, active states, key links */
---primary-500: #5b4fcf; /* Hover, focus rings */
---primary-100: #edeafb; /* Chip/tag backgrounds, subtle tints */
+/* Primary — Black */
+--primary-900: #000000; /* Nav, buttons, headings, key UI */
+--primary-700: #111111; /* Body text, secondary black surfaces */
+--primary-400: #888888; /* Muted text, icons, placeholders */
+--primary-200: #cccccc; /* Borders, dividers, disabled */
+--primary-100: #f5f5f5; /* Subtle backgrounds */
 
-/* Accent — Amber (use sparingly) */
---accent-500: #f5a623; /* CTAs, notification dots, celebration */
---accent-100: #fef6e4; /* Toast backgrounds, warm empty states */
+/* Accent — Tiger Yellow */
+--accent-500: #f5c100; /* Logo on dark, CTAs, notification dots */
+--accent-400: #e0ae00; /* Yellow hover state */
+--accent-100: #fef8d0; /* Yellow tint backgrounds */
 
 /* Text */
---text-primary: #1a1523;
---text-secondary: #5c5470;
---text-disabled: #a89ec0;
+--text-primary: #000000;
+--text-secondary: #888888;
+--text-disabled: #cccccc;
 
-/* Borders */
---border-default: #ddd8ee;
---border-strong: #b8b0d4;
+/* Borders — always 0.5px */
+--border-default: #e5e5e5;
+--border-strong: #cccccc;
 
 /* Semantic */
 --success: #2db87a;
@@ -55,33 +58,34 @@ Anchored in a **warm cream base**, a **deep indigo** as the brand primary, and *
 
 **Rules:**
 
-- `--bg-base` is always the page background. The warmth is intentional.
-- Indigo is for action — don't fill large decorative areas with it.
-- Amber is for joy — one CTA or notification dot per view, not paragraph text.
+- Pure white is always the page background.
+- Sections alternate white / `--bg-subtle` for rhythm.
+- Black is structure and action. Use it for nav, buttons, headings.
+- Yellow is reserved for one moment per view — a CTA, a logo, a badge. Never body text, never decorative fills.
+- No gradients. No colored decorative areas. Let type carry the weight.
 
 ---
 
 ## Typography
 
-**Display (headings):** `Bricolage Grotesque` — editorial, characterful, campus-magazine energy.
-**Body / UI:** `DM Sans` — warm, readable, approachable.
+One font family: DM Sans. Tight letter-spacing on display sizes. No decorative or editorial typeface — clarity over character.
 
 ```css
---font-display: 'Bricolage Grotesque', system-ui, sans-serif;
 --font-body: 'DM Sans', system-ui, sans-serif;
 ```
 
-| Role       | Size | Weight  | Font           |
+| Role       | Size | Weight  | Letter Spacing |
 | ---------- | ---- | ------- | -------------- |
-| Hero       | 56px | 800     | Bricolage      |
-| H1         | 40px | 700     | Bricolage      |
-| H2         | 28px | 700     | Bricolage      |
-| H3         | 20px | 600     | DM Sans        |
-| Body       | 15px | 400     | DM Sans        |
-| Small / UI | 13px | 400–600 | DM Sans        |
-| Labels     | 11px | 600     | DM Sans (caps) |
+| Hero       | 56px | 700     | -0.04em        |
+| H1         | 40px | 700     | -0.03em        |
+| H2         | 28px | 600     | -0.02em        |
+| H3         | 20px | 600     | -0.01em        |
+| Body       | 15px | 400     | 0              |
+| Small / UI | 13px | 400–500 | 0              |
+| Stat       | 28px | 700     | -0.05em        |
+| Labels     | 11px | 500     | +0.08em (caps) |
 
-**Rules:** `letter-spacing: -0.02em` on Hero and H1. Max ~68 chars per line for body. Center only short hero taglines — everything else is left-aligned.
+**Rules:** Tight negative tracking on all display sizes is intentional. Max ~68 chars per line for body. Center only short hero taglines — everything else is left-aligned.
 
 ---
 
@@ -90,69 +94,96 @@ Anchored in a **warm cream base**, a **deep indigo** as the brand primary, and *
 **Spacing scale (4px base):** `4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64 · 80 · 96`
 
 ```css
---radius-sm: 6px; /* Inputs, small chips */
---radius-md: 12px; /* Buttons, small cards */
---radius-lg: 16px; /* Content cards */
---radius-xl: 24px; /* Modals, featured cards */
---radius-full: 9999px; /* Avatars, tags, pills */
+--radius-sm: 4px; /* Tags, chips, badges */
+--radius-md: 6px; /* Buttons, inputs */
+--radius-lg: 10px; /* Content cards */
+--radius-xl: 16px; /* Modals */
+--radius-full: 9999px; /* Avatars, pills */
 ```
 
-Cards need `24px` minimum inner padding. Rounded but not bubbly.
+Cards use 24px minimum inner padding. Corners are clean — not bubbly.
 
 ---
 
 ## Key Components
 
-**Cards** are the core unit — they should feel like social posts, not data rows. Lead with a visual, show the person's name prominently, one clear action on hover.
+**Navigation Bar**
+Always black (`--primary-900`). Logo mark in `--accent-500` (yellow) on dark. Nav links in white at 75% opacity. Primary CTA: solid white fill, black text, `--radius-md`, weight 600. Secondary action: ghost "Log In" with 0.5px white border. Sticky on scroll, always fully opaque.
 
-**Buttons** use `--radius-md`, weight 600, `DM Sans`. Primary = `--primary-700`. On hover: darken + subtle indigo glow.
+**Cards**
+White surface, 0.5px `--border-default`, `--radius-lg`, 24px padding. Lead with a name or stat prominently. One clear action per card. Hover: 2px lift + faint shadow increase. No colored card fills.
 
-**Avatars** are always circular. No photo? Show initials on a warm gradient — never a gray silhouette.
+**Buttons**
 
-**Tags / Chips** — `--primary-100` background, `--radius-full`, 11px uppercase caps, weight 600.
+- Primary: `--primary-900` fill, white text, `--radius-md`, weight 600. Hover: softens to `#111`.
+- Secondary: transparent, 1.5px `--primary-900` border, black text. Hover: `--bg-subtle` fill.
+- Yellow CTA: `--accent-500` fill, `--primary-900` text, `--radius-md`, weight 600. Hover: `--accent-400`. One per view maximum.
+- Ghost: transparent, 0.5px `--border-default`, `--text-secondary`. For low-priority actions like "Log in".
+- All buttons: `scale(0.97)` on press.
 
-**Inputs** — `--bg-subtle` fill, `1.5px` border. On focus: `--primary-500` border + `--primary-100` outer glow.
+**Avatars**
+Always circular (`--radius-full`). No photo: black circle, white initials, weight 500. Never a gray silhouette.
+
+**Tags / Chips**
+`--bg-subtle` background, 0.5px `--border-default`, `--radius-sm`. 11px, uppercase, weight 500, letter-spacing: 0.06em. Yellow variant: `--accent-100` bg, 0.5px `--accent-500` border.
+
+**Inputs**
+`--bg-subtle` fill, 1.5px `--border-default`, `--radius-md`, 36px height. Focus: `--primary-900` border + faint black outer ring (box-shadow).
+
+**Stat / Metric Cards**
+`--bg-subtle` background, no border, `--radius-md`, 16px padding. Oversized stat number (DM Sans 700, -0.05em tracking) above a small-caps label. Grid of 2–4. These are proof — show real numbers.
+
+---
+
+## Borders
+
+Always 0.5px. Never 1px or 2px except for the one featured/highlighted card in a comparison set (2px `--primary-900` border for that case only). Borders use `--border-default` (`#e5e5e5`) by default, `--border-strong` for emphasis. No colored borders outside the yellow chip variant.
 
 ---
 
 ## Motion
 
-Fast feels respectful. Expressive animation is saved for meaningful moments.
+Fast feels respectful.
 
 ```css
---ease-default: cubic-bezier(0.16, 1, 0.3, 1); /* Most UI transitions */
---ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1); /* Delight moments */
+--ease-default: cubic-bezier(0.16, 1, 0.3, 1); /* Most transitions */
+--ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1); /* Rare delight moments */
 
 --duration-fast: 150ms; /* Hovers, color changes */
 --duration-default: 250ms; /* Cards, dropdowns */
 --duration-enter: 350ms; /* Modals, page transitions */
 ```
 
-Card hover: lifts `2px` + shadow increase. Button press: scales to `0.97`. Always wrap in `prefers-reduced-motion`.
+Always wrap in `prefers-reduced-motion`.
+
+---
+
+## Section Backgrounds
+
+White (`#ffffff`) and off-white (`#f5f5f5`) only. Alternate for rhythm. Black surfaces: nav bar and footer only. No large mid-page black fills.
 
 ---
 
 ## Voice & Tone
 
-Write like a person, not a system.
+Direct. Clear. Data-confident. Not chatty, not corporate.
 
 | ❌ Don't                | ✅ Do                                |
 | ----------------------- | ------------------------------------ |
 | "No data available"     | "Nothing here yet — check back soon" |
 | "An error has occurred" | "Something went wrong. Try again?"   |
-| "Operation successful"  | "Done! You're connected."            |
+| "Operation successful"  | "Done! You're all set."              |
 | "Get started"           | "Set up your profile"                |
-
-Tone: direct, warm, low-stakes casual. Smart without being smug.
 
 ---
 
 ## What This Is Not
 
-- ❌ A university portal — no institutional serifs, no navy/gold, no stock campus photos
-- ❌ A LinkedIn clone — no data-dense rows, no achievement-flexing layouts
-- ❌ A generic SaaS dashboard — no sidebar-dominated interfaces with tiny content areas
-- ❌ Cookie-cutter edtech — no cartoon mascots, no excessive gamification badges
+- ❌ A university portal — no institutional serifs, no navy/gold
+- ❌ A LinkedIn clone — no data-dense rows, no achievement flexing
+- ❌ A generic SaaS dashboard — no sidebar-dominated chrome
+- ❌ Cookie-cutter edtech — no mascots, no gamification badge walls
+- ❌ A gradient-heavy consumer app — flat surfaces only
 
 ---
 

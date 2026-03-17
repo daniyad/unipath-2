@@ -1,43 +1,42 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useProfile } from '../contexts/ProfileContext'
-import { useLang } from '../contexts/LangContext'
 import { LanguageToggle } from '../components/LanguageToggle'
 import type { PartialProfile } from '../types'
 import styles from './ProfileWizardPage.module.css'
 
 const STEPS = [
-  { key: 'basics', titleRu: 'Основное', titleEn: 'Basics' },
-  { key: 'motivation', titleRu: 'Мотивация', titleEn: 'Motivation' },
-  { key: 'interests', titleRu: 'Интересы', titleEn: 'Interests' },
-  { key: 'languages', titleRu: 'Языки', titleEn: 'Languages' },
-  { key: 'budget', titleRu: 'Бюджет', titleEn: 'Budget' },
-  { key: 'preferences', titleRu: 'Предпочтения', titleEn: 'Preferences' },
-  { key: 'extracurriculars', titleRu: 'Активности', titleEn: 'Extracurriculars' },
+  { key: 'basics' },
+  { key: 'motivation' },
+  { key: 'interests' },
+  { key: 'languages' },
+  { key: 'budget' },
+  { key: 'preferences' },
+  { key: 'extracurriculars' },
 ]
 
 interface StepProps {
   data: PartialProfile
   onChange: (updates: PartialProfile) => void
-  lang: 'ru' | 'en'
 }
 
-function StepBasics({ data, onChange, lang }: StepProps) {
-  const label = (ru: string, en: string) => (lang === 'ru' ? ru : en)
+function StepBasics({ data, onChange }: StepProps) {
+  const { t } = useTranslation()
   return (
     <div className={styles.fields}>
       <div className={styles.field}>
-        <label className={styles.label}>{label('Как тебя зовут?', 'What is your name?')}</label>
+        <label className={styles.label}>{t('wizard.basics.nameLabel')}</label>
         <input
           className="input"
           value={data.name ?? ''}
           onChange={(e) => onChange({ name: e.target.value })}
-          placeholder={label('Имя', 'Your name')}
+          placeholder={t('wizard.basics.namePlaceholder')}
         />
       </div>
       <div className={styles.row}>
         <div className={styles.field}>
-          <label className={styles.label}>{label('Возраст', 'Age')}</label>
+          <label className={styles.label}>{t('wizard.basics.ageLabel')}</label>
           <input
             className="input"
             type="number"
@@ -49,7 +48,7 @@ function StepBasics({ data, onChange, lang }: StepProps) {
           />
         </div>
         <div className={styles.field}>
-          <label className={styles.label}>{label('Класс', 'Grade')}</label>
+          <label className={styles.label}>{t('wizard.basics.gradeLabel')}</label>
           <input
             className="input"
             type="number"
@@ -62,18 +61,16 @@ function StepBasics({ data, onChange, lang }: StepProps) {
         </div>
       </div>
       <div className={styles.field}>
-        <label className={styles.label}>{label('Страна', 'Country')}</label>
+        <label className={styles.label}>{t('wizard.basics.countryLabel')}</label>
         <input
           className="input"
           value={data.country ?? ''}
           onChange={(e) => onChange({ country: e.target.value })}
-          placeholder={label('Казахстан', 'Kazakhstan')}
+          placeholder={t('wizard.basics.countryPlaceholder')}
         />
       </div>
       <div className={styles.field}>
-        <label className={styles.label}>
-          {label('В какой год планируешь поступать?', 'Target enrollment year?')}
-        </label>
+        <label className={styles.label}>{t('wizard.basics.yearLabel')}</label>
         <input
           className="input"
           type="number"
@@ -88,45 +85,36 @@ function StepBasics({ data, onChange, lang }: StepProps) {
   )
 }
 
-function StepMotivation({ data, onChange, lang }: StepProps) {
-  const label = (ru: string, en: string) => (lang === 'ru' ? ru : en)
+function StepMotivation({ data, onChange }: StepProps) {
+  const { t } = useTranslation()
+  const returnOptions = [
+    { value: true as boolean | null, labelKey: 'wizard.motivation.returnYes' },
+    { value: false as boolean | null, labelKey: 'wizard.motivation.returnNo' },
+    { value: null as boolean | null, labelKey: 'wizard.motivation.returnUnknown' },
+  ]
   return (
     <div className={styles.fields}>
       <div className={styles.field}>
-        <label className={styles.label}>
-          {label(
-            'Почему ты хочешь учиться за рубежом? Можно честно, даже если ещё не знаешь.',
-            'Why do you want to study abroad? Be honest — not sure is fine.',
-          )}
-        </label>
+        <label className={styles.label}>{t('wizard.motivation.whyLabel')}</label>
         <textarea
           className={`input ${styles.textarea}`}
           value={data.whyAbroad ?? ''}
           onChange={(e) => onChange({ whyAbroad: e.target.value })}
-          placeholder={label('Я хочу...', 'I want...')}
+          placeholder={t('wizard.motivation.whyPlaceholder')}
           rows={4}
         />
       </div>
       <div className={styles.field}>
-        <label className={styles.label}>
-          {label(
-            'Планируешь вернуться домой после учёбы?',
-            'Do you plan to return home after studying?',
-          )}
-        </label>
+        <label className={styles.label}>{t('wizard.motivation.returnLabel')}</label>
         <div className={styles.options}>
-          {[
-            { value: true, labelRu: 'Да, скорее всего', labelEn: 'Yes, probably' },
-            { value: false, labelRu: 'Нет, хочу остаться', labelEn: 'No, want to stay' },
-            { value: null, labelRu: 'Ещё не знаю', labelEn: "I don't know yet" },
-          ].map((opt) => (
+          {returnOptions.map((opt) => (
             <button
               key={String(opt.value)}
               type="button"
               className={`${styles.optionBtn} ${data.planToReturn === opt.value ? styles.optionBtnActive : ''}`}
               onClick={() => onChange({ planToReturn: opt.value })}
             >
-              {lang === 'ru' ? opt.labelRu : opt.labelEn}
+              {t(opt.labelKey)}
             </button>
           ))}
         </div>
@@ -135,21 +123,21 @@ function StepMotivation({ data, onChange, lang }: StepProps) {
   )
 }
 
-function StepInterests({ data, onChange, lang }: StepProps) {
-  const label = (ru: string, en: string) => (lang === 'ru' ? ru : en)
-  const subjectOptions = [
-    { ru: 'Математика', en: 'Math' },
-    { ru: 'Физика', en: 'Physics' },
-    { ru: 'Химия', en: 'Chemistry' },
-    { ru: 'Биология', en: 'Biology' },
-    { ru: 'IT / Программирование', en: 'IT / Programming' },
-    { ru: 'Экономика', en: 'Economics' },
-    { ru: 'История', en: 'History' },
-    { ru: 'Языки', en: 'Languages' },
-    { ru: 'Искусство / Дизайн', en: 'Art / Design' },
-    { ru: 'Медицина', en: 'Medicine' },
-    { ru: 'Право', en: 'Law' },
-    { ru: 'Психология', en: 'Psychology' },
+function StepInterests({ data, onChange }: StepProps) {
+  const { t } = useTranslation()
+  const subjectKeys = [
+    'math',
+    'physics',
+    'chemistry',
+    'biology',
+    'it',
+    'economics',
+    'history',
+    'languages',
+    'art',
+    'medicine',
+    'law',
+    'psychology',
   ]
   const subjects = data.subjects ?? []
   const toggle = (s: string) => {
@@ -160,18 +148,13 @@ function StepInterests({ data, onChange, lang }: StepProps) {
   return (
     <div className={styles.fields}>
       <div className={styles.field}>
-        <label className={styles.label}>
-          {label(
-            'Какие предметы заставляют тебя терять счёт времени?',
-            'What subjects make you lose track of time?',
-          )}
-        </label>
+        <label className={styles.label}>{t('wizard.interests.subjectsLabel')}</label>
         <div className={styles.chips}>
-          {subjectOptions.map((s) => {
-            const val = lang === 'ru' ? s.ru : s.en
+          {subjectKeys.map((key) => {
+            const val = t(`wizard.interests.subjects.${key}`)
             return (
               <button
-                key={val}
+                key={key}
                 type="button"
                 className={`${styles.chipBtn} ${subjects.includes(val) ? styles.chipBtnActive : ''}`}
                 onClick={() => toggle(val)}
@@ -183,33 +166,22 @@ function StepInterests({ data, onChange, lang }: StepProps) {
         </div>
       </div>
       <div className={styles.field}>
-        <label className={styles.label}>
-          {label(
-            'Куда ты думаешь направить свою карьеру? (Можно написать «не знаю»)',
-            'Where do you see your career going? ("Don\'t know" is fine)',
-          )}
-        </label>
+        <label className={styles.label}>{t('wizard.interests.careerLabel')}</label>
         <input
           className="input"
           value={data.careerDirection ?? ''}
           onChange={(e) => onChange({ careerDirection: e.target.value })}
-          placeholder={label(
-            'Например: инженер, врач, предприниматель...',
-            'e.g. engineer, doctor, entrepreneur...',
-          )}
+          placeholder={t('wizard.interests.careerPlaceholder')}
         />
       </div>
     </div>
   )
 }
 
-function StepLanguages({ data, onChange, lang }: StepProps) {
-  const label = (ru: string, en: string) => (lang === 'ru' ? ru : en)
+function StepLanguages({ data, onChange }: StepProps) {
+  const { t } = useTranslation()
+  const levelKeys = ['beginner', 'elementary', 'intermediate', 'advanced', 'native']
   const languages = data.languages ?? [{ language: '', level: '' }]
-  const levels =
-    lang === 'ru'
-      ? ['Начальный', 'Средний', 'Выше среднего', 'Продвинутый', 'Носитель']
-      : ['Beginner', 'Elementary', 'Intermediate', 'Advanced', 'Native']
 
   const updateLang = (idx: number, field: 'language' | 'level', value: string) => {
     const updated = languages.map((l, i) => (i === idx ? { ...l, [field]: value } : l))
@@ -220,31 +192,29 @@ function StepLanguages({ data, onChange, lang }: StepProps) {
 
   return (
     <div className={styles.fields}>
-      <p className={styles.hint}>
-        {label('Укажи все языки, которыми владеешь.', 'List all the languages you speak.')}
-      </p>
+      <p className={styles.hint}>{t('wizard.languages.hint')}</p>
       {languages.map((l, idx) => (
         <div key={idx} className={styles.row}>
           <div className={styles.field}>
-            <label className={styles.label}>{label('Язык', 'Language')}</label>
+            <label className={styles.label}>{t('wizard.languages.languageLabel')}</label>
             <input
               className="input"
               value={l.language}
               onChange={(e) => updateLang(idx, 'language', e.target.value)}
-              placeholder={label('Английский', 'English')}
+              placeholder={t('wizard.languages.languagePlaceholder')}
             />
           </div>
           <div className={styles.field}>
-            <label className={styles.label}>{label('Уровень', 'Level')}</label>
+            <label className={styles.label}>{t('wizard.languages.levelLabel')}</label>
             <select
               className="input"
               value={l.level}
               onChange={(e) => updateLang(idx, 'level', e.target.value)}
             >
-              <option value="">{label('Выбери уровень', 'Select level')}</option>
-              {levels.map((lv) => (
-                <option key={lv} value={lv}>
-                  {lv}
+              <option value="">{t('wizard.languages.levelPlaceholder')}</option>
+              {levelKeys.map((key) => (
+                <option key={key} value={t(`wizard.languages.levels.${key}`)}>
+                  {t(`wizard.languages.levels.${key}`)}
                 </option>
               ))}
             </select>
@@ -252,25 +222,24 @@ function StepLanguages({ data, onChange, lang }: StepProps) {
         </div>
       ))}
       <button type="button" className={`btn btn-ghost ${styles.addBtn}`} onClick={addLang}>
-        + {label('Добавить язык', 'Add language')}
+        {t('wizard.languages.addLanguage')}
       </button>
     </div>
   )
 }
 
-function StepBudget({ data, onChange, lang }: StepProps) {
-  const label = (ru: string, en: string) => (lang === 'ru' ? ru : en)
+function StepBudget({ data, onChange }: StepProps) {
+  const { t } = useTranslation()
+  const scholarshipOptions = [
+    { value: true, labelKey: 'wizard.budget.scholarshipYes' },
+    { value: false, labelKey: 'wizard.budget.scholarshipNo' },
+  ]
   return (
     <div className={styles.fields}>
-      <p className={styles.hint}>
-        {label(
-          'Примерный годовой бюджет на обучение (в USD)',
-          'Approximate annual tuition budget (in USD)',
-        )}
-      </p>
+      <p className={styles.hint}>{t('wizard.budget.hint')}</p>
       <div className={styles.row}>
         <div className={styles.field}>
-          <label className={styles.label}>{label('От', 'From')}</label>
+          <label className={styles.label}>{t('wizard.budget.fromLabel')}</label>
           <input
             className="input"
             type="number"
@@ -282,7 +251,7 @@ function StepBudget({ data, onChange, lang }: StepProps) {
           />
         </div>
         <div className={styles.field}>
-          <label className={styles.label}>{label('До', 'To')}</label>
+          <label className={styles.label}>{t('wizard.budget.toLabel')}</label>
           <input
             className="input"
             type="number"
@@ -295,21 +264,16 @@ function StepBudget({ data, onChange, lang }: StepProps) {
         </div>
       </div>
       <div className={styles.field}>
-        <label className={styles.label}>
-          {label('Открыт(а) к стипендиям?', 'Open to scholarships?')}
-        </label>
+        <label className={styles.label}>{t('wizard.budget.scholarshipLabel')}</label>
         <div className={styles.options}>
-          {[
-            { value: true, ru: 'Да, обязательно', en: 'Yes, definitely' },
-            { value: false, ru: 'Нет, не нужно', en: 'No, not needed' },
-          ].map((opt) => (
+          {scholarshipOptions.map((opt) => (
             <button
               key={String(opt.value)}
               type="button"
               className={`${styles.optionBtn} ${data.openToScholarship === opt.value ? styles.optionBtnActive : ''}`}
               onClick={() => onChange({ openToScholarship: opt.value })}
             >
-              {lang === 'ru' ? opt.ru : opt.en}
+              {t(opt.labelKey)}
             </button>
           ))}
         </div>
@@ -318,8 +282,8 @@ function StepBudget({ data, onChange, lang }: StepProps) {
   )
 }
 
-function StepPreferences({ data, onChange, lang }: StepProps) {
-  const label = (ru: string, en: string) => (lang === 'ru' ? ru : en)
+function StepPreferences({ data, onChange }: StepProps) {
+  const { t } = useTranslation()
   const countryOptions = [
     'Germany',
     'Czech Republic',
@@ -334,6 +298,7 @@ function StepPreferences({ data, onChange, lang }: StepProps) {
     'Turkey',
     'South Korea',
   ]
+  const vibeKeys = ['cityBig', 'citySmall', 'cityTown', 'cityAny'] as const
   const preferred = data.preferredCountries ?? []
   const toggle = (c: string) => {
     onChange({
@@ -342,17 +307,11 @@ function StepPreferences({ data, onChange, lang }: StepProps) {
         : [...preferred, c],
     })
   }
-  const vibeOptions =
-    lang === 'ru'
-      ? ['Большой город', 'Небольшой город', 'Студгородок / кампус', 'Без разницы']
-      : ['Big city', 'Small city', 'College town / campus', "Doesn't matter"]
 
   return (
     <div className={styles.fields}>
       <div className={styles.field}>
-        <label className={styles.label}>
-          {label('Какие страны тебе интересны?', 'Which countries interest you?')}
-        </label>
+        <label className={styles.label}>{t('wizard.preferences.countriesLabel')}</label>
         <div className={styles.chips}>
           {countryOptions.map((c) => (
             <button
@@ -367,38 +326,39 @@ function StepPreferences({ data, onChange, lang }: StepProps) {
         </div>
       </div>
       <div className={styles.field}>
-        <label className={styles.label}>
-          {label('Какой тип города тебе нравится?', 'What kind of city do you prefer?')}
-        </label>
+        <label className={styles.label}>{t('wizard.preferences.cityLabel')}</label>
         <div className={styles.options}>
-          {vibeOptions.map((v) => (
-            <button
-              key={v}
-              type="button"
-              className={`${styles.optionBtn} ${data.cityVibe === v ? styles.optionBtnActive : ''}`}
-              onClick={() => onChange({ cityVibe: v })}
-            >
-              {v}
-            </button>
-          ))}
+          {vibeKeys.map((key) => {
+            const val = t(`wizard.preferences.${key}`)
+            return (
+              <button
+                key={key}
+                type="button"
+                className={`${styles.optionBtn} ${data.cityVibe === val ? styles.optionBtnActive : ''}`}
+                onClick={() => onChange({ cityVibe: val })}
+              >
+                {val}
+              </button>
+            )
+          })}
         </div>
       </div>
     </div>
   )
 }
 
-function StepExtracurriculars({ data, onChange, lang }: StepProps) {
-  const label = (ru: string, en: string) => (lang === 'ru' ? ru : en)
-  const activityOptions = [
-    { ru: 'Спорт', en: 'Sports' },
-    { ru: 'Музыка', en: 'Music' },
-    { ru: 'Волонтёрство', en: 'Volunteering' },
-    { ru: 'Олимпиады', en: 'Olympiads' },
-    { ru: 'Дебатный клуб', en: 'Debate club' },
-    { ru: 'Студсовет', en: 'Student council' },
-    { ru: 'Стартапы / бизнес', en: 'Startups / business' },
-    { ru: 'Искусство', en: 'Art' },
-    { ru: 'Наука / исследования', en: 'Science / research' },
+function StepExtracurriculars({ data, onChange }: StepProps) {
+  const { t } = useTranslation()
+  const activityKeys = [
+    'sports',
+    'music',
+    'volunteering',
+    'olympiads',
+    'debate',
+    'council',
+    'startup',
+    'art',
+    'science',
   ]
   const activities = data.activities ?? []
   const toggle = (a: string) => {
@@ -409,15 +369,13 @@ function StepExtracurriculars({ data, onChange, lang }: StepProps) {
   return (
     <div className={styles.fields}>
       <div className={styles.field}>
-        <label className={styles.label}>
-          {label('Чем ты занимаешься вне учёбы?', 'What do you do outside of school?')}
-        </label>
+        <label className={styles.label}>{t('wizard.extracurriculars.activitiesLabel')}</label>
         <div className={styles.chips}>
-          {activityOptions.map((a) => {
-            const val = lang === 'ru' ? a.ru : a.en
+          {activityKeys.map((key) => {
+            const val = t(`wizard.extracurriculars.activities.${key}`)
             return (
               <button
-                key={val}
+                key={key}
                 type="button"
                 className={`${styles.chipBtn} ${activities.includes(val) ? styles.chipBtnActive : ''}`}
                 onClick={() => toggle(val)}
@@ -429,17 +387,12 @@ function StepExtracurriculars({ data, onChange, lang }: StepProps) {
         </div>
       </div>
       <div className={styles.field}>
-        <label className={styles.label}>
-          {label(
-            'Что ты считаешь своей главной силой?',
-            'What do you consider your biggest strength?',
-          )}
-        </label>
+        <label className={styles.label}>{t('wizard.extracurriculars.strengthsLabel')}</label>
         <textarea
           className={`input ${styles.textarea}`}
           value={data.strengths ?? ''}
           onChange={(e) => onChange({ strengths: e.target.value })}
-          placeholder={label('Я умею...', 'I am good at...')}
+          placeholder={t('wizard.extracurriculars.strengthsPlaceholder')}
           rows={3}
         />
       </div>
@@ -459,7 +412,7 @@ const stepComponents = [
 
 export function ProfileWizardPage() {
   const { profile, setProfile } = useProfile()
-  const { lang } = useLang()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [step, setStep] = useState(0)
   const [localData, setLocalData] = useState<PartialProfile>(profile ?? {})
@@ -475,7 +428,7 @@ export function ProfileWizardPage() {
   const handleNext = () => {
     setProfile(localData)
     if (isLast) {
-      navigate('/shortlist')
+      navigate('/dashboard')
     } else {
       setStep((s) => s + 1)
     }
@@ -487,31 +440,31 @@ export function ProfileWizardPage() {
 
   const progressPct = ((step + 1) / total) * 100
   const currentStep = STEPS[step]
-  const title = lang === 'ru' ? currentStep.titleRu : currentStep.titleEn
-  const nextLabel = lang === 'ru' ? (isLast ? 'Готово' : 'Далее') : isLast ? 'Done' : 'Next'
-  const backLabel = lang === 'ru' ? 'Назад' : 'Back'
-  const stepLabel = lang === 'ru' ? `Шаг ${step + 1} из ${total}` : `Step ${step + 1} of ${total}`
 
   return (
     <div className={styles.page}>
       <div className={styles.topBar}>
-        <span className={styles.logo}>Unipath</span>
+        <button className={styles.logo} onClick={() => navigate('/dashboard')}>
+          Unipath
+        </button>
         <LanguageToggle />
       </div>
       <div className={styles.container}>
         <div className={styles.progress}>
-          <span className={styles.stepLabel}>{stepLabel}</span>
+          <span className={styles.stepLabel}>
+            {t('wizard.stepOf', { current: step + 1, total })}
+          </span>
           <div className={styles.progressBar}>
             <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />
           </div>
         </div>
         <div className={styles.card}>
-          <h2 className={styles.stepTitle}>{title}</h2>
-          <StepComponent data={localData} onChange={handleChange} lang={lang} />
+          <h2 className={styles.stepTitle}>{t(`wizard.steps.${currentStep.key}`)}</h2>
+          <StepComponent data={localData} onChange={handleChange} />
           <div className={styles.actions}>
             {step > 0 && (
               <button type="button" className="btn btn-ghost" onClick={handleBack}>
-                {backLabel}
+                {t('wizard.back')}
               </button>
             )}
             <button
@@ -520,7 +473,7 @@ export function ProfileWizardPage() {
               onClick={handleNext}
               style={{ marginLeft: 'auto' }}
             >
-              {nextLabel}
+              {isLast ? t('wizard.done') : t('wizard.next')}
             </button>
           </div>
         </div>

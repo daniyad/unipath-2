@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import i18n from '../i18n'
 import type { Lang } from '../types'
 
 interface LangContextValue {
@@ -19,6 +20,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
   const setLang = (l: Lang) => {
     localStorage.setItem('unipath_lang', l)
     setLangState(l)
+    void i18n.changeLanguage(l)
   }
 
   return <LangContext.Provider value={{ lang, setLang }}>{children}</LangContext.Provider>

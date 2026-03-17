@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useLang } from '../contexts/LangContext'
+import { useTranslation } from 'react-i18next'
 import { LanguageToggle } from '../components/LanguageToggle'
 import type { UniversityPlan } from '../types'
 import styles from './PlanPage.module.css'
@@ -70,46 +70,25 @@ const urgencyColors = {
   medium: styles.urgencyMed,
   low: styles.urgencyLow,
 }
-const urgencyLabels = {
-  high: { ru: 'Срочно', en: 'Urgent' },
-  medium: { ru: 'Важно', en: 'Important' },
-  low: { ru: 'Позже', en: 'Later' },
-}
 
 export function PlanPage() {
   const { id } = useParams<{ id: string }>()
-  const { lang } = useLang()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [tasks, setTasks] = useState(MOCK_PLAN.monthlyTasks)
   const [activeSection, setActiveSection] = useState<string | null>(null)
 
   const toggleTask = (taskId: string) => {
-    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)))
+    setTasks((prev) =>
+      prev.map((task) => (task.id === taskId ? { ...task, done: !task.done } : task)),
+    )
   }
 
   const toggleSection = (s: string) => setActiveSection((prev) => (prev === s ? null : s))
 
-  const months = [...new Set(tasks.map((t) => t.month))]
-  const completedCount = tasks.filter((t) => t.done).length
+  const months = [...new Set(tasks.map((task) => task.month))]
+  const completedCount = tasks.filter((task) => task.done).length
   const totalCount = tasks.length
-
-  const t = {
-    back: lang === 'ru' ? '← Назад' : '← Back',
-    overview: lang === 'ru' ? 'Обзор' : 'Overview',
-    docs: lang === 'ru' ? 'Документы' : 'Documents needed',
-    tests: lang === 'ru' ? 'Тесты' : 'Tests',
-    steps: lang === 'ru' ? 'Как подавать' : 'How to apply',
-    monthly: lang === 'ru' ? 'Твой план по месяцам' : 'Your monthly plan',
-    parents: lang === 'ru' ? 'Как объяснить родителям' : 'Talking to your parents',
-    progress:
-      lang === 'ru'
-        ? `${completedCount} из ${totalCount} выполнено`
-        : `${completedCount} of ${totalCount} done`,
-    how: lang === 'ru' ? 'Как получить' : 'How to get it',
-    urgency: lang === 'ru' ? 'Приоритет' : 'Priority',
-    prepTime: lang === 'ru' ? 'Время подготовки' : 'Prep time',
-    startBy: lang === 'ru' ? 'Начать до' : 'Start by',
-  }
 
   void id // used via MOCK_PLAN for now
 
@@ -117,8 +96,8 @@ export function PlanPage() {
     <div className={styles.page}>
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
-          <button className={styles.backBtn} onClick={() => navigate('/shortlist')}>
-            {t.back}
+          <button className={styles.backBtn} onClick={() => navigate('/dashboard')}>
+            {t('plan.back')}
           </button>
         </div>
         <LanguageToggle />
@@ -133,7 +112,7 @@ export function PlanPage() {
         {/* Documents */}
         <section className={styles.section}>
           <button className={styles.sectionToggle} onClick={() => toggleSection('docs')}>
-            <span className={styles.sectionTitle}>{t.docs}</span>
+            <span className={styles.sectionTitle}>{t('plan.docs')}</span>
             <span className={styles.sectionCaret}>{activeSection === 'docs' ? '▲' : '▼'}</span>
           </button>
           {activeSection === 'docs' && (
@@ -145,7 +124,7 @@ export function PlanPage() {
                     <span className={styles.docHow}>{doc.howToGet}</span>
                   </div>
                   <span className={`${styles.urgencyBadge} ${urgencyColors[doc.urgency]}`}>
-                    {urgencyLabels[doc.urgency][lang]}
+                    {t(`plan.urgencyLabels.${doc.urgency}`)}
                   </span>
                 </div>
               ))}
@@ -156,7 +135,7 @@ export function PlanPage() {
         {/* Tests */}
         <section className={styles.section}>
           <button className={styles.sectionToggle} onClick={() => toggleSection('tests')}>
-            <span className={styles.sectionTitle}>{t.tests}</span>
+            <span className={styles.sectionTitle}>{t('plan.tests')}</span>
             <span className={styles.sectionCaret}>{activeSection === 'tests' ? '▲' : '▼'}</span>
           </button>
           {activeSection === 'tests' && (
@@ -166,10 +145,10 @@ export function PlanPage() {
                   <span className={styles.testName}>{test.name}</span>
                   <div className={styles.testMeta}>
                     <span>
-                      {t.prepTime}: <strong>{test.prepTime}</strong>
+                      {t('plan.prepTime')}: <strong>{test.prepTime}</strong>
                     </span>
                     <span>
-                      {t.startBy}: <strong>{test.startBy}</strong>
+                      {t('plan.startBy')}: <strong>{test.startBy}</strong>
                     </span>
                   </div>
                 </div>
@@ -181,7 +160,7 @@ export function PlanPage() {
         {/* How to apply */}
         <section className={styles.section}>
           <button className={styles.sectionToggle} onClick={() => toggleSection('steps')}>
-            <span className={styles.sectionTitle}>{t.steps}</span>
+            <span className={styles.sectionTitle}>{t('plan.steps')}</span>
             <span className={styles.sectionCaret}>{activeSection === 'steps' ? '▲' : '▼'}</span>
           </button>
           {activeSection === 'steps' && (
@@ -201,8 +180,10 @@ export function PlanPage() {
         {/* Monthly tasks */}
         <section className={styles.section}>
           <button className={styles.sectionToggle} onClick={() => toggleSection('monthly')}>
-            <span className={styles.sectionTitle}>{t.monthly}</span>
-            <span className={styles.sectionProgress}>{t.progress}</span>
+            <span className={styles.sectionTitle}>{t('plan.monthly')}</span>
+            <span className={styles.sectionProgress}>
+              {t('plan.progress', { done: completedCount, total: totalCount })}
+            </span>
             <span className={styles.sectionCaret}>{activeSection === 'monthly' ? '▲' : '▼'}</span>
           </button>
           {activeSection === 'monthly' && (
@@ -234,7 +215,7 @@ export function PlanPage() {
         {/* Parent talking points */}
         <section className={styles.section}>
           <button className={styles.sectionToggle} onClick={() => toggleSection('parents')}>
-            <span className={styles.sectionTitle}>{t.parents}</span>
+            <span className={styles.sectionTitle}>{t('plan.parents')}</span>
             <span className={styles.sectionCaret}>{activeSection === 'parents' ? '▲' : '▼'}</span>
           </button>
           {activeSection === 'parents' && (

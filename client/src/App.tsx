@@ -6,7 +6,8 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import { ProfileWizardPage } from './pages/ProfileWizardPage'
-import { ShortlistPage } from './pages/ShortlistPage'
+import { ProfilePage } from './pages/ProfilePage'
+import { UniversityPage } from './pages/UniversityPage'
 import { PlanPage } from './pages/PlanPage'
 import { DashboardPage } from './pages/DashboardPage'
 
@@ -20,7 +21,7 @@ export default function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route
-                path="/profile"
+                path="/setup"
                 element={
                   <ProtectedRoute>
                     <ProfileWizardPage />
@@ -28,10 +29,18 @@ export default function App() {
                 }
               />
               <Route
-                path="/shortlist"
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/university/:id"
                 element={
                   <ProtectedRoute requireProfile>
-                    <ShortlistPage />
+                    <UniversityPage />
                   </ProtectedRoute>
                 }
               />
