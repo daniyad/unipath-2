@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { LanguageToggle } from '../components/LanguageToggle'
+import { Navbar } from '../components/Navbar'
 import { MOCK_UNIVERSITIES } from '../data/universities'
 import type { University } from '../types'
 import styles from './UniversityPage.module.css'
@@ -28,14 +28,7 @@ export function UniversityPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.topBar}>
-        <div className={styles.topBarLeft}>
-          <button className={styles.backBtn} onClick={() => navigate('/dashboard')}>
-            {t('university.back')}
-          </button>
-        </div>
-        <LanguageToggle />
-      </div>
+      <Navbar showBack />
 
       <div className={styles.container}>
         {/* Header */}

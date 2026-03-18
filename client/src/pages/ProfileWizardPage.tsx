@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useProfile } from '../contexts/ProfileContext'
-import { LanguageToggle } from '../components/LanguageToggle'
+import { Navbar } from '../components/Navbar'
 import type { PartialProfile } from '../types'
 import styles from './ProfileWizardPage.module.css'
 
@@ -443,12 +443,7 @@ export function ProfileWizardPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.topBar}>
-        <button className={styles.logo} onClick={() => navigate('/dashboard')}>
-          Unipath
-        </button>
-        <LanguageToggle />
-      </div>
+      <Navbar />
       <div className={styles.container}>
         <div className={styles.progress}>
           <span className={styles.stepLabel}>

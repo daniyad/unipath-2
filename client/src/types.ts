@@ -53,6 +53,7 @@ export interface University {
 export interface PlanTask {
   id: string
   month: string
+  week?: number
   title: string
   done: boolean
 }
@@ -60,9 +61,12 @@ export interface PlanTask {
 export interface UniversityPlan {
   universityId: string
   overview: string
+  portalUrl: string
+  applicationDeadline: string
+  tuition: number
+  level: 'Reach' | 'Match' | 'Safety'
   documents: Array<{ name: string; howToGet: string; urgency: 'high' | 'medium' | 'low' }>
   tests: Array<{ name: string; prepTime: string; startBy: string }>
-  applicationSteps: string[]
   monthlyTasks: PlanTask[]
   parentTalkingPoints: string[]
 }

@@ -1,4 +1,7 @@
 export default {
+  nav: {
+    back: '← Back',
+  },
   login: {
     title: 'Welcome back',
     subtitle: 'Sign in to continue',
@@ -134,14 +137,12 @@ export default {
     },
   },
   profile: {
-    back: '← Dashboard',
     title: 'Your profile',
     save: 'Save changes',
     saved: 'Saved',
     signOut: 'Sign out',
   },
   university: {
-    back: '← Dashboard',
     tuitionFree: 'Free',
     perYear: '/yr',
     whyFit: 'Why this fits',
@@ -178,7 +179,6 @@ export default {
     },
   },
   plan: {
-    back: '← Back',
     overview: 'Overview',
     docs: 'Documents needed',
     tests: 'Tests',
@@ -195,5 +195,19 @@ export default {
       medium: 'Important',
       low: 'Later',
     },
+    portal: 'Apply on the official portal',
+    deadline: 'Deadline',
+    daysLeft: '{{days}} days left',
+    tuition: 'Tuition',
+    focusNow: 'Focus right now',
+    focusSubtitle: 'Your next tasks — check off as you go',
+    actionPlan: 'Action plan',
+    monthCol: 'Month',
+    weekCol: 'Week',
+    taskCol: 'Task',
+    doneCol: 'Done',
+    gotIt: 'Got it',
+    progressLabel: 'Your progress',
+    testsRequired: 'Tests required',
   },
 }

@@ -4,40 +4,6 @@
   padding: 80px 16px 64px;
 }
 
-.topBar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  background: var(--bg-base);
-  border-bottom: 0.5px solid var(--border-default);
-  z-index: 10;
-}
-
-.topBarLeft {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.backBtn {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: color var(--duration-fast) var(--ease-default);
-}
-
-.backBtn:hover {
-  color: var(--primary-900);
-}
 
 .container {
   max-width: 680px;

@@ -1,8 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '../contexts/AuthContext'
 import { useProfile } from '../contexts/ProfileContext'
-import { LanguageToggle } from '../components/LanguageToggle'
+import { Navbar } from '../components/Navbar'
 import { MOCK_UNIVERSITIES } from '../data/universities'
 import styles from './DashboardPage.module.css'
 
@@ -13,31 +12,15 @@ const levelColors: Record<string, string> = {
 }
 
 export function DashboardPage() {
-  const { user, logout } = useAuth()
   const { profile } = useProfile()
   const { t } = useTranslation()
   const navigate = useNavigate()
 
   const name = profile?.name ?? t('dashboard.nameFallback')
-  const initial = (profile?.name?.[0] ?? user?.email?.[0] ?? '?').toUpperCase()
 
   return (
     <div className={styles.page}>
-      <div className={styles.topBar}>
-        <button className={styles.logo} onClick={() => navigate('/dashboard')}>
-          Unipath
-        </button>
-        <div className={styles.topBarRight}>
-          <LanguageToggle />
-          <button className={styles.profileBtn} onClick={() => navigate('/profile')}>
-            <span className={styles.avatar}>{initial}</span>
-            <span className={styles.profileName}>{profile?.name ?? user?.email}</span>
-          </button>
-          <button className={styles.logoutBtn} onClick={logout}>
-            {t('dashboard.logout')}
-          </button>
-        </div>
-      </div>
+      <Navbar showProfileActions />
 
       <div className={styles.container}>
         <div className={styles.header}>

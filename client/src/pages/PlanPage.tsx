@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useMemo } from 'react'
+import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { LanguageToggle } from '../components/LanguageToggle'
+import { Navbar } from '../components/Navbar'
 import type { UniversityPlan } from '../types'
 import styles from './PlanPage.module.css'
 
@@ -10,8 +10,16 @@ const MOCK_PLAN: UniversityPlan = {
   universityId: '1',
   overview:
     "You have ~18 months until the application deadline. That's enough time to prepare well.",
+  portalUrl: 'https://is.cuni.cz/studium/eng/prijimacky/',
+  applicationDeadline: '2026-02-28',
+  tuition: 3500,
+  level: 'Match',
   documents: [
-    { name: 'Transcript', howToGet: 'Request from your school registrar', urgency: 'high' },
+    {
+      name: 'Official Transcript',
+      howToGet: 'Request from your school registrar',
+      urgency: 'high',
+    },
     {
       name: 'Passport copy',
       howToGet: 'Make a colour copy of your current passport',
@@ -27,36 +35,109 @@ const MOCK_PLAN: UniversityPlan = {
       howToGet: 'Ask 2 teachers who know you well',
       urgency: 'medium',
     },
+    {
+      name: 'IELTS certificate',
+      howToGet: 'Obtained after passing the IELTS exam',
+      urgency: 'high',
+    },
+    { name: 'CV / Résumé', howToGet: 'Prepare a 1-page academic CV', urgency: 'low' },
   ],
   tests: [{ name: 'IELTS', prepTime: '3–4 months', startBy: 'September 2025' }],
-  applicationSteps: [
-    'Create an account on the university application portal',
-    'Fill in the personal information form',
-    'Upload all required documents',
-    'Pay the application fee ($30)',
-    'Submit and await confirmation email',
-    'Attend online interview if invited',
-  ],
   monthlyTasks: [
-    { id: 't1', month: 'March 2025', title: 'Research IELTS test centres near you', done: false },
+    {
+      id: 't1',
+      month: 'March 2025',
+      week: 1,
+      title: 'Research IELTS test centres near you',
+      done: false,
+    },
     {
       id: 't2',
       month: 'March 2025',
-      title: 'Request your official transcript from school',
+      week: 2,
+      title: 'Request official transcript from school',
       done: false,
     },
-    { id: 't3', month: 'April 2025', title: 'Start IELTS preparation course', done: false },
-    { id: 't4', month: 'May 2025', title: 'Ask teachers for recommendation letters', done: false },
-    { id: 't5', month: 'June 2025', title: 'Draft your motivation letter', done: false },
-    { id: 't6', month: 'July 2025', title: 'Take IELTS exam', done: false },
-    { id: 't7', month: 'August 2025', title: 'Finalize and review all documents', done: false },
     {
-      id: 't8',
-      month: 'September 2025',
-      title: 'Create portal account and start application',
+      id: 't3',
+      month: 'April 2025',
+      week: 1,
+      title: 'Register for IELTS preparation course',
       done: false,
     },
-    { id: 't9', month: 'October 2025', title: 'Submit complete application', done: false },
+    { id: 't4', month: 'April 2025', week: 3, title: 'Book your IELTS exam date', done: false },
+    {
+      id: 't5',
+      month: 'May 2025',
+      week: 2,
+      title: 'Ask teachers for recommendation letters',
+      done: false,
+    },
+    { id: 't6', month: 'June 2025', week: 1, title: 'Draft your motivation letter', done: false },
+    {
+      id: 't7',
+      month: 'June 2025',
+      week: 3,
+      title: 'Get feedback on motivation letter draft',
+      done: false,
+    },
+    { id: 't8', month: 'July 2025', week: 2, title: 'Take IELTS exam', done: false },
+    {
+      id: 't9',
+      month: 'August 2025',
+      week: 1,
+      title: 'Collect and finalize all documents',
+      done: false,
+    },
+    {
+      id: 't10',
+      month: 'August 2025',
+      week: 3,
+      title: 'Review full application package',
+      done: false,
+    },
+    {
+      id: 't11',
+      month: 'September 2025',
+      week: 1,
+      title: 'Create account on the university portal',
+      done: false,
+    },
+    {
+      id: 't12',
+      month: 'September 2025',
+      week: 2,
+      title: 'Fill in personal information on the portal',
+      done: false,
+    },
+    {
+      id: 't13',
+      month: 'September 2025',
+      week: 3,
+      title: 'Upload all documents to the portal',
+      done: false,
+    },
+    {
+      id: 't14',
+      month: 'October 2025',
+      week: 1,
+      title: 'Pay the application fee ($30)',
+      done: false,
+    },
+    {
+      id: 't15',
+      month: 'October 2025',
+      week: 2,
+      title: 'Submit complete application',
+      done: false,
+    },
+    {
+      id: 't16',
+      month: 'November 2025',
+      week: 1,
+      title: 'Attend online interview if invited',
+      done: false,
+    },
   ],
   parentTalkingPoints: [
     'Charles University is one of the oldest and most respected universities in Central Europe, founded in 1348.',
@@ -65,7 +146,7 @@ const MOCK_PLAN: UniversityPlan = {
   ],
 }
 
-const urgencyColors = {
+const urgencyStyles: Record<string, string> = {
   high: styles.urgencyHigh,
   medium: styles.urgencyMed,
   low: styles.urgencyLow,
@@ -74,9 +155,9 @@ const urgencyColors = {
 export function PlanPage() {
   const { id } = useParams<{ id: string }>()
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const [tasks, setTasks] = useState(MOCK_PLAN.monthlyTasks)
-  const [activeSection, setActiveSection] = useState<string | null>(null)
+  const [docsDone, setDocsDone] = useState<Set<string>>(new Set())
+  const [parentsOpen, setParentsOpen] = useState(false)
 
   const toggleTask = (taskId: string) => {
     setTasks((prev) =>
@@ -84,146 +165,227 @@ export function PlanPage() {
     )
   }
 
-  const toggleSection = (s: string) => setActiveSection((prev) => (prev === s ? null : s))
+  const toggleDoc = (name: string) => {
+    setDocsDone((prev) => {
+      const next = new Set(prev)
+      if (next.has(name)) next.delete(name)
+      else next.add(name)
+      return next
+    })
+  }
 
-  const months = [...new Set(tasks.map((task) => task.month))]
-  const completedCount = tasks.filter((task) => task.done).length
+  const months = useMemo(() => [...new Set(MOCK_PLAN.monthlyTasks.map((t) => t.month))], [])
+  const completedCount = tasks.filter((t) => t.done).length
   const totalCount = tasks.length
+  const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
+  const focusTasks = tasks.filter((t) => !t.done).slice(0, 3)
 
-  void id // used via MOCK_PLAN for now
+  const daysUntilDeadline = useMemo(() => {
+    const deadline = new Date(MOCK_PLAN.applicationDeadline)
+    const today = new Date()
+    return Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  }, [])
+
+  const formattedDeadline = useMemo(
+    () =>
+      new Date(MOCK_PLAN.applicationDeadline).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+    [],
+  )
+
+  void id
 
   return (
     <div className={styles.page}>
-      <div className={styles.topBar}>
-        <div className={styles.topBarLeft}>
-          <button className={styles.backBtn} onClick={() => navigate('/dashboard')}>
-            {t('plan.back')}
-          </button>
-        </div>
-        <LanguageToggle />
-      </div>
+      <Navbar showBack />
+
       <div className={styles.container}>
+        {/* ── Header ── */}
         <div className={styles.header}>
           <h1 className={styles.uniName}>Charles University</h1>
-          <p className={styles.programLine}>Computer Science · Prague, Czech Republic</p>
-          <p className={styles.overviewLine}>{MOCK_PLAN.overview}</p>
+          <p className={styles.programLine}>
+            Computer Science · Prague, Czech Republic ·{' '}
+            <a
+              href={MOCK_PLAN.portalUrl}
+              className={styles.portalLink}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t('plan.portal')} ↗
+            </a>
+          </p>
+          <p className={styles.headerMeta}>
+            {t('plan.deadline')}: {formattedDeadline}
+            {daysUntilDeadline > 0 && ` · ${t('plan.daysLeft', { days: daysUntilDeadline })}`}
+            {' · '}
+            {t('plan.tuition')}: ${MOCK_PLAN.tuition.toLocaleString()}/yr
+          </p>
         </div>
 
-        {/* Documents */}
-        <section className={styles.section}>
-          <button className={styles.sectionToggle} onClick={() => toggleSection('docs')}>
-            <span className={styles.sectionTitle}>{t('plan.docs')}</span>
-            <span className={styles.sectionCaret}>{activeSection === 'docs' ? '▲' : '▼'}</span>
-          </button>
-          {activeSection === 'docs' && (
-            <div className={styles.sectionBody}>
-              {MOCK_PLAN.documents.map((doc) => (
-                <div key={doc.name} className={styles.docRow}>
-                  <div className={styles.docInfo}>
-                    <span className={styles.docName}>{doc.name}</span>
-                    <span className={styles.docHow}>{doc.howToGet}</span>
+        {/* ── Focus right now ── */}
+        {focusTasks.length > 0 && (
+          <div className={styles.focusCard}>
+            <div className={styles.focusHeader}>
+              <h3 className={styles.focusTitle}>{t('plan.focusNow')}</h3>
+              <span className={styles.focusSubtitle}>{t('plan.focusSubtitle')}</span>
+            </div>
+            <div className={styles.focusList}>
+              {focusTasks.map((task) => (
+                <label key={task.id} className={styles.focusTask}>
+                  <input
+                    type="checkbox"
+                    checked={task.done}
+                    onChange={() => toggleTask(task.id)}
+                    className={styles.checkbox}
+                  />
+                  <div className={styles.focusTaskContent}>
+                    <span className={styles.focusTaskTitle}>{task.title}</span>
+                    <span className={styles.focusTaskMonth}>{task.month}</span>
                   </div>
-                  <span className={`${styles.urgencyBadge} ${urgencyColors[doc.urgency]}`}>
-                    {t(`plan.urgencyLabels.${doc.urgency}`)}
-                  </span>
-                </div>
+                </label>
               ))}
             </div>
-          )}
-        </section>
+          </div>
+        )}
 
-        {/* Tests */}
-        <section className={styles.section}>
-          <button className={styles.sectionToggle} onClick={() => toggleSection('tests')}>
-            <span className={styles.sectionTitle}>{t('plan.tests')}</span>
-            <span className={styles.sectionCaret}>{activeSection === 'tests' ? '▲' : '▼'}</span>
-          </button>
-          {activeSection === 'tests' && (
-            <div className={styles.sectionBody}>
-              {MOCK_PLAN.tests.map((test) => (
-                <div key={test.name} className={styles.testRow}>
-                  <span className={styles.testName}>{test.name}</span>
-                  <div className={styles.testMeta}>
-                    <span>
-                      {t('plan.prepTime')}: <strong>{test.prepTime}</strong>
-                    </span>
-                    <span>
-                      {t('plan.startBy')}: <strong>{test.startBy}</strong>
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* How to apply */}
-        <section className={styles.section}>
-          <button className={styles.sectionToggle} onClick={() => toggleSection('steps')}>
-            <span className={styles.sectionTitle}>{t('plan.steps')}</span>
-            <span className={styles.sectionCaret}>{activeSection === 'steps' ? '▲' : '▼'}</span>
-          </button>
-          {activeSection === 'steps' && (
-            <div className={styles.sectionBody}>
-              <ol className={styles.stepsList}>
-                {MOCK_PLAN.applicationSteps.map((step, idx) => (
-                  <li key={idx} className={styles.stepItem}>
-                    <span className={styles.stepNum}>{idx + 1}</span>
-                    <span>{step}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
-        </section>
-
-        {/* Monthly tasks */}
-        <section className={styles.section}>
-          <button className={styles.sectionToggle} onClick={() => toggleSection('monthly')}>
-            <span className={styles.sectionTitle}>{t('plan.monthly')}</span>
-            <span className={styles.sectionProgress}>
+        {/* ── Progress bar ── */}
+        <div className={styles.progressSection}>
+          <div className={styles.progressHeader}>
+            <span className={styles.progressLabel}>{t('plan.progressLabel')}</span>
+            <span className={styles.progressCount}>
               {t('plan.progress', { done: completedCount, total: totalCount })}
             </span>
-            <span className={styles.sectionCaret}>{activeSection === 'monthly' ? '▲' : '▼'}</span>
-          </button>
-          {activeSection === 'monthly' && (
-            <div className={styles.sectionBody}>
-              {months.map((month) => (
-                <div key={month} className={styles.monthGroup}>
-                  <h4 className={styles.monthLabel}>{month}</h4>
-                  {tasks
-                    .filter((task) => task.month === month)
-                    .map((task) => (
-                      <label key={task.id} className={styles.taskRow}>
+          </div>
+          <div className={styles.progressTrack}>
+            <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />
+          </div>
+        </div>
+
+        {/* ── Action plan table ── */}
+        <section className={styles.tableSection}>
+          <h2 className={styles.sectionHeading}>{t('plan.actionPlan')}</h2>
+          <div className={styles.tableWrap}>
+            <table className={styles.planTable}>
+              <thead>
+                <tr>
+                  <th className={styles.thMonth}>{t('plan.monthCol')}</th>
+                  <th className={styles.thWeek}>{t('plan.weekCol')}</th>
+                  <th className={styles.thTask}>{t('plan.taskCol')}</th>
+                  <th className={styles.thDone}>{t('plan.doneCol')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {months.map((month) => {
+                  const monthTasks = tasks.filter((t) => t.month === month)
+                  return monthTasks.map((task, i) => (
+                    <tr
+                      key={task.id}
+                      className={`${styles.planRow} ${task.done ? styles.rowDone : ''}`}
+                    >
+                      {i === 0 && (
+                        <td rowSpan={monthTasks.length} className={styles.monthCell}>
+                          {month}
+                        </td>
+                      )}
+                      <td className={styles.weekCell}>
+                        {task.week != null ? `Wk ${task.week}` : '—'}
+                      </td>
+                      <td className={styles.taskCell}>{task.title}</td>
+                      <td className={styles.checkCell}>
                         <input
                           type="checkbox"
                           checked={task.done}
                           onChange={() => toggleTask(task.id)}
                           className={styles.checkbox}
                         />
-                        <span className={task.done ? styles.taskDone : styles.taskTitle}>
-                          {task.title}
-                        </span>
-                      </label>
-                    ))}
-                </div>
-              ))}
-            </div>
-          )}
+                      </td>
+                    </tr>
+                  ))
+                })}
+              </tbody>
+            </table>
+          </div>
         </section>
 
-        {/* Parent talking points */}
+        {/* ── Documents table ── */}
+        <section className={styles.tableSection}>
+          <h2 className={styles.sectionHeading}>{t('plan.docs')}</h2>
+          <div className={styles.tableWrap}>
+            <table className={styles.docsTable}>
+              <thead>
+                <tr>
+                  <th className={styles.thDocName}>{t('plan.taskCol')}</th>
+                  <th className={styles.thDocHow}>{t('plan.how')}</th>
+                  <th className={styles.thDocUrgency}>{t('plan.urgency')}</th>
+                  <th className={styles.thDocGot}>{t('plan.gotIt')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {MOCK_PLAN.documents.map((doc) => (
+                  <tr
+                    key={doc.name}
+                    className={`${styles.docRow} ${docsDone.has(doc.name) ? styles.rowDone : ''}`}
+                  >
+                    <td className={styles.docNameCell}>{doc.name}</td>
+                    <td className={styles.docHowCell}>{doc.howToGet}</td>
+                    <td className={styles.docUrgencyCell}>
+                      <span className={`${styles.urgencyBadge} ${urgencyStyles[doc.urgency]}`}>
+                        {t(`plan.urgencyLabels.${doc.urgency}`)}
+                      </span>
+                    </td>
+                    <td className={styles.docGotCell}>
+                      <input
+                        type="checkbox"
+                        checked={docsDone.has(doc.name)}
+                        onChange={() => toggleDoc(doc.name)}
+                        className={styles.checkbox}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* ── Tests required ── */}
+        <section className={styles.tableSection}>
+          <h2 className={styles.sectionHeading}>{t('plan.testsRequired')}</h2>
+          <div className={styles.testsGrid}>
+            {MOCK_PLAN.tests.map((test) => (
+              <div key={test.name} className={styles.testCard}>
+                <span className={styles.testName}>{test.name}</span>
+                <div className={styles.testMeta}>
+                  <div className={styles.testMetaItem}>
+                    <span className={styles.testMetaLabel}>{t('plan.prepTime')}</span>
+                    <span className={styles.testMetaValue}>{test.prepTime}</span>
+                  </div>
+                  <div className={styles.testMetaItem}>
+                    <span className={styles.testMetaLabel}>{t('plan.startBy')}</span>
+                    <span className={styles.testMetaValue}>{test.startBy}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Parent talking points (collapsible) ── */}
         <section className={styles.section}>
-          <button className={styles.sectionToggle} onClick={() => toggleSection('parents')}>
+          <button className={styles.sectionToggle} onClick={() => setParentsOpen((v) => !v)}>
             <span className={styles.sectionTitle}>{t('plan.parents')}</span>
-            <span className={styles.sectionCaret}>{activeSection === 'parents' ? '▲' : '▼'}</span>
+            <span className={styles.sectionCaret}>{parentsOpen ? '▲' : '▼'}</span>
           </button>
-          {activeSection === 'parents' && (
+          {parentsOpen && (
             <div className={styles.sectionBody}>
               <ul className={styles.parentList}>
                 {MOCK_PLAN.parentTalkingPoints.map((point, idx) => (
                   <li key={idx} className={styles.parentPoint}>
-                    {point}
+                    <span className={styles.parentNum}>{idx + 1}</span>
+                    <span className={styles.parentText}>{point}</span>
                   </li>
                 ))}
               </ul>

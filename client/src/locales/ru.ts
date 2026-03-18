@@ -1,4 +1,7 @@
 export default {
+  nav: {
+    back: '← Назад',
+  },
   login: {
     title: 'Добро пожаловать',
     subtitle: 'Войдите, чтобы продолжить',
@@ -134,14 +137,12 @@ export default {
     },
   },
   profile: {
-    back: '← Дашборд',
     title: 'Твой профиль',
     save: 'Сохранить изменения',
     saved: 'Сохранено',
     signOut: 'Выйти',
   },
   university: {
-    back: '← Дашборд',
     tuitionFree: 'Бесплатно',
     perYear: '/год',
     whyFit: 'Почему подходит',
@@ -178,9 +179,8 @@ export default {
     },
   },
   plan: {
-    back: '← Назад',
     overview: 'Обзор',
-    docs: 'Документы',
+    docs: 'Необходимые документы',
     tests: 'Тесты',
     steps: 'Как подавать',
     monthly: 'Твой план по месяцам',
@@ -195,5 +195,19 @@ export default {
       medium: 'Важно',
       low: 'Позже',
     },
+    portal: 'Подать заявку на официальном портале',
+    deadline: 'Дедлайн',
+    daysLeft: 'осталось {{days}} дней',
+    tuition: 'Стоимость',
+    focusNow: 'Что делать сейчас',
+    focusSubtitle: 'Ближайшие задачи — отмечай по мере выполнения',
+    actionPlan: 'План действий',
+    monthCol: 'Месяц',
+    weekCol: 'Неделя',
+    taskCol: 'Задача',
+    doneCol: 'Готово',
+    gotIt: 'Есть',
+    progressLabel: 'Твой прогресс',
+    testsRequired: 'Необходимые тесты',
   },
 }

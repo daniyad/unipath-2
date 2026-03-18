@@ -1,7 +1,7 @@
 .page {
   min-height: 100vh;
   background: var(--bg-base);
-  padding: 80px 16px 64px;
+  padding: 80px 16px 96px;
 }
 
 .topBar {
@@ -16,12 +16,6 @@
   background: var(--bg-base);
   border-bottom: 0.5px solid var(--border-default);
   z-index: 10;
-}
-
-.topBarLeft {
-  display: flex;
-  align-items: center;
-  gap: 16px;
 }
 
 .backBtn {
@@ -39,12 +33,13 @@
 }
 
 .container {
-  max-width: 640px;
+  max-width: 760px;
   margin: 0 auto;
 }
 
+/* ── Header ── */
 .header {
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .uniName {
@@ -53,30 +48,387 @@
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--text-primary);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .programLine {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.portalLink {
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+.portalLink:hover {
+  color: var(--primary-900);
+}
+
+.headerMeta {
+  font-size: 13px;
+  color: var(--text-disabled);
+}
+
+/* ── Focus card ── */
+.focusCard {
+  background: var(--bg-subtle);
+  border: 0.5px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.focusHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.focusTitle {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.focusSubtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.focusList {
+  display: flex;
+  flex-direction: column;
+}
+
+.focusTask {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--border-default);
+  cursor: pointer;
+}
+
+.focusTask:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.focusTaskContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.focusTaskTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.focusTaskMonth {
+  font-size: 12px;
+  color: var(--text-disabled);
+}
+
+/* ── Progress ── */
+.progressSection {
+  margin-bottom: 32px;
+}
+
+.progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.progressLabel {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-disabled);
+}
+
+.progressCount {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.progressTrack {
+  height: 5px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 0.5px solid var(--border-default);
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--primary-900);
+  border-radius: var(--radius-full);
+  transition: width 350ms var(--ease-default);
+}
+
+/* ── Table sections ── */
+.tableSection {
+  margin-bottom: 32px;
+}
+
+.sectionHeading {
+  font-family: var(--font-body);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
   margin-bottom: 12px;
 }
 
-.overviewLine {
-  font-size: 15px;
-  color: var(--text-secondary);
-  padding: 12px 16px;
-  background: var(--accent-100);
-  border-radius: var(--radius-md);
-  border-left: 3px solid var(--accent-500);
+.tableWrap {
+  border: 0.5px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
+/* Shared table base */
+.planTable,
+.docsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.planTable thead tr,
+.docsTable thead tr {
+  background: var(--bg-subtle);
+}
+
+.planTable th,
+.docsTable th {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-disabled);
+  padding: 10px 16px;
+  text-align: left;
+  border-bottom: 0.5px solid var(--border-default);
+}
+
+.planTable td,
+.docsTable td {
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--border-default);
+  vertical-align: middle;
+}
+
+.planTable tr:last-child td,
+.docsTable tr:last-child td {
+  border-bottom: none;
+}
+
+/* Plan table columns */
+.thMonth {
+  width: 130px;
+}
+
+.thWeek {
+  width: 56px;
+}
+
+.thTask {
+  /* flexible */
+}
+
+.thDone {
+  width: 52px;
+  text-align: center;
+}
+
+.monthCell {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  vertical-align: top;
+  padding-top: 14px !important;
+  border-right: 0.5px solid var(--border-default);
+  white-space: nowrap;
+}
+
+.weekCell {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-disabled);
+  white-space: nowrap;
+}
+
+.taskCell {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.checkCell {
+  text-align: center;
+}
+
+.planRow.rowDone .taskCell {
+  color: var(--text-disabled);
+  text-decoration: line-through;
+}
+
+.planRow.rowDone .weekCell {
+  opacity: 0.4;
+}
+
+/* Docs table columns */
+.thDocName {
+  width: 170px;
+}
+
+.thDocHow {
+  /* flexible */
+}
+
+.thDocUrgency {
+  width: 100px;
+}
+
+.thDocGot {
+  width: 60px;
+  text-align: center;
+}
+
+.docNameCell {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.docHowCell {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.docUrgencyCell {
+  white-space: nowrap;
+}
+
+.docGotCell {
+  text-align: center;
+}
+
+.docRow.rowDone .docNameCell {
+  color: var(--text-disabled);
+  text-decoration: line-through;
+}
+
+.docRow.rowDone .docHowCell {
+  color: var(--text-disabled);
+}
+
+/* Urgency badges */
+.urgencyBadge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.urgencyHigh {
+  background: #fff0f0;
+  color: var(--error);
+}
+
+.urgencyMed {
+  background: var(--accent-100);
+  color: #9a6200;
+}
+
+.urgencyLow {
+  background: #e6f9f2;
+  color: #1a7a50;
+}
+
+/* ── Tests ── */
+.testsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.testCard {
+  padding: 20px;
+  background: var(--bg-surface);
+  border: 0.5px solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+.testName {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 14px;
+}
+
+.testMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.testMetaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.testMetaLabel {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-disabled);
+}
+
+.testMetaValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ── Shared checkbox ── */
+.checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-900);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* ── Parents section (collapsible) ── */
 .section {
   background: var(--bg-surface);
   border-radius: var(--radius-lg);
   border: 0.5px solid var(--border-default);
-  margin-bottom: 12px;
+  margin-bottom: 32px;
   overflow: hidden;
 }
 
@@ -99,16 +451,10 @@
 
 .sectionTitle {
   font-family: var(--font-body);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
   flex: 1;
-}
-
-.sectionProgress {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
 }
 
 .sectionCaret {
@@ -119,176 +465,38 @@
 .sectionBody {
   padding: 0 24px 24px;
   border-top: 0.5px solid var(--border-default);
-  padding-top: 20px;
 }
 
-/* Documents */
-.docRow {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 0;
-  border-bottom: 0.5px solid var(--border-default);
-}
-
-.docRow:last-child {
-  border-bottom: none;
-}
-
-.docInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.docName {
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--text-primary);
-}
-
-.docHow {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.urgencyBadge {
-  flex-shrink: 0;
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-}
-
-.urgencyHigh {
-  background: #FFF0F0;
-  color: var(--error);
-}
-
-.urgencyMed {
-  background: var(--accent-100);
-  color: #9A6200;
-}
-
-.urgencyLow {
-  background: #E6F9F2;
-  color: #1A7A50;
-}
-
-/* Tests */
-.testRow {
-  padding: 12px 0;
-  border-bottom: 0.5px solid var(--border-default);
-}
-
-.testRow:last-child { border-bottom: none; }
-
-.testName {
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--text-primary);
-  display: block;
-  margin-bottom: 6px;
-}
-
-.testMeta {
-  display: flex;
-  gap: 24px;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-/* Steps */
-.stepsList {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.stepItem {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  font-size: 15px;
-  color: var(--text-primary);
-}
-
-.stepNum {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  background: var(--primary-900);
-  color: #fff;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-/* Tasks */
-.monthGroup {
-  margin-bottom: 20px;
-}
-
-.monthLabel {
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-disabled);
-  margin-bottom: 10px;
-}
-
-.taskRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 0.5px solid var(--border-default);
-  cursor: pointer;
-}
-
-.taskRow:last-child { border-bottom: none; }
-
-.checkbox {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--primary-900);
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.taskTitle {
-  font-size: 15px;
-  color: var(--text-primary);
-}
-
-.taskDone {
-  font-size: 15px;
-  color: var(--text-disabled);
-  text-decoration: line-through;
-}
-
-/* Parents */
 .parentList {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  padding-top: 4px;
 }
 
 .parentPoint {
-  padding: 14px 16px;
-  background: var(--bg-subtle);
-  border-radius: var(--radius-md);
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 0.5px solid var(--border-default);
+}
+
+.parentPoint:last-child {
+  border-bottom: none;
+}
+
+.parentNum {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-disabled);
+  padding-top: 2px;
+  min-width: 16px;
+}
+
+.parentText {
   font-size: 14px;
   color: var(--text-primary);
-  line-height: 1.5;
-  border-left: 3px solid var(--accent-500);
+  line-height: 1.6;
 }

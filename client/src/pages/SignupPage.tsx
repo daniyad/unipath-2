@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
-import { LanguageToggle } from '../components/LanguageToggle'
+import { Navbar } from '../components/Navbar'
 import styles from './AuthPage.module.css'
 
 export function SignupPage() {
@@ -30,12 +30,7 @@ export function SignupPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.topBar}>
-        <button className={styles.logo} onClick={() => navigate('/login')}>
-          Unipath
-        </button>
-        <LanguageToggle />
-      </div>
+      <Navbar />
       <div className={styles.card}>
         <h1 className={styles.title}>{t('signup.title')}</h1>
         <p className={styles.subtitle}>{t('signup.subtitle')}</p>

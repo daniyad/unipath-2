@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { useProfile } from '../contexts/ProfileContext'
-import { LanguageToggle } from '../components/LanguageToggle'
+import { Navbar } from '../components/Navbar'
 import type { PartialProfile } from '../types'
 import styles from './ProfilePage.module.css'
 
@@ -53,7 +52,6 @@ export function ProfilePage() {
   const { profile, setProfile } = useProfile()
   const { user, logout } = useAuth()
   const { t } = useTranslation()
-  const navigate = useNavigate()
 
   const [data, setData] = useState<PartialProfile>(profile ?? {})
   const [saved, setSaved] = useState(false)
@@ -90,12 +88,7 @@ export function ProfilePage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.topBar}>
-        <button className={styles.backBtn} onClick={() => navigate('/dashboard')}>
-          {t('profile.back')}
-        </button>
-        <LanguageToggle />
-      </div>
+      <Navbar showBack />
 
       <div className={styles.container}>
         <h1 className={styles.title}>{t('profile.title')}</h1>
