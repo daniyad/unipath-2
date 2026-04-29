@@ -9,7 +9,9 @@ export const shortlistResponseSchema = z.object({
       z.object({
         name: z.string(),
         country: z.string(),
+        city: z.string(),
         program: z.string(),
+        language: z.string(),
         tier: z.enum(['Reach', 'Match', 'Safety']),
         rationale: z.string(),
         tuitionUSD: z.number(),
@@ -21,18 +23,21 @@ export const shortlistResponseSchema = z.object({
 
 export const planResponseSchema = z.object({
   universityName: z.string(),
+  applicationDeadline: z.string(),
+  portalUrl: z.string(),
+  overview: z.string(),
   documents: z.array(
     z.object({
       name: z.string(),
-      deadline: z.string().optional(),
-      notes: z.string().optional(),
+      howToGet: z.string(),
+      urgency: z.enum(['high', 'medium', 'low']),
     }),
   ),
   tests: z.array(
     z.object({
       name: z.string(),
-      targetScore: z.string().optional(),
-      deadline: z.string().optional(),
+      prepTime: z.string(),
+      startBy: z.string(),
     }),
   ),
   applicationSteps: z.array(
@@ -44,7 +49,7 @@ export const planResponseSchema = z.object({
   monthlyChecklist: z.array(
     z.object({
       month: z.string(),
-      tasks: z.array(z.string()),
+      tasks: z.array(z.object({ week: z.number(), task: z.string() })),
     }),
   ),
   parentTalkingPoints: z.array(z.string()),
@@ -55,19 +60,24 @@ export type PlanResult = z.infer<typeof planResponseSchema>
 
 // ─── Prompt builders ────────────────────────────────────────────────────────
 
-const SHORTLIST_SYSTEM = `You are an expert university admissions counselor specializing in helping Central Asian high school students find universities abroad. You have deep knowledge of international admissions, scholarship opportunities, and programs in countries commonly chosen by Central Asian students (USA, UK, Germany, Netherlands, Czech Republic, Turkey, Russia, South Korea, UAE, and others).
+const SHORTLIST_SYSTEM = `You are an expert university admissions counselor specializing in helping Central Asian high school students find universities abroad. You have deep knowledge of international admissions, scholarship opportunities, visa processes, and programs at universities in the USA, Canada, UK, Germany, and South Korea.
+
+IMPORTANT: Only recommend universities located in the student's target countries. Do not suggest universities in any other country, even if they are a strong academic fit.
 
 Recommend exactly 3 universities:
 - 1 Reach: student is slightly below the typical admitted profile but has a realistic chance
 - 1 Match: student meets the typical admitted profile well
 - 1 Safety: student clearly exceeds requirements — near-certain admission
 
+Always include at least one affordable or tuition-free option.
+
 Prioritize universities that:
 1. Offer strong programs in the student's intended major
 2. Are within or near the student's budget, or offer substantial scholarships to close the gap
 3. Are in one of the student's target countries
 4. Have a track record of admitting international or Central Asian students
-5. Offer scholarships or financial aid to international applicants where possible
+
+Use web search to verify that each university's program exists, the tuition is current, and the application deadline is accurate. Drop or replace any candidate that doesn't check out.
 
 Respond with ONLY a valid JSON object — no explanation, no markdown, no code fences:
 {
@@ -75,9 +85,11 @@ Respond with ONLY a valid JSON object — no explanation, no markdown, no code f
     {
       "name": "string",
       "country": "string",
+      "city": "string",
       "program": "string",
+      "language": "string (teaching language, e.g. 'English' or 'English / German')",
       "tier": "Reach" | "Match" | "Safety",
-      "rationale": "string (2-3 sentences on why this is a good fit)",
+      "rationale": "string (2-3 sentences on why this fits this specific student)",
       "tuitionUSD": number,
       "scholarshipPotential": "string (brief description of scholarship opportunities)"
     }
@@ -89,70 +101,73 @@ const PLAN_SYSTEM = `You are an expert university admissions counselor. Create a
 The plan must be:
 - Specific to the university and student profile provided
 - Realistic in timelines (assume applying for the next academic intake)
-- Tailored to international student requirements at the given university
-- Actionable with clear, concrete next steps
+- Tailored to international student requirements at this university
+- Include country-specific processes (Campus France, uni-assist, OUAC, etc.) where relevant
 
-Include language test requirements appropriate for the destination country (e.g., IELTS/TOEFL for English-speaking countries, Goethe/TestDaF for Germany).
+Use web search to verify: the exact application portal URL, the current application deadline, and any country-specific requirements.
 
 Respond with ONLY a valid JSON object — no explanation, no markdown, no code fences:
 {
   "universityName": "string",
+  "applicationDeadline": "string (e.g. 'March 31, 2026')",
+  "portalUrl": "string (direct link to the application portal)",
+  "overview": "string (2-3 sentence summary of what the student should know going in)",
   "documents": [
-    { "name": "string", "deadline": "string", "notes": "string" }
+    { "name": "string", "howToGet": "string (specific to the student's home country)", "urgency": "high" | "medium" | "low" }
   ],
   "tests": [
-    { "name": "string", "targetScore": "string", "deadline": "string" }
+    { "name": "string", "prepTime": "string (e.g. '3-4 months')", "startBy": "string (e.g. 'September 2025')" }
   ],
   "applicationSteps": [
     { "step": "string", "deadline": "string" }
   ],
   "monthlyChecklist": [
-    { "month": "string", "tasks": ["string"] }
+    { "month": "string (e.g. 'May 2025')", "tasks": [{ "week": 1, "task": "string" }] }
   ],
-  "parentTalkingPoints": ["string"]
+  "parentTalkingPoints": ["string (2-3 key points: cost, timeline, why this is a real plan)"]
 }`
 
-function formatLanguageProficiency(lp: StudentProfile['languageProficiency']): string {
-  if (lp.length === 0) return 'Not specified'
-  return lp.map((l) => `${l.test}: ${l.score}`).join(', ')
-}
+const formatLanguages = (lp: StudentProfile['languageProficiency']): string =>
+  lp.length === 0 ? 'Not specified' : lp.map((l) => `${l.test}: ${l.score}`).join(', ')
 
-export function buildShortlistPrompt(profile: StudentProfile): { system: string; user: string } {
-  const user = `Student profile:
+export const buildShortlistPrompt = (
+  profile: StudentProfile,
+): { system: string; user: string } => ({
+  system: SHORTLIST_SYSTEM,
+  user: `Student profile:
 - Name: ${profile.name}
 - Nationality: ${profile.nationality}
 - GPA: ${profile.gpa}/4.0
 - Intended major: ${profile.intendedMajor}
 - Target countries: ${profile.targetCountries.join(', ')}
 - Annual budget (USD): $${profile.budgetUSD.toLocaleString()}
-- Language proficiency: ${formatLanguageProficiency(profile.languageProficiency)}
+- Language proficiency: ${formatLanguages(profile.languageProficiency)}
 - Extracurriculars: ${profile.extracurriculars.length > 0 ? profile.extracurriculars.join('; ') : 'None listed'}
 - Special circumstances: ${profile.specialCircumstances ?? 'None'}
 
-Please recommend 3 universities for this student.`
+Please recommend 3 universities for this student.`,
+})
 
-  return { system: SHORTLIST_SYSTEM, user }
-}
-
-export function buildPlanPrompt(
+export const buildPlanPrompt = (
   profile: StudentProfile,
   university: University,
-): { system: string; user: string } {
-  const user = `Student profile:
+): { system: string; user: string } => ({
+  system: PLAN_SYSTEM,
+  user: `Student profile:
 - Name: ${profile.name}
 - Nationality: ${profile.nationality}
 - GPA: ${profile.gpa}/4.0
 - Intended major: ${profile.intendedMajor}
 - Annual budget (USD): $${profile.budgetUSD.toLocaleString()}
-- Language proficiency: ${formatLanguageProficiency(profile.languageProficiency)}
+- Language proficiency: ${formatLanguages(profile.languageProficiency)}
 - Extracurriculars: ${profile.extracurriculars.length > 0 ? profile.extracurriculars.join('; ') : 'None listed'}
 - Special circumstances: ${profile.specialCircumstances ?? 'None'}
 
-Target university: ${university.name} (${university.country})
+Target university: ${university.name} (${university.city}, ${university.country})
 Program: ${university.program}
+Teaching language: ${university.language}
 Admission tier: ${university.tier}
+Estimated tuition: $${university.tuitionUSD.toLocaleString()}/yr
 
-Please create a detailed application plan for this student to apply to ${university.name}.`
-
-  return { system: PLAN_SYSTEM, user }
-}
+Please create a detailed application plan for this student.`,
+})

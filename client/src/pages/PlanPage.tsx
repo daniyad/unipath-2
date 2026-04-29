@@ -1,150 +1,11 @@
-import { useState, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { useParams, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useApi } from '../contexts/ApiContext'
 import { Navbar } from '../components/Navbar'
-import type { UniversityPlan } from '../types'
+import type { University, UniversityPlan, PlanTask, ServerPlan } from '../types'
+import { toClientPlan } from '../types'
 import styles from './PlanPage.module.css'
-
-// Mock data — replace with API call
-const MOCK_PLAN: UniversityPlan = {
-  universityId: '1',
-  overview:
-    "You have ~18 months until the application deadline. That's enough time to prepare well.",
-  portalUrl: 'https://is.cuni.cz/studium/eng/prijimacky/',
-  applicationDeadline: '2026-02-28',
-  tuition: 3500,
-  level: 'Match',
-  documents: [
-    {
-      name: 'Official Transcript',
-      howToGet: 'Request from your school registrar',
-      urgency: 'high',
-    },
-    {
-      name: 'Passport copy',
-      howToGet: 'Make a colour copy of your current passport',
-      urgency: 'medium',
-    },
-    {
-      name: 'Motivation letter',
-      howToGet: 'Write yourself — we can help you outline it',
-      urgency: 'high',
-    },
-    {
-      name: 'Recommendation letters',
-      howToGet: 'Ask 2 teachers who know you well',
-      urgency: 'medium',
-    },
-    {
-      name: 'IELTS certificate',
-      howToGet: 'Obtained after passing the IELTS exam',
-      urgency: 'high',
-    },
-    { name: 'CV / Résumé', howToGet: 'Prepare a 1-page academic CV', urgency: 'low' },
-  ],
-  tests: [{ name: 'IELTS', prepTime: '3–4 months', startBy: 'September 2025' }],
-  monthlyTasks: [
-    {
-      id: 't1',
-      month: 'March 2025',
-      week: 1,
-      title: 'Research IELTS test centres near you',
-      done: false,
-    },
-    {
-      id: 't2',
-      month: 'March 2025',
-      week: 2,
-      title: 'Request official transcript from school',
-      done: false,
-    },
-    {
-      id: 't3',
-      month: 'April 2025',
-      week: 1,
-      title: 'Register for IELTS preparation course',
-      done: false,
-    },
-    { id: 't4', month: 'April 2025', week: 3, title: 'Book your IELTS exam date', done: false },
-    {
-      id: 't5',
-      month: 'May 2025',
-      week: 2,
-      title: 'Ask teachers for recommendation letters',
-      done: false,
-    },
-    { id: 't6', month: 'June 2025', week: 1, title: 'Draft your motivation letter', done: false },
-    {
-      id: 't7',
-      month: 'June 2025',
-      week: 3,
-      title: 'Get feedback on motivation letter draft',
-      done: false,
-    },
-    { id: 't8', month: 'July 2025', week: 2, title: 'Take IELTS exam', done: false },
-    {
-      id: 't9',
-      month: 'August 2025',
-      week: 1,
-      title: 'Collect and finalize all documents',
-      done: false,
-    },
-    {
-      id: 't10',
-      month: 'August 2025',
-      week: 3,
-      title: 'Review full application package',
-      done: false,
-    },
-    {
-      id: 't11',
-      month: 'September 2025',
-      week: 1,
-      title: 'Create account on the university portal',
-      done: false,
-    },
-    {
-      id: 't12',
-      month: 'September 2025',
-      week: 2,
-      title: 'Fill in personal information on the portal',
-      done: false,
-    },
-    {
-      id: 't13',
-      month: 'September 2025',
-      week: 3,
-      title: 'Upload all documents to the portal',
-      done: false,
-    },
-    {
-      id: 't14',
-      month: 'October 2025',
-      week: 1,
-      title: 'Pay the application fee ($30)',
-      done: false,
-    },
-    {
-      id: 't15',
-      month: 'October 2025',
-      week: 2,
-      title: 'Submit complete application',
-      done: false,
-    },
-    {
-      id: 't16',
-      month: 'November 2025',
-      week: 1,
-      title: 'Attend online interview if invited',
-      done: false,
-    },
-  ],
-  parentTalkingPoints: [
-    'Charles University is one of the oldest and most respected universities in Central Europe, founded in 1348.',
-    'The program is taught in English and tuition is only $3,500/year — far less than private universities in the region.',
-    'Czech Republic is an EU country with strong safety standards and a stable economy.',
-  ],
-}
 
 const urgencyStyles: Record<string, string> = {
   high: styles.urgencyHigh,
@@ -152,17 +13,86 @@ const urgencyStyles: Record<string, string> = {
   low: styles.urgencyLow,
 }
 
+interface LocationState {
+  university?: University
+}
+
 export function PlanPage() {
   const { id } = useParams<{ id: string }>()
+  const location = useLocation()
   const { t } = useTranslation()
-  const [tasks, setTasks] = useState(MOCK_PLAN.monthlyTasks)
+  const api = useApi()
+
+  const state = location.state as LocationState | null
+  const passedUniversity = state?.university
+
+  const [plan, setPlan] = useState<UniversityPlan | null>(null)
+  const [serverPlan, setServerPlan] = useState<ServerPlan | null>(null)
+  const [loading, setLoading] = useState(true)
   const [docsDone, setDocsDone] = useState<Set<string>>(new Set())
   const [parentsOpen, setParentsOpen] = useState(false)
 
-  const toggleTask = (taskId: string) => {
-    setTasks((prev) =>
-      prev.map((task) => (task.id === taskId ? { ...task, done: !task.done } : task)),
-    )
+  useEffect(() => {
+    if (!id) return
+    void api
+      .getPlans()
+      .then((plans) => {
+        const match = plans.find((p) => p.id === id)
+        if (match) {
+          setServerPlan(match)
+          const university = passedUniversity ?? {
+            id: match.university_name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            name: match.university_name,
+            program: '',
+            city: '',
+            country: '',
+            language: '',
+            tuition: 0,
+            level: 'Match' as const,
+            whyFit: '',
+          }
+          setPlan(toClientPlan(match, university))
+        }
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [id])
+
+  const toggleTask = async (taskId: string) => {
+    if (!plan || !serverPlan) return
+    const currentDone = !!serverPlan.task_completions[taskId]
+    const newDone = !currentDone
+
+    // Optimistic update
+    setPlan((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        monthlyTasks: prev.monthlyTasks.map((t) => (t.id === taskId ? { ...t, done: newDone } : t)),
+      }
+    })
+    setServerPlan((prev) => {
+      if (!prev) return prev
+      const completions = { ...prev.task_completions }
+      if (newDone) completions[taskId] = true
+      else delete completions[taskId]
+      return { ...prev, task_completions: completions }
+    })
+
+    try {
+      await api.updateTask(serverPlan.id, taskId, newDone)
+    } catch {
+      // Revert on failure
+      setPlan((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          monthlyTasks: prev.monthlyTasks.map((t) =>
+            t.id === taskId ? { ...t, done: currentDone } : t,
+          ),
+        }
+      })
+    }
   }
 
   const toggleDoc = (name: string) => {
@@ -174,29 +104,58 @@ export function PlanPage() {
     })
   }
 
-  const months = useMemo(() => [...new Set(MOCK_PLAN.monthlyTasks.map((t) => t.month))], [])
-  const completedCount = tasks.filter((t) => t.done).length
-  const totalCount = tasks.length
-  const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
-  const focusTasks = tasks.filter((t) => !t.done).slice(0, 3)
-
-  const daysUntilDeadline = useMemo(() => {
-    const deadline = new Date(MOCK_PLAN.applicationDeadline)
-    const today = new Date()
-    return Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-  }, [])
-
-  const formattedDeadline = useMemo(
-    () =>
-      new Date(MOCK_PLAN.applicationDeadline).toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }),
-    [],
+  const months = useMemo(
+    () => (plan ? [...new Set(plan.monthlyTasks.map((t: PlanTask) => t.month))] : []),
+    [plan],
   )
 
-  void id
+  const completedCount = plan?.monthlyTasks.filter((t) => t.done).length ?? 0
+  const totalCount = plan?.monthlyTasks.length ?? 0
+  const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
+  const focusTasks = plan?.monthlyTasks.filter((t) => !t.done).slice(0, 3) ?? []
+
+  const daysUntilDeadline = useMemo(() => {
+    if (!plan?.applicationDeadline) return 0
+    const deadline = new Date(plan.applicationDeadline)
+    const today = new Date()
+    return Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  }, [plan?.applicationDeadline])
+
+  const formattedDeadline = useMemo(() => {
+    if (!plan?.applicationDeadline) return ''
+    return new Date(plan.applicationDeadline).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+  }, [plan?.applicationDeadline])
+
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <Navbar showBack />
+        <div className={styles.container}>
+          <p style={{ color: 'var(--color-muted)', fontSize: 'var(--text-sm)' }}>Loading plan...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!plan) {
+    return (
+      <div className={styles.page}>
+        <Navbar showBack />
+        <div className={styles.container}>
+          <p style={{ color: 'var(--color-muted)' }}>Plan not found.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const uniName = passedUniversity?.name ?? serverPlan?.university_name ?? 'University'
+  const program = passedUniversity?.program
+  const city = passedUniversity?.city
+  const country = passedUniversity?.country
 
   return (
     <div className={styles.page}>
@@ -205,25 +164,38 @@ export function PlanPage() {
       <div className={styles.container}>
         {/* ── Header ── */}
         <div className={styles.header}>
-          <h1 className={styles.uniName}>Charles University</h1>
+          <h1 className={styles.uniName}>{uniName}</h1>
           <p className={styles.programLine}>
-            Computer Science · Prague, Czech Republic ·{' '}
-            <a
-              href={MOCK_PLAN.portalUrl}
-              className={styles.portalLink}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t('plan.portal')} ↗
-            </a>
+            {[program, city && country ? `${city}, ${country}` : null].filter(Boolean).join(' · ')}
+            {plan.portalUrl && (
+              <>
+                {' · '}
+                <a
+                  href={plan.portalUrl}
+                  className={styles.portalLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t('plan.portal')} ↗
+                </a>
+              </>
+            )}
           </p>
-          <p className={styles.headerMeta}>
-            {t('plan.deadline')}: {formattedDeadline}
-            {daysUntilDeadline > 0 && ` · ${t('plan.daysLeft', { days: daysUntilDeadline })}`}
-            {' · '}
-            {t('plan.tuition')}: ${MOCK_PLAN.tuition.toLocaleString()}/yr
-          </p>
+          {formattedDeadline && (
+            <p className={styles.headerMeta}>
+              {t('plan.deadline')}: {formattedDeadline}
+              {daysUntilDeadline > 0 && ` · ${t('plan.daysLeft', { days: daysUntilDeadline })}`}
+              {plan.tuition > 0 && ` · ${t('plan.tuition')}: $${plan.tuition.toLocaleString()}/yr`}
+            </p>
+          )}
         </div>
+
+        {/* ── Overview ── */}
+        {plan.overview && (
+          <div className={styles.overviewCard}>
+            <p className={styles.overviewText}>{plan.overview}</p>
+          </div>
+        )}
 
         {/* ── Focus right now ── */}
         {focusTasks.length > 0 && (
@@ -238,7 +210,7 @@ export function PlanPage() {
                   <input
                     type="checkbox"
                     checked={task.done}
-                    onChange={() => toggleTask(task.id)}
+                    onChange={() => void toggleTask(task.id)}
                     className={styles.checkbox}
                   />
                   <div className={styles.focusTaskContent}>
@@ -279,7 +251,7 @@ export function PlanPage() {
               </thead>
               <tbody>
                 {months.map((month) => {
-                  const monthTasks = tasks.filter((t) => t.month === month)
+                  const monthTasks = plan.monthlyTasks.filter((t) => t.month === month)
                   return monthTasks.map((task, i) => (
                     <tr
                       key={task.id}
@@ -298,7 +270,7 @@ export function PlanPage() {
                         <input
                           type="checkbox"
                           checked={task.done}
-                          onChange={() => toggleTask(task.id)}
+                          onChange={() => void toggleTask(task.id)}
                           className={styles.checkbox}
                         />
                       </td>
@@ -324,7 +296,7 @@ export function PlanPage() {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_PLAN.documents.map((doc) => (
+                {plan.documents.map((doc) => (
                   <tr
                     key={doc.name}
                     className={`${styles.docRow} ${docsDone.has(doc.name) ? styles.rowDone : ''}`}
@@ -352,46 +324,50 @@ export function PlanPage() {
         </section>
 
         {/* ── Tests required ── */}
-        <section className={styles.tableSection}>
-          <h2 className={styles.sectionHeading}>{t('plan.testsRequired')}</h2>
-          <div className={styles.testsGrid}>
-            {MOCK_PLAN.tests.map((test) => (
-              <div key={test.name} className={styles.testCard}>
-                <span className={styles.testName}>{test.name}</span>
-                <div className={styles.testMeta}>
-                  <div className={styles.testMetaItem}>
-                    <span className={styles.testMetaLabel}>{t('plan.prepTime')}</span>
-                    <span className={styles.testMetaValue}>{test.prepTime}</span>
-                  </div>
-                  <div className={styles.testMetaItem}>
-                    <span className={styles.testMetaLabel}>{t('plan.startBy')}</span>
-                    <span className={styles.testMetaValue}>{test.startBy}</span>
+        {plan.tests.length > 0 && (
+          <section className={styles.tableSection}>
+            <h2 className={styles.sectionHeading}>{t('plan.testsRequired')}</h2>
+            <div className={styles.testsGrid}>
+              {plan.tests.map((test) => (
+                <div key={test.name} className={styles.testCard}>
+                  <span className={styles.testName}>{test.name}</span>
+                  <div className={styles.testMeta}>
+                    <div className={styles.testMetaItem}>
+                      <span className={styles.testMetaLabel}>{t('plan.prepTime')}</span>
+                      <span className={styles.testMetaValue}>{test.prepTime}</span>
+                    </div>
+                    <div className={styles.testMetaItem}>
+                      <span className={styles.testMetaLabel}>{t('plan.startBy')}</span>
+                      <span className={styles.testMetaValue}>{test.startBy}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ── Parent talking points (collapsible) ── */}
-        <section className={styles.section}>
-          <button className={styles.sectionToggle} onClick={() => setParentsOpen((v) => !v)}>
-            <span className={styles.sectionTitle}>{t('plan.parents')}</span>
-            <span className={styles.sectionCaret}>{parentsOpen ? '▲' : '▼'}</span>
-          </button>
-          {parentsOpen && (
-            <div className={styles.sectionBody}>
-              <ul className={styles.parentList}>
-                {MOCK_PLAN.parentTalkingPoints.map((point, idx) => (
-                  <li key={idx} className={styles.parentPoint}>
-                    <span className={styles.parentNum}>{idx + 1}</span>
-                    <span className={styles.parentText}>{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </section>
+        {plan.parentTalkingPoints.length > 0 && (
+          <section className={styles.section}>
+            <button className={styles.sectionToggle} onClick={() => setParentsOpen((v) => !v)}>
+              <span className={styles.sectionTitle}>{t('plan.parents')}</span>
+              <span className={styles.sectionCaret}>{parentsOpen ? '▲' : '▼'}</span>
+            </button>
+            {parentsOpen && (
+              <div className={styles.sectionBody}>
+                <ul className={styles.parentList}>
+                  {plan.parentTalkingPoints.map((point, idx) => (
+                    <li key={idx} className={styles.parentPoint}>
+                      <span className={styles.parentNum}>{idx + 1}</span>
+                      <span className={styles.parentText}>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </div>
   )

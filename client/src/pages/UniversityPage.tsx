@@ -1,8 +1,11 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useProfile } from '../contexts/ProfileContext'
+import { useApi } from '../contexts/ApiContext'
 import { Navbar } from '../components/Navbar'
-import { MOCK_UNIVERSITIES } from '../data/universities'
-import type { University } from '../types'
+import { AiGeneratingOverlay } from '../components/AiGeneratingOverlay'
+import type { University, ServerUniversity } from '../types'
 import styles from './UniversityPage.module.css'
 
 const levelColors: Record<University['level'], string> = {
@@ -11,27 +14,71 @@ const levelColors: Record<University['level'], string> = {
   Safety: 'chip-success',
 }
 
+interface LocationState {
+  university: University
+  serverUniversity: ServerUniversity
+}
+
 export function UniversityPage() {
-  const { id } = useParams<{ id: string }>()
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
+  const { profile } = useProfile()
+  const api = useApi()
 
-  const uni = MOCK_UNIVERSITIES.find((u) => u.id === id)
+  const state = location.state as LocationState | null
+  const uni = state?.university
+  const serverUni = state?.serverUniversity
 
-  if (!uni) {
+  const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState('')
+
+  if (!uni || !serverUni) {
     return (
       <div className={styles.page}>
-        <p>University not found.</p>
+        <Navbar showBack />
+        <div className={styles.container}>
+          <p style={{ color: 'var(--color-muted)' }}>
+            University not found. Please go back to the{' '}
+            <button type="button" className="btn btn-ghost" onClick={() => navigate('/dashboard')}>
+              dashboard
+            </button>
+            .
+          </p>
+        </div>
       </div>
     )
   }
 
+  const handlePlanAction = async () => {
+    if (uni.hasPlan && uni.planId) {
+      navigate(`/plan/${uni.planId}`, { state: { university: uni } })
+      return
+    }
+    setGenerating(true)
+    setError('')
+    try {
+      const result = await api.generatePlan(profile ?? {}, serverUni)
+      navigate(`/plan/${result.id}`, { state: { university: uni } })
+    } catch {
+      setError('Something went wrong generating your plan. Try again.')
+      setGenerating(false)
+    }
+  }
+
   return (
     <div className={styles.page}>
+      <AiGeneratingOverlay
+        visible={generating}
+        messages={[
+          'Checking application requirements...',
+          'Building your timeline...',
+          'Almost done...',
+        ]}
+      />
       <Navbar showBack />
 
       <div className={styles.container}>
-        {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerMeta}>
             <span className={`chip ${levelColors[uni.level]}`}>
@@ -69,13 +116,11 @@ export function UniversityPage() {
           </div>
         </div>
 
-        {/* Why this fits */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>{t('university.whyFit')}</h2>
           <p className={styles.sectionText}>{uni.whyFit}</p>
         </section>
 
-        {/* Scholarships */}
         {uni.scholarshipInfo && (
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>{t('university.scholarship')}</h2>
@@ -83,7 +128,6 @@ export function UniversityPage() {
           </section>
         )}
 
-        {/* Insider tip */}
         {uni.insiderTip && (
           <section className={`${styles.section} ${styles.tipSection}`}>
             <h2 className={styles.sectionTitle}>{t('university.tip')}</h2>
@@ -91,12 +135,16 @@ export function UniversityPage() {
           </section>
         )}
 
-        {/* Action */}
+        {error && (
+          <p style={{ color: 'red', fontSize: 'var(--text-sm)', marginBottom: 12 }}>{error}</p>
+        )}
+
         <div className={styles.action}>
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => navigate(`/plan/${uni.id}`)}
+            onClick={() => void handlePlanAction()}
+            disabled={generating}
           >
             {uni.hasPlan ? t('university.viewPlan') : t('university.generatePlan')}
           </button>

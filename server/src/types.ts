@@ -20,7 +20,9 @@ export const studentProfileSchema = z.object({
 export const universitySchema = z.object({
   name: z.string(),
   country: z.string(),
+  city: z.string(),
   program: z.string(),
+  language: z.string(),
   tier: z.enum(['Reach', 'Match', 'Safety']),
   rationale: z.string(),
   tuitionUSD: z.number(),

@@ -153,6 +153,12 @@
   align-self: flex-start;
 }
 
+.fieldError {
+  font-size: 13px;
+  color: #e53e3e;
+  margin-top: -4px;
+}
+
 .actions {
   display: flex;
   align-items: center;

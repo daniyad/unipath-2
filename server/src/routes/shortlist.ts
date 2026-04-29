@@ -1,21 +1,25 @@
 import { Router } from 'express'
 import { authMiddleware } from '../middleware/auth.js'
 import { aiRateLimiter } from '../middleware/rateLimit.js'
-import { callClaude } from '../services/claude.js'
-import { buildShortlistPrompt, shortlistResponseSchema } from '../services/prompts.js'
+import { runAgent, type AgentOutput } from '../services/agent.js'
+import { toStudentProfile } from '../services/profileAdapter.js'
 import { saveShortlist, getShortlists } from '../services/db.js'
-import { studentProfileSchema } from '../types.js'
 
 const router = Router()
 
 router.post('/shortlist', authMiddleware, aiRateLimiter, async (req, res, next) => {
   try {
-    const profile = studentProfileSchema.parse(req.body)
-    const { system, user } = buildShortlistPrompt(profile)
-    const raw = await callClaude(system, user)
-    const result = shortlistResponseSchema.parse(raw)
-    const saved = await saveShortlist(req.user!.id, profile, result.universities)
-    res.json({ success: true, data: { ...result, id: (saved as { id: string }).id } })
+    const profile = toStudentProfile(req.body as Record<string, unknown>)
+    const output = (await runAgent({ type: 'shortlist', profile })) as Extract<
+      AgentOutput,
+      { type: 'shortlist' }
+    >
+    const saved = await saveShortlist(
+      req.user!.id,
+      req.body as Record<string, unknown>,
+      output.result.universities,
+    )
+    res.json({ success: true, data: { id: (saved as { id: string }).id, ...output.result } })
   } catch (err) {
     next(err)
   }

@@ -32,36 +32,52 @@ const ACTIVITY_KEYS = [
   'science',
 ]
 const LEVEL_KEYS = ['beginner', 'elementary', 'intermediate', 'advanced', 'native']
-const COUNTRY_OPTIONS = [
-  'Germany',
-  'Czech Republic',
-  'Hungary',
-  'Poland',
+const COUNTRY_OPTIONS = ['USA', 'Canada', 'UK', 'Germany', 'South Korea']
+
+const CIS_COUNTRIES = [
+  'Kazakhstan',
+  'Kyrgyzstan',
+  'Tajikistan',
+  'Turkmenistan',
+  'Uzbekistan',
   'Russia',
-  'UK',
-  'USA',
-  'Canada',
-  'Netherlands',
-  'Austria',
-  'Turkey',
-  'South Korea',
+  'Belarus',
+  'Ukraine',
+  'Armenia',
+  'Azerbaijan',
+  'Georgia',
+  'Moldova',
 ]
 const VIBE_KEYS = ['cityBig', 'citySmall', 'cityTown', 'cityAny'] as const
 
 export function ProfilePage() {
-  const { profile, setProfile } = useProfile()
+  const { profile, saveProfileToAPI } = useProfile()
   const { user, logout } = useAuth()
   const { t } = useTranslation()
 
   const [data, setData] = useState<PartialProfile>(profile ?? {})
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [staleMsg, setStaleMsg] = useState(false)
 
   const update = (updates: PartialProfile) => setData((prev) => ({ ...prev, ...updates }))
 
-  const handleSave = () => {
-    setProfile(data)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const result = await saveProfileToAPI(data)
+      if (result.staleFields.length > 0) {
+        setStaleMsg(true)
+        setTimeout(() => setStaleMsg(false), 4000)
+      } else {
+        setSaved(true)
+        setTimeout(() => setSaved(false), 2000)
+      }
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setSaving(false)
+    }
   }
 
   const toggleChip = (field: 'subjects' | 'activities' | 'preferredCountries', val: string) => {
@@ -108,19 +124,25 @@ export function ProfilePage() {
             </div>
             <div className={styles.field}>
               <label className={styles.label}>{t('wizard.basics.countryLabel')}</label>
-              <input
+              <select
                 className="input"
                 value={data.country ?? ''}
                 onChange={(e) => update({ country: e.target.value })}
-                placeholder={t('wizard.basics.countryPlaceholder')}
-              />
+              >
+                <option value="">Select your country</option>
+                {CIS_COUNTRIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className={styles.field}>
               <label className={styles.label}>{t('wizard.basics.ageLabel')}</label>
               <input
                 className="input"
                 type="number"
-                min={14}
+                min={16}
                 max={20}
                 value={data.age ?? ''}
                 onChange={(e) => update({ age: Number(e.target.value) })}
@@ -409,11 +431,21 @@ export function ProfilePage() {
             <span className={styles.email}>{user?.email}</span>
           </div>
           <div className={styles.footerRight}>
-            <button type="button" className={styles.signOutBtn} onClick={logout}>
+            {staleMsg && (
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-muted)' }}>
+                Saved — your recommendations may update
+              </span>
+            )}
+            <button type="button" className={styles.signOutBtn} onClick={() => void logout()}>
               {t('profile.signOut')}
             </button>
-            <button type="button" className="btn btn-primary" onClick={handleSave}>
-              {saved ? t('profile.saved') : t('profile.save')}
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => void handleSave()}
+              disabled={saving}
+            >
+              {saving ? '...' : saved ? t('profile.saved') : t('profile.save')}
             </button>
           </div>
         </div>

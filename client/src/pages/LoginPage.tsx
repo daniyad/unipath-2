@@ -19,7 +19,7 @@ export function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      await login(email)
+      await login(email, password)
       navigate('/dashboard')
     } catch {
       setError(t('login.error'))

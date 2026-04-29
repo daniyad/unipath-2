@@ -19,7 +19,7 @@ export function SignupPage() {
     setError('')
     setLoading(true)
     try {
-      await signup(email)
+      await signup(email, password)
       navigate('/setup')
     } catch {
       setError(t('signup.error'))

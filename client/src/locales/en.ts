@@ -113,11 +113,13 @@ export default {
     },
     preferences: {
       countriesLabel: 'Which countries interest you?',
-      cityLabel: 'What kind of city do you prefer?',
-      cityBig: 'Big city',
-      citySmall: 'Small city',
-      cityTown: 'College town / campus',
-      cityAny: "Doesn't matter",
+      countriesHint: 'You can select multiple.',
+      countriesError: 'Please select at least one country.',
+      cityLabel: 'What kind of environment do you want outside of class?',
+      cityBig: 'Megapolis — big city, lots to do',
+      citySmall: 'Mid-size city — good balance',
+      cityTown: 'College town — campus is the social center',
+      cityAny: "Doesn't matter to me",
     },
     extracurriculars: {
       activitiesLabel: 'What do you do outside of school?',

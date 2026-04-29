@@ -2,6 +2,7 @@ import 'dotenv/config'
 import express from 'express'
 import type { ErrorRequestHandler } from 'express'
 import { ZodError } from 'zod'
+import profileRouter from './routes/profile.js'
 import shortlistRouter from './routes/shortlist.js'
 import planRouter from './routes/plan.js'
 
@@ -10,16 +11,14 @@ const PORT = process.env.PORT ?? 4000
 
 app.use(express.json())
 
-// Health check — no auth required
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' })
 })
 
-// Feature routes
+app.use('/api', profileRouter)
 app.use('/api', shortlistRouter)
 app.use('/api', planRouter)
 
-// Global error handler
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) {
