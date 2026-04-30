@@ -11,6 +11,7 @@ import { ProfilePage } from './pages/ProfilePage'
 import { UniversityPage } from './pages/UniversityPage'
 import { PlanPage } from './pages/PlanPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { LandingPage } from './pages/LandingPage'
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           <ProfileProvider>
             <BrowserRouter>
               <Routes>
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route
