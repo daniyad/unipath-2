@@ -52,6 +52,7 @@ export interface PlanTask {
   week?: number
   title: string
   done: boolean
+  importance: 'critical' | 'important' | 'nice-to-have'
 }
 
 export interface UniversityPlan {
@@ -98,7 +99,14 @@ export interface ServerPlanData {
   documents: Array<{ name: string; howToGet: string; urgency: 'high' | 'medium' | 'low' }>
   tests: Array<{ name: string; prepTime: string; startBy: string }>
   applicationSteps: Array<{ step: string; deadline?: string }>
-  monthlyChecklist: Array<{ month: string; tasks: Array<{ week: number; task: string }> }>
+  monthlyChecklist: Array<{
+    month: string
+    tasks: Array<{
+      week: number
+      task: string
+      importance: 'critical' | 'important' | 'nice-to-have'
+    }>
+  }>
   parentTalkingPoints: string[]
 }
 
@@ -142,7 +150,14 @@ export const toClientPlan = (serverPlan: ServerPlan, university: University): Un
     month.tasks.map((t, ti) => {
       const id = `m${mi}-t${ti}`
       taskIndex++
-      return { id, month: month.month, week: t.week, title: t.task, done: !!completions[id] }
+      return {
+        id,
+        month: month.month,
+        week: t.week,
+        title: t.task,
+        done: !!completions[id],
+        importance: t.importance ?? 'important',
+      }
     }),
   )
 

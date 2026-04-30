@@ -49,7 +49,13 @@ export const planResponseSchema = z.object({
   monthlyChecklist: z.array(
     z.object({
       month: z.string(),
-      tasks: z.array(z.object({ week: z.number(), task: z.string() })),
+      tasks: z.array(
+        z.object({
+          week: z.number(),
+          task: z.string(),
+          importance: z.enum(['critical', 'important', 'nice-to-have']),
+        }),
+      ),
     }),
   ),
   parentTalkingPoints: z.array(z.string()),
@@ -104,13 +110,15 @@ The plan must be:
 - Tailored to international student requirements at this university
 - Include country-specific processes (Campus France, uni-assist, OUAC, etc.) where relevant
 
-Use web search to verify: the exact application portal URL, the current application deadline, and any country-specific requirements.
+Use web search to verify: the application portal URL, the current application deadline, and any country-specific requirements.
+
+For portalUrl: use web search to confirm the URL actually loads. If you can verify the exact application portal page, use it. If you cannot confirm the specific path works, use the university's top-level homepage (e.g. https://www.ouac.on.ca/ not https://www.ouac.on.ca/apply/101). If you are not confident in any URL, return an empty string — never fabricate a URL.
 
 Respond with ONLY a valid JSON object — no explanation, no markdown, no code fences:
 {
   "universityName": "string",
   "applicationDeadline": "string (e.g. 'March 31, 2026')",
-  "portalUrl": "string (direct link to the application portal)",
+  "portalUrl": "string (verified URL or empty string)",
   "overview": "string (2-3 sentence summary of what the student should know going in)",
   "documents": [
     { "name": "string", "howToGet": "string (specific to the student's home country)", "urgency": "high" | "medium" | "low" }
@@ -122,7 +130,7 @@ Respond with ONLY a valid JSON object — no explanation, no markdown, no code f
     { "step": "string", "deadline": "string" }
   ],
   "monthlyChecklist": [
-    { "month": "string (e.g. 'May 2025')", "tasks": [{ "week": 1, "task": "string" }] }
+    { "month": "string (e.g. 'May 2025')", "tasks": [{ "week": 1, "task": "string", "importance": "critical" | "important" | "nice-to-have" }] }
   ],
   "parentTalkingPoints": ["string (2-3 key points: cost, timeline, why this is a real plan)"]
 }`

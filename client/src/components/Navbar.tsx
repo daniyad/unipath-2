@@ -1,7 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
-import { useProfile } from '../contexts/ProfileContext'
 import { LanguageToggle } from './LanguageToggle'
 import styles from './Navbar.module.css'
 
@@ -15,10 +14,8 @@ export function Navbar({ showBack, showProfileActions }: NavbarProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuth()
-  const { profile } = useProfile()
 
   const logoTarget = user ? '/dashboard' : '/login'
-  const initial = (profile?.name?.[0] ?? user?.email?.[0] ?? '?').toUpperCase()
 
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + '/')
@@ -43,8 +40,14 @@ export function Navbar({ showBack, showProfileActions }: NavbarProps) {
         {showProfileActions && (
           <div className={styles.links}>
             <button
-              className={`${styles.link} ${isActive('/dashboard') || isActive('/university') ? styles.linkActive : ''}`}
+              className={`${styles.link} ${isActive('/dashboard') ? styles.linkActive : ''}`}
               onClick={() => navigate('/dashboard')}
+            >
+              {t('nav.dashboard')}
+            </button>
+            <button
+              className={`${styles.link} ${isActive('/universities') || isActive('/university') ? styles.linkActive : ''}`}
+              onClick={() => navigate('/universities')}
             >
               {t('nav.universities')}
             </button>
@@ -60,14 +63,9 @@ export function Navbar({ showBack, showProfileActions }: NavbarProps) {
         <div className={styles.right}>
           <LanguageToggle />
           {showProfileActions && (
-            <>
-              <button className={styles.profileBtn} onClick={() => navigate('/profile')}>
-                <span className={styles.avatar}>{initial}</span>
-              </button>
-              <button className={styles.logoutBtn} onClick={logout}>
-                {t('dashboard.logout')}
-              </button>
-            </>
+            <button className={styles.logoutBtn} onClick={logout}>
+              {t('dashboard.logout')}
+            </button>
           )}
         </div>
       </nav>

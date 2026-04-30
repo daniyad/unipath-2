@@ -16,7 +16,7 @@ const extractJson = (text: string): unknown => {
 const runCall = async (systemPrompt: string, userMessage: string): Promise<unknown> => {
   const message = await client.messages.create({
     model: MODEL,
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: systemPrompt,
     messages: [{ role: 'user', content: userMessage }],
   })
@@ -44,7 +44,7 @@ export const callClaude = async (systemPrompt: string, userMessage: string): Pro
 const runCallWithSearch = async (systemPrompt: string, userMessage: string): Promise<unknown> => {
   const message = await client.messages.create({
     model: MODEL,
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: systemPrompt,
     messages: [{ role: 'user', content: userMessage }],
     tools: [{ type: 'web_search_20250305' as const, name: 'web_search' }],

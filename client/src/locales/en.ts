@@ -145,6 +145,7 @@ export default {
   },
   nav: {
     back: '← Back',
+    dashboard: 'Dashboard',
     universities: 'Universities',
     profile: 'Profile',
   },
@@ -183,6 +184,25 @@ export default {
     gradeLabel: '{{grade}}th grade',
     uniSummary:
       'Based on your profile, we found 3 universities that are a strong fit — from ambitious to reliable.',
+    inProgress: 'In Progress',
+    noPlansTitle: 'No plans yet',
+    noPlansText: 'Head to Universities and generate a plan for a school you like.',
+    viewUniversities: 'View universities',
+    daysUntilDeadline: '{{days}} days until deadline',
+    upcomingDeadlines: 'Upcoming Deadlines',
+    noTasksThisMonth: 'No tasks scheduled for this month.',
+    week: 'Week {{n}}',
+    ongoing: 'Ongoing',
+    refreshing: 'Refreshing...',
+    refreshRecommendations: 'Refresh recommendations',
+    profileChanged: 'Your profile changed — these recommendations may no longer be your best fit.',
+    noRecommendationsTitle: 'No recommendations yet',
+    noRecommendationsText:
+      'Finish setting up your profile so we can find the right universities for you.',
+    completeProfile: 'Complete your profile',
+  },
+  universities: {
+    interested: 'Interested',
   },
   wizard: {
     steps: {
@@ -357,5 +377,10 @@ export default {
     gotIt: 'Got it',
     progressLabel: 'Your progress',
     testsRequired: 'Tests required',
+    importanceLabels: {
+      critical: 'Critical',
+      important: 'Important',
+      'nice-to-have': 'Nice to have',
+    },
   },
 }

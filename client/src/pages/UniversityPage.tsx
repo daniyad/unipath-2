@@ -36,7 +36,7 @@ export function UniversityPage() {
   if (!uni || !serverUni) {
     return (
       <div className={styles.page}>
-        <Navbar showBack />
+        <Navbar showProfileActions />
         <div className={styles.container}>
           <p style={{ color: 'var(--color-muted)' }}>
             University not found. Please go back to the{' '}
@@ -76,7 +76,7 @@ export function UniversityPage() {
           'Almost done...',
         ]}
       />
-      <Navbar showBack />
+      <Navbar showProfileActions />
 
       <div className={styles.container}>
         <div className={styles.header}>
