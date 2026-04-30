@@ -212,7 +212,7 @@ function StepInterests({ data, onChange, errors }: StepProps) {
 function StepLanguages({ data, onChange, errors }: StepProps) {
   const { t } = useTranslation()
   const levelKeys = ['beginner', 'elementary', 'intermediate', 'advanced', 'native']
-  const languages = data.languages ?? [{ language: '', level: '' }]
+  const languages = data.languages ?? [{ language: 'English', level: '' }]
 
   const updateLang = (idx: number, field: 'language' | 'level', value: string) => {
     const updated = languages.map((l, i) => (i === idx ? { ...l, [field]: value } : l))
@@ -501,11 +501,12 @@ export function ProfileWizardPage() {
     country: CIS_COUNTRIES[0],
     grade: 11,
     targetYear: new Date().getFullYear() + 1,
+    languages: [{ language: 'English', level: '' }],
     ...(profile ?? {}),
   })
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
-  const [showErrors, setShowErrors] = useState(false)
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set())
 
   const StepComponent = stepComponents[step]
   const total = STEPS.length
@@ -513,17 +514,20 @@ export function ProfileWizardPage() {
 
   const handleChange = (updates: PartialProfile) => {
     setLocalData((prev) => ({ ...prev, ...updates }))
+    setTouchedFields((prev) => {
+      const next = new Set(prev)
+      Object.keys(updates).forEach((k) => next.add(k))
+      return next
+    })
   }
 
   const stepErrors = getStepErrors(step, localData)
   const isStepValid = Object.keys(stepErrors).length === 0
+  const visibleErrors = Object.fromEntries(
+    Object.entries(stepErrors).filter(([key]) => touchedFields.has(key)),
+  )
 
   const handleNext = async () => {
-    if (!isStepValid) {
-      setShowErrors(true)
-      return
-    }
-    setShowErrors(false)
     setError('')
     setProfile(localData)
     if (isLast) {
@@ -543,14 +547,14 @@ export function ProfileWizardPage() {
       }
     } else {
       setStep((s) => s + 1)
-      setShowErrors(false)
+      setTouchedFields(new Set())
     }
   }
 
   const handleBack = () => {
     if (step > 0) {
       setStep((s) => s - 1)
-      setShowErrors(false)
+      setTouchedFields(new Set())
     }
   }
 
@@ -579,11 +583,7 @@ export function ProfileWizardPage() {
         </div>
         <div className={styles.card}>
           <h2 className={styles.stepTitle}>{t(`wizard.steps.${currentStep.key}`)}</h2>
-          <StepComponent
-            data={localData}
-            onChange={handleChange}
-            errors={showErrors ? stepErrors : {}}
-          />
+          <StepComponent data={localData} onChange={handleChange} errors={visibleErrors} />
           {error && (
             <p style={{ color: 'red', fontSize: 'var(--text-sm)', marginTop: 8 }}>{error}</p>
           )}
@@ -602,7 +602,7 @@ export function ProfileWizardPage() {
               type="button"
               className={`btn ${isLast ? 'btn-yellow' : 'btn-primary'}`}
               onClick={() => void handleNext()}
-              disabled={generating}
+              disabled={generating || !isStepValid}
               style={{ marginLeft: 'auto' }}
             >
               {isLast ? t('wizard.done') : t('wizard.next')}

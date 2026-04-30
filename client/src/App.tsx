@@ -11,6 +11,7 @@ import { ProfilePage } from './pages/ProfilePage'
 import { UniversityPage } from './pages/UniversityPage'
 import { PlanPage } from './pages/PlanPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { UniversitiesPage } from './pages/UniversitiesPage'
 
 export default function App() {
   return (
@@ -59,6 +60,14 @@ export default function App() {
                   element={
                     <ProtectedRoute requireProfile>
                       <DashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/universities"
+                  element={
+                    <ProtectedRoute requireProfile>
+                      <UniversitiesPage />
                     </ProtectedRoute>
                   }
                 />

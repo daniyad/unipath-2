@@ -1,6 +1,7 @@
 export default {
   nav: {
     back: '← Назад',
+    dashboard: 'Главная',
     universities: 'Университеты',
     profile: 'Профиль',
   },
@@ -39,6 +40,24 @@ export default {
     gradeLabel: '{{grade}} класс',
     uniSummary:
       'На основе твоего профиля мы подобрали 3 университета — от амбициозного до надёжного.',
+    inProgress: 'В процессе',
+    noPlansTitle: 'Планов пока нет',
+    noPlansText: 'Перейди в раздел «Университеты» и создай план для понравившегося вуза.',
+    viewUniversities: 'Смотреть университеты',
+    daysUntilDeadline: 'до дедлайна {{days}} дней',
+    upcomingDeadlines: 'Ближайшие дедлайны',
+    noTasksThisMonth: 'На этот месяц задач нет.',
+    week: '{{n}}-я неделя',
+    ongoing: 'Текущие',
+    refreshing: 'Обновляем...',
+    refreshRecommendations: 'Обновить рекомендации',
+    profileChanged: 'Профиль изменился — рекомендации могут быть неактуальны.',
+    noRecommendationsTitle: 'Рекомендаций пока нет',
+    noRecommendationsText: 'Заполни профиль, чтобы мы подобрали подходящие университеты.',
+    completeProfile: 'Заполнить профиль',
+  },
+  universities: {
+    interested: 'Интересует',
   },
   wizard: {
     steps: {
@@ -213,5 +232,10 @@ export default {
     gotIt: 'Есть',
     progressLabel: 'Твой прогресс',
     testsRequired: 'Необходимые тесты',
+    importanceLabels: {
+      critical: 'Критично',
+      important: 'Важно',
+      'nice-to-have': 'Желательно',
+    },
   },
 }

@@ -104,7 +104,7 @@ export function ProfilePage() {
 
   return (
     <div className={styles.page}>
-      <Navbar showBack />
+      <Navbar showProfileActions />
 
       <div className={styles.container}>
         <h1 className={styles.title}>{t('profile.title')}</h1>

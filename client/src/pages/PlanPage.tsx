@@ -13,6 +13,12 @@ const urgencyStyles: Record<string, string> = {
   low: styles.urgencyLow,
 }
 
+const importanceStyles: Record<string, string> = {
+  critical: styles.importanceCritical,
+  important: styles.importanceImportant,
+  'nice-to-have': styles.importanceNice,
+}
+
 interface LocationState {
   university?: University
 }
@@ -133,7 +139,7 @@ export function PlanPage() {
   if (loading) {
     return (
       <div className={styles.page}>
-        <Navbar showBack />
+        <Navbar showProfileActions />
         <div className={styles.container}>
           <p style={{ color: 'var(--color-muted)', fontSize: 'var(--text-sm)' }}>Loading plan...</p>
         </div>
@@ -144,7 +150,7 @@ export function PlanPage() {
   if (!plan) {
     return (
       <div className={styles.page}>
-        <Navbar showBack />
+        <Navbar showProfileActions />
         <div className={styles.container}>
           <p style={{ color: 'var(--color-muted)' }}>Plan not found.</p>
         </div>
@@ -159,7 +165,7 @@ export function PlanPage() {
 
   return (
     <div className={styles.page}>
-      <Navbar showBack />
+      <Navbar showProfileActions />
 
       <div className={styles.container}>
         {/* ── Header ── */}
@@ -246,6 +252,7 @@ export function PlanPage() {
                   <th className={styles.thMonth}>{t('plan.monthCol')}</th>
                   <th className={styles.thWeek}>{t('plan.weekCol')}</th>
                   <th className={styles.thTask}>{t('plan.taskCol')}</th>
+                  <th className={styles.thImportance}>{t('plan.urgency')}</th>
                   <th className={styles.thDone}>{t('plan.doneCol')}</th>
                 </tr>
               </thead>
@@ -266,6 +273,13 @@ export function PlanPage() {
                         {task.week != null ? `Wk ${task.week}` : '—'}
                       </td>
                       <td className={styles.taskCell}>{task.title}</td>
+                      <td className={styles.importanceCell}>
+                        <span
+                          className={`${styles.importanceBadge} ${importanceStyles[task.importance] ?? ''}`}
+                        >
+                          {t(`plan.importanceLabels.${task.importance}`)}
+                        </span>
+                      </td>
                       <td className={styles.checkCell}>
                         <input
                           type="checkbox"
@@ -327,18 +341,18 @@ export function PlanPage() {
         {plan.tests.length > 0 && (
           <section className={styles.tableSection}>
             <h2 className={styles.sectionHeading}>{t('plan.testsRequired')}</h2>
-            <div className={styles.testsGrid}>
+            <div className={styles.testList}>
               {plan.tests.map((test) => (
-                <div key={test.name} className={styles.testCard}>
-                  <span className={styles.testName}>{test.name}</span>
-                  <div className={styles.testMeta}>
-                    <div className={styles.testMetaItem}>
-                      <span className={styles.testMetaLabel}>{t('plan.prepTime')}</span>
-                      <span className={styles.testMetaValue}>{test.prepTime}</span>
+                <div key={test.name} className={styles.testRow}>
+                  <span className={styles.testBadge}>{test.name}</span>
+                  <div className={styles.testDetails}>
+                    <div className={styles.testDetail}>
+                      <span className={styles.testDetailLabel}>{t('plan.startBy')}</span>
+                      <span className={styles.testDetailValue}>{test.startBy}</span>
                     </div>
-                    <div className={styles.testMetaItem}>
-                      <span className={styles.testMetaLabel}>{t('plan.startBy')}</span>
-                      <span className={styles.testMetaValue}>{test.startBy}</span>
+                    <div className={styles.testDetail}>
+                      <span className={styles.testDetailLabel}>{t('plan.prepTime')}</span>
+                      <span className={styles.testDetailValue}>{test.prepTime}</span>
                     </div>
                   </div>
                 </div>
