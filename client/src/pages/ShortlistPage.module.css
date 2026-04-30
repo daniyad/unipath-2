@@ -4,24 +4,34 @@
   padding: 80px 16px 64px;
 }
 
-.topBar {
+.topBarOuter {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
+  padding: 10px 16px 0;
+  z-index: 10;
+}
+
+.topBar {
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
-  background: var(--bg-base);
-  border-bottom: 0.5px solid var(--border-default);
-  z-index: 10;
+  padding: 0 6px 0 18px;
+  background: #fff;
+  border-radius: 14px;
+  border: 0.5px solid #ececec;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.02),
+    0 2px 8px rgba(0, 0, 0, 0.025);
 }
 
 .logo {
   font-family: var(--font-body);
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
+  letter-spacing: -0.03em;
   color: var(--primary-900);
 }
 

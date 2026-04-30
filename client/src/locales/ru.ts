@@ -1,6 +1,8 @@
 export default {
   nav: {
     back: '← Назад',
+    universities: 'Университеты',
+    profile: 'Профиль',
   },
   login: {
     title: 'Добро пожаловать',

@@ -25,9 +25,11 @@ export function ShortlistPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.topBar}>
-        <span className={styles.logo}>Unipath</span>
-        <LanguageToggle />
+      <div className={styles.topBarOuter}>
+        <div className={styles.topBar}>
+          <span className={styles.logo}>Unipath</span>
+          <LanguageToggle />
+        </div>
       </div>
       <div className={styles.container}>
         <div className={styles.header}>

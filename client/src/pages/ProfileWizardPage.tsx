@@ -78,6 +78,7 @@ function StepBasics({ data, onChange, errors }: StepProps) {
             onChange={(e) => onChange({ grade: Number(e.target.value) })}
             placeholder="11"
           />
+          {errors?.grade && <p className={styles.fieldError}>{errors.grade}</p>}
         </div>
       </div>
       <div className={styles.field}>
@@ -105,12 +106,13 @@ function StepBasics({ data, onChange, errors }: StepProps) {
           onChange={(e) => onChange({ targetYear: Number(e.target.value) })}
           placeholder={String(new Date().getFullYear() + 1)}
         />
+        {errors?.targetYear && <p className={styles.fieldError}>{errors.targetYear}</p>}
       </div>
     </div>
   )
 }
 
-function StepMotivation({ data, onChange }: StepProps) {
+function StepMotivation({ data, onChange, errors }: StepProps) {
   const { t } = useTranslation()
   const returnOptions = [
     { value: true as boolean | null, labelKey: 'wizard.motivation.returnYes' },
@@ -128,6 +130,7 @@ function StepMotivation({ data, onChange }: StepProps) {
           placeholder={t('wizard.motivation.whyPlaceholder')}
           rows={4}
         />
+        {errors?.whyAbroad && <p className={styles.fieldError}>{errors.whyAbroad}</p>}
       </div>
       <div className={styles.field}>
         <label className={styles.label}>{t('wizard.motivation.returnLabel')}</label>
@@ -143,12 +146,13 @@ function StepMotivation({ data, onChange }: StepProps) {
             </button>
           ))}
         </div>
+        {errors?.planToReturn && <p className={styles.fieldError}>{errors.planToReturn}</p>}
       </div>
     </div>
   )
 }
 
-function StepInterests({ data, onChange }: StepProps) {
+function StepInterests({ data, onChange, errors }: StepProps) {
   const { t } = useTranslation()
   const subjectKeys = [
     'math',
@@ -189,6 +193,7 @@ function StepInterests({ data, onChange }: StepProps) {
             )
           })}
         </div>
+        {errors?.subjects && <p className={styles.fieldError}>{errors.subjects}</p>}
       </div>
       <div className={styles.field}>
         <label className={styles.label}>{t('wizard.interests.careerLabel')}</label>
@@ -198,12 +203,13 @@ function StepInterests({ data, onChange }: StepProps) {
           onChange={(e) => onChange({ careerDirection: e.target.value })}
           placeholder={t('wizard.interests.careerPlaceholder')}
         />
+        {errors?.careerDirection && <p className={styles.fieldError}>{errors.careerDirection}</p>}
       </div>
     </div>
   )
 }
 
-function StepLanguages({ data, onChange }: StepProps) {
+function StepLanguages({ data, onChange, errors }: StepProps) {
   const { t } = useTranslation()
   const levelKeys = ['beginner', 'elementary', 'intermediate', 'advanced', 'native']
   const languages = data.languages ?? [{ language: '', level: '' }]
@@ -246,6 +252,7 @@ function StepLanguages({ data, onChange }: StepProps) {
           </div>
         </div>
       ))}
+      {errors?.languages && <p className={styles.fieldError}>{errors.languages}</p>}
       <button type="button" className={`btn btn-ghost ${styles.addBtn}`} onClick={addLang}>
         {t('wizard.languages.addLanguage')}
       </button>
@@ -253,7 +260,7 @@ function StepLanguages({ data, onChange }: StepProps) {
   )
 }
 
-function StepBudget({ data, onChange }: StepProps) {
+function StepBudget({ data, onChange, errors }: StepProps) {
   const { t } = useTranslation()
   const scholarshipOptions = [
     { value: true, labelKey: 'wizard.budget.scholarshipYes' },
@@ -286,6 +293,7 @@ function StepBudget({ data, onChange }: StepProps) {
             onChange={(e) => onChange({ tuitionMax: Number(e.target.value) })}
             placeholder="20000"
           />
+          {errors?.tuitionMax && <p className={styles.fieldError}>{errors.tuitionMax}</p>}
         </div>
       </div>
       <div className={styles.field}>
@@ -302,6 +310,9 @@ function StepBudget({ data, onChange }: StepProps) {
             </button>
           ))}
         </div>
+        {errors?.openToScholarship && (
+          <p className={styles.fieldError}>{errors.openToScholarship}</p>
+        )}
       </div>
     </div>
   )
@@ -358,6 +369,7 @@ function StepPreferences({ data, onChange, errors }: StepProps) {
             )
           })}
         </div>
+        {errors?.cityVibe && <p className={styles.fieldError}>{errors.cityVibe}</p>}
       </div>
     </div>
   )
@@ -426,6 +438,59 @@ const stepComponents = [
   StepExtracurriculars,
 ]
 
+function getStepErrors(step: number, data: PartialProfile): Record<string, string> {
+  const errs: Record<string, string> = {}
+
+  if (step === 0) {
+    if (!data.name?.trim()) errs.name = 'Please enter your name.'
+    if (!data.age) errs.age = 'Please enter your age.'
+    else if (data.age < 16) errs.age = 'You must be at least 16 to use Unipath.'
+    else if (data.age > 25) errs.age = 'Age must be 25 or under.'
+    if (!data.grade) errs.grade = 'Please enter your grade.'
+    else if (data.grade < 9 || data.grade > 12) errs.grade = 'Grade must be between 9 and 12.'
+    if (!data.targetYear) errs.targetYear = 'Please enter your target enrollment year.'
+    else if (data.targetYear < 2025 || data.targetYear > 2030)
+      errs.targetYear = 'Year must be between 2025 and 2030.'
+  }
+
+  if (step === 1) {
+    if (!data.whyAbroad?.trim() || data.whyAbroad.trim().length < 20)
+      errs.whyAbroad = 'Please write at least 20 characters about your motivation.'
+    if (data.planToReturn === undefined) errs.planToReturn = 'Please select an option.'
+  }
+
+  if (step === 2) {
+    if (!data.subjects?.length) errs.subjects = 'Please select at least one subject.'
+    if (!data.careerDirection?.trim()) errs.careerDirection = 'Please enter a career direction.'
+  }
+
+  if (step === 3) {
+    const langs = data.languages ?? []
+    const hasValid = langs.some((l) => l.language.trim() && l.level)
+    if (!hasValid) errs.languages = 'Please add at least one language with a name and level.'
+  }
+
+  if (step === 4) {
+    if (data.openToScholarship === undefined) errs.openToScholarship = 'Please select an option.'
+    if (
+      data.tuitionMin !== undefined &&
+      data.tuitionMax !== undefined &&
+      data.tuitionMin > 0 &&
+      data.tuitionMax > 0 &&
+      data.tuitionMax < data.tuitionMin
+    )
+      errs.tuitionMax = 'Max tuition must be at least the minimum.'
+  }
+
+  if (step === 5) {
+    if (!data.preferredCountries?.length)
+      errs.preferredCountries = 'Please select at least one country.'
+    if (!data.cityVibe) errs.cityVibe = 'Please select a city size preference.'
+  }
+
+  return errs
+}
+
 export function ProfileWizardPage() {
   const { profile, setProfile, saveProfileToAPI } = useProfile()
   const api = useApi()
@@ -440,6 +505,7 @@ export function ProfileWizardPage() {
   })
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
+  const [showErrors, setShowErrors] = useState(false)
 
   const StepComponent = stepComponents[step]
   const total = STEPS.length
@@ -449,42 +515,15 @@ export function ProfileWizardPage() {
     setLocalData((prev) => ({ ...prev, ...updates }))
   }
 
-  const getStepErrors = (): Record<string, string> => {
-    if (step === 0) {
-      const errs: Record<string, string> = {}
-      if (!localData.name?.trim()) errs.name = 'Please enter your name.'
-      if (!localData.age) errs.age = 'Please enter your age.'
-      else if (localData.age < 16) errs.age = 'You must be at least 16 to use Unipath.'
-      if (!localData.country) errs.country = 'Please select your country.'
-      if (!localData.targetYear) errs.year = 'Please enter your target enrollment year.'
-      return errs
-    }
-    if (step === 5) {
-      const errs: Record<string, string> = {}
-      if (!localData.preferredCountries?.length)
-        errs.preferredCountries = 'Please select at least one country.'
-      return errs
-    }
-    return {}
-  }
-
-  const stepErrors = getStepErrors()
+  const stepErrors = getStepErrors(step, localData)
   const isStepValid = Object.keys(stepErrors).length === 0
-
-  const visibleErrors = (): Record<string, string> => {
-    if (step === 0) {
-      const errs: Record<string, string> = {}
-      if (localData.age && localData.age < 16) errs.age = 'You must be at least 16 to use Unipath.'
-      return errs
-    }
-    return {}
-  }
 
   const handleNext = async () => {
     if (!isStepValid) {
-      setError('')
+      setShowErrors(true)
       return
     }
+    setShowErrors(false)
     setError('')
     setProfile(localData)
     if (isLast) {
@@ -504,11 +543,15 @@ export function ProfileWizardPage() {
       }
     } else {
       setStep((s) => s + 1)
+      setShowErrors(false)
     }
   }
 
   const handleBack = () => {
-    if (step > 0) setStep((s) => s - 1)
+    if (step > 0) {
+      setStep((s) => s - 1)
+      setShowErrors(false)
+    }
   }
 
   const progressPct = ((step + 1) / total) * 100
@@ -536,7 +579,11 @@ export function ProfileWizardPage() {
         </div>
         <div className={styles.card}>
           <h2 className={styles.stepTitle}>{t(`wizard.steps.${currentStep.key}`)}</h2>
-          <StepComponent data={localData} onChange={handleChange} errors={visibleErrors()} />
+          <StepComponent
+            data={localData}
+            onChange={handleChange}
+            errors={showErrors ? stepErrors : {}}
+          />
           {error && (
             <p style={{ color: 'red', fontSize: 'var(--text-sm)', marginTop: 8 }}>{error}</p>
           )}
@@ -553,9 +600,9 @@ export function ProfileWizardPage() {
             )}
             <button
               type="button"
-              className="btn btn-primary"
+              className={`btn ${isLast ? 'btn-yellow' : 'btn-primary'}`}
               onClick={() => void handleNext()}
-              disabled={generating || !isStepValid}
+              disabled={generating}
               style={{ marginLeft: 'auto' }}
             >
               {isLast ? t('wizard.done') : t('wizard.next')}

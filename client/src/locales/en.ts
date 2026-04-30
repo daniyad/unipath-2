@@ -1,6 +1,8 @@
 export default {
   nav: {
     back: '← Back',
+    universities: 'Universities',
+    profile: 'Profile',
   },
   login: {
     title: 'Welcome back',

@@ -142,7 +142,7 @@ export function UniversityPage() {
         <div className={styles.action}>
           <button
             type="button"
-            className="btn btn-primary"
+            className={`btn ${uni.hasPlan ? 'btn-primary' : 'btn-yellow'}`}
             onClick={() => void handlePlanAction()}
             disabled={generating}
           >
