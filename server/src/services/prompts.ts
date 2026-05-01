@@ -66,7 +66,7 @@ export type PlanResult = z.infer<typeof planResponseSchema>
 
 // ─── Prompt builders ────────────────────────────────────────────────────────
 
-const SHORTLIST_SYSTEM = `You are an expert university admissions counselor specializing in helping Central Asian high school students find universities abroad. You have deep knowledge of international admissions, scholarship opportunities, visa processes, and programs at universities in the USA, Canada, UK, Germany, and South Korea.
+const SHORTLIST_SYSTEM = `You are an expert university admissions counselor specializing in helping Central Asian high school students find universities abroad. You have deep knowledge of international admissions, scholarship opportunities, visa processes, and programs at universities in the UK, USA, Canada, Germany, South Korea, and UAE.
 
 IMPORTANT: Only recommend universities located in the student's target countries. Do not suggest universities in any other country, even if they are a strong academic fit.
 

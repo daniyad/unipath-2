@@ -48,17 +48,17 @@ const UNI_NAMES = [
   'NYU Abu Dhabi',
   'KAIST',
   'KIMEP',
-  'NUS Singapore',
-  'Bocconi',
+  'Seoul National University',
   'TU Munich',
   'Minerva',
   'University of Toronto',
-  'Sciences Po',
-  'Charles University',
-  'Koç University',
-  'ETH Zürich',
-  'HKUST',
+  'University of Edinburgh',
+  'McGill University',
+  'Khalifa University',
+  'University of Manchester',
   'Westminster',
+  'POSTECH',
+  'Queen Mary London',
 ]
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -288,12 +288,12 @@ function HowSection() {
             <div className={s.stepMini}>
               <div className={s.stepMiniQ}>{t('landing.how.step1MiniQ')}</div>
               <div className={s.stepMiniOpts}>
-                <span className={`${s.miniOpt} ${s.miniOptActive}`}>Kazakhstan</span>
                 <span className={`${s.miniOpt} ${s.miniOptActive}`}>UAE</span>
                 <span className={`${s.miniOpt} ${s.miniOptActive}`}>South Korea</span>
+                <span className={`${s.miniOpt} ${s.miniOptActive}`}>Germany</span>
                 <span className={s.miniOpt}>UK</span>
                 <span className={s.miniOpt}>USA</span>
-                <span className={s.miniOpt}>+ 12 more</span>
+                <span className={s.miniOpt}>+ 1 more</span>
               </div>
             </div>
           </div>

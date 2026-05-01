@@ -16,7 +16,7 @@ export const toStudentProfile = (data: ProfileData): StudentProfile => ({
   targetCountries:
     Array.isArray(data.preferredCountries) && data.preferredCountries.length > 0
       ? (data.preferredCountries as string[])
-      : ['USA', 'Canada', 'UK'],
+      : ['USA', 'Canada', 'UK', 'Germany', 'South Korea', 'UAE'],
   budgetUSD: Number(data.tuitionMax ?? 10000) || 10000,
   intendedMajor: String(data.careerDirection ?? 'Undecided'),
   extracurriculars: Array.isArray(data.activities) ? (data.activities as string[]) : [],

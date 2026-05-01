@@ -32,7 +32,7 @@ const ACTIVITY_KEYS = [
   'science',
 ]
 const LEVEL_KEYS = ['beginner', 'elementary', 'intermediate', 'advanced', 'native']
-const COUNTRY_OPTIONS = ['USA', 'Canada', 'UK', 'Germany', 'South Korea']
+const COUNTRY_OPTIONS = ['USA', 'Canada', 'UK', 'Germany', 'South Korea', 'UAE']
 
 const CIS_COUNTRIES = [
   'Kazakhstan',

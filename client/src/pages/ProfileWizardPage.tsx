@@ -320,7 +320,7 @@ function StepBudget({ data, onChange, errors }: StepProps) {
 
 function StepPreferences({ data, onChange, errors }: StepProps) {
   const { t } = useTranslation()
-  const countryOptions = ['USA', 'Canada', 'UK', 'Germany', 'South Korea']
+  const countryOptions = ['USA', 'Canada', 'UK', 'Germany', 'South Korea', 'UAE']
   const vibeKeys = ['cityBig', 'citySmall', 'cityTown', 'cityAny'] as const
   const preferred = data.preferredCountries ?? []
   const toggle = (c: string) => {
