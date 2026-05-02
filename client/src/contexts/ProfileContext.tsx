@@ -16,16 +16,11 @@ const ProfileContext = createContext<ProfileContextValue | null>(null)
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const api = useApi()
-  const [profile, setProfileState] = useState<PartialProfile | null>(null)
-  const [hasStaleRecommendations, setHasStaleRecommendations] = useState(false)
-
-  // Load from localStorage on mount (fast, no flash)
-  useEffect(() => {
+  const [profile, setProfileState] = useState<PartialProfile | null>(() => {
     const stored = localStorage.getItem('unipath_profile')
-    if (stored) {
-      setProfileState(JSON.parse(stored) as PartialProfile)
-    }
-  }, [])
+    return stored ? (JSON.parse(stored) as PartialProfile) : null
+  })
+  const [hasStaleRecommendations, setHasStaleRecommendations] = useState(false)
 
   // When user is authenticated, sync with API (API is source of truth)
   useEffect(() => {

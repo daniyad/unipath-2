@@ -12,7 +12,12 @@ const mapLanguages = (raw: unknown): StudentProfile['languageProficiency'] => {
 export const toStudentProfile = (data: ProfileData): StudentProfile => ({
   name: String(data.name ?? 'Student'),
   nationality: String(data.country ?? ''),
-  gpa: Number(data.gpa ?? 3.0),
+  gpa: (() => {
+    const score = Number(data.academicScore ?? 0)
+    const max = Number(data.academicScoreMax ?? 0)
+    if (score > 0 && max > 0) return Math.min((score / max) * 4, 4)
+    return Number(data.gpa ?? 3.0)
+  })(),
   targetCountries:
     Array.isArray(data.preferredCountries) && data.preferredCountries.length > 0
       ? (data.preferredCountries as string[])

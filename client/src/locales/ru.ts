@@ -224,6 +224,9 @@ export default {
       countryLabel: 'Страна',
       countryPlaceholder: 'Казахстан',
       yearLabel: 'В какой год планируешь поступать?',
+      scoreLabel: 'Средний балл',
+      scorePlaceholder: '4.7',
+      scoreMaxLabel: 'Из',
     },
     motivation: {
       whyLabel: 'Почему ты хочешь учиться за рубежом? Можно честно, даже если ещё не знаешь.',

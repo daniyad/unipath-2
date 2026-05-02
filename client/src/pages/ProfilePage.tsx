@@ -173,6 +173,31 @@ export function ProfilePage() {
                 placeholder="2026"
               />
             </div>
+            <div className={styles.field}>
+              <label className={styles.label}>{t('wizard.basics.scoreLabel')}</label>
+              <input
+                className="input"
+                type="number"
+                min={0}
+                step={0.1}
+                value={data.academicScore ?? ''}
+                onChange={(e) => update({ academicScore: Number(e.target.value) })}
+                placeholder={t('wizard.basics.scorePlaceholder')}
+              />
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>{t('wizard.basics.scoreMaxLabel')}</label>
+              <select
+                className="input"
+                value={data.academicScoreMax ?? ''}
+                onChange={(e) => update({ academicScoreMax: Number(e.target.value) })}
+              >
+                <option value="">—</option>
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
           </div>
         </section>
 

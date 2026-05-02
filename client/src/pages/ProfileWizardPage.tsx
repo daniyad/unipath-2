@@ -81,6 +81,37 @@ function StepBasics({ data, onChange, errors }: StepProps) {
           {errors?.grade && <p className={styles.fieldError}>{errors.grade}</p>}
         </div>
       </div>
+      <div className={styles.row}>
+        <div className={styles.field}>
+          <label className={styles.label}>{t('wizard.basics.scoreLabel')}</label>
+          <input
+            className="input"
+            type="number"
+            min={0}
+            step={0.1}
+            value={data.academicScore ?? ''}
+            onChange={(e) => onChange({ academicScore: Number(e.target.value) })}
+            placeholder={t('wizard.basics.scorePlaceholder')}
+          />
+          {errors?.academicScore && <p className={styles.fieldError}>{errors.academicScore}</p>}
+        </div>
+        <div className={styles.field}>
+          <label className={styles.label}>{t('wizard.basics.scoreMaxLabel')}</label>
+          <select
+            className="input"
+            value={data.academicScoreMax ?? ''}
+            onChange={(e) => onChange({ academicScoreMax: Number(e.target.value) })}
+          >
+            <option value="">—</option>
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={100}>100</option>
+          </select>
+          {errors?.academicScoreMax && (
+            <p className={styles.fieldError}>{errors.academicScoreMax}</p>
+          )}
+        </div>
+      </div>
       <div className={styles.field}>
         <label className={styles.label}>{t('wizard.basics.countryLabel')}</label>
         <select
@@ -451,6 +482,10 @@ function getStepErrors(step: number, data: PartialProfile): Record<string, strin
     if (!data.targetYear) errs.targetYear = 'Please enter your target enrollment year.'
     else if (data.targetYear < 2025 || data.targetYear > 2030)
       errs.targetYear = 'Year must be between 2025 and 2030.'
+    if (!data.academicScore) errs.academicScore = 'Please enter your score.'
+    else if (data.academicScoreMax && data.academicScore > data.academicScoreMax)
+      errs.academicScore = 'Score cannot exceed the maximum.'
+    if (!data.academicScoreMax) errs.academicScoreMax = 'Please select your grading scale.'
   }
 
   if (step === 1) {
