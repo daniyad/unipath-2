@@ -1,49 +1,771 @@
+/* ── Page shell ─────────────────────────────────────────────────── */
 .page {
   min-height: 100vh;
   background: var(--bg-base);
-  padding: 80px 16px 64px;
 }
 
-.container {
-  max-width: 680px;
+.dashPage {
+  padding: 88px 32px 80px;
+  max-width: 1180px;
   margin: 0 auto;
 }
 
-.header {
-  margin-bottom: 40px;
+/* ── Header ─────────────────────────────────────────────────────── */
+.dashHeader {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 32px;
+  padding-bottom: 28px;
+  margin-bottom: 32px;
+  border-bottom: 0.5px solid var(--border-default);
 }
 
-.greeting {
-  font-size: 40px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--text-primary);
-  margin-bottom: 8px;
+.dashGreet {
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 10px;
 }
 
-.subtitle {
-  color: var(--text-secondary);
+.dashSub {
   font-size: 16px;
-}
-
-.sectionHeader {
-  margin-bottom: 20px;
-}
-
-.sectionTitle {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-  margin-bottom: 6px;
-}
-
-.sectionSummary {
-  font-size: 14px;
   color: var(--text-secondary);
+  max-width: 56ch;
   line-height: 1.5;
 }
 
+.dashSub strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.dashStats {
+  display: flex;
+  gap: 40px;
+  align-items: end;
+}
+
+.dashStat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.dashStatLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-disabled);
+  white-space: nowrap;
+}
+
+.dashStatValue {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.dashStatDate {
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.unit {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+
+/* ── Sections ────────────────────────────────────────────────────── */
+.dashSection {
+  margin-bottom: 56px;
+}
+
+.dashSection:last-child {
+  margin-bottom: 0;
+}
+
+.secHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.secTitle {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.secMeta {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.secMeta a {
+  color: var(--primary-900);
+  font-weight: 500;
+}
+
+.secMeta a:hover {
+  color: var(--text-secondary);
+}
+
+/* ── University row ──────────────────────────────────────────────── */
+.uniRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.uniTile {
+  background: var(--bg-surface);
+  border: 0.5px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  cursor: pointer;
+  transition:
+    transform 250ms var(--ease-default),
+    box-shadow 250ms var(--ease-default),
+    border-color 250ms var(--ease-default);
+  position: relative;
+}
+
+.uniTile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.uniTile.featured {
+  border: 2px solid var(--primary-900);
+  padding: 21px 23px 19px;
+}
+
+.uniTile.dimmed {
+  opacity: 0.45;
+  filter: saturate(0.6);
+}
+
+.uniTile.dimmed:hover {
+  opacity: 1;
+  filter: none;
+}
+
+.uniTileTop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.uniTileName {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.uniTileProg {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.dot {
+  color: var(--text-disabled);
+}
+
+.tileProgress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tileProgressRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.tilePct {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary-900);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.tileTrack {
+  height: 4px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 0.5px solid var(--border-default);
+}
+
+.tileTrack > div {
+  height: 100%;
+  background: var(--primary-900);
+  border-radius: var(--radius-full);
+  transition: width 350ms var(--ease-default);
+}
+
+.uniTileDeadline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 0.5px solid var(--border-default);
+}
+
+.uniTileDeadlineLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-disabled);
+  white-space: nowrap;
+}
+
+.uniTileDeadlineVal {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: right;
+}
+
+.soon {
+  color: var(--error);
+}
+
+.uniTileArrow {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  font-size: 16px;
+  color: var(--text-disabled);
+  transition:
+    color 150ms var(--ease-default),
+    transform 250ms var(--ease-default);
+}
+
+.uniTile:hover .uniTileArrow {
+  color: var(--primary-900);
+  transform: translateX(2px);
+}
+
+/* ── Split layout ────────────────────────────────────────────────── */
+.dashSplit {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* ── This week ───────────────────────────────────────────────────── */
+.weekCard {
+  background: var(--bg-surface);
+  border: 0.5px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px 16px;
+}
+
+.weekHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.weekEyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-disabled);
+}
+
+.weekEyebrowMuted {
+  color: var(--text-secondary);
+}
+
+.weekTitle {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.weekSub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+.weekList {
+  display: flex;
+  flex-direction: column;
+}
+
+.weekItem {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-top: 0.5px solid var(--border-default);
+}
+
+.weekItem:first-child {
+  border-top: none;
+  padding-top: 8px;
+}
+
+.weekItem:last-child {
+  padding-bottom: 4px;
+}
+
+.weekCheck {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-strong);
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 150ms var(--ease-default),
+    background 150ms var(--ease-default);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.weekCheck:hover {
+  border-color: var(--primary-900);
+}
+
+.weekCheck.checked {
+  background: var(--primary-900);
+  border-color: var(--primary-900);
+  color: #fff;
+  font-size: 12px;
+}
+
+.weekCheck.checked::before {
+  content: "✓";
+  line-height: 1;
+}
+
+.weekTaskMain {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.weekTaskTitle {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.weekTaskDone {
+  text-decoration: line-through;
+  color: var(--text-disabled);
+}
+
+.weekTaskMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.uniNamePill {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.metaDot {
+  display: inline-block;
+  width: 2px;
+  height: 2px;
+  background: var(--text-disabled);
+  border-radius: 50%;
+}
+
+.weekDue {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.weekDue strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.weekDue.overdue strong {
+  color: var(--error);
+}
+
+.weekDueDate {
+  font-weight: 400;
+  color: var(--text-disabled);
+  font-size: 11px;
+}
+
+.weekEmpty {
+  padding: 28px 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* ── Month view ──────────────────────────────────────────────────── */
+.monthCard {
+  background: var(--bg-surface);
+  border: 0.5px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 24px 24px 20px;
+}
+
+.monthHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.monthTitle {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.monthNav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.monthNavBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--text-secondary);
+  border: 0.5px solid var(--border-default);
+  background: #fff;
+}
+
+.monthNavBtn:hover {
+  border-color: var(--primary-900);
+  color: var(--primary-900);
+}
+
+.monthNavBtnDisabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.monthNavLabel {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding: 0 10px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Calendar grid */
+.cal {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calDow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-disabled);
+  text-align: center;
+  padding: 4px 0 8px;
+}
+
+.calDay {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6px 4px 4px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  position: relative;
+  transition: background 150ms var(--ease-default);
+  font-variant-numeric: tabular-nums;
+}
+
+.calDay.muted {
+  color: var(--text-disabled);
+}
+
+.calDay.today {
+  background: var(--primary-900);
+  color: #fff;
+  font-weight: 700;
+}
+
+.calDay.today .calDayNum {
+  color: #fff;
+}
+
+.calDay.hasTask {
+  background: var(--bg-subtle);
+}
+
+.calDay.hasTask:hover {
+  background: #ececec;
+}
+
+.calDay.today.hasTask {
+  background: var(--primary-900);
+}
+
+.calDay.calDeadline {
+  background: var(--accent-100);
+  border: 0.5px solid var(--accent-500);
+  color: #1a1300;
+}
+
+.calDay.calDeadline:hover {
+  background: #fdf3a8;
+}
+
+.calDay.today.calDeadline {
+  background: var(--primary-900);
+  border-color: transparent;
+  color: #fff;
+}
+
+.calDay.calSelected {
+  box-shadow: inset 0 0 0 1.5px var(--primary-900);
+}
+
+.calDayNum {
+  line-height: 1;
+}
+
+.calDots {
+  display: flex;
+  gap: 2px;
+  margin-top: auto;
+  padding-bottom: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.calDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary-900);
+}
+
+.urgentDot {
+  background: var(--error);
+}
+
+.deadlineMark {
+  width: 6px;
+  height: 6px;
+  background: var(--accent-500);
+  border: 0.5px solid #b8860b;
+}
+
+.calDay.today .calDot {
+  background: #fff;
+}
+
+/* Day detail popover */
+.calDetail {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.calDetailHead {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+
+.calDetailList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.calDetailRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--text-primary);
+}
+
+.calDetailUni {
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Calendar legend */
+.calLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--border-default);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.calLegendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.calLegendSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.swatchToday {
+  background: var(--primary-900);
+  border-radius: 50%;
+}
+
+.swatchTask {
+  background: var(--primary-900);
+}
+
+.swatchUrgent {
+  background: var(--error);
+}
+
+.swatchDeadline {
+  background: var(--accent-500);
+  border: 0.5px solid #b8860b;
+}
+
+/* ── No-plan tile state ──────────────────────────────────────────── */
+.noPlanHint {
+  font-size: 13px;
+  color: var(--text-disabled);
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 0.5px solid var(--border-default);
+}
+
+.noPlanLink {
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.noPlanLink:hover {
+  color: var(--primary-900);
+}
+
+/* ── Calendar no-plan state ──────────────────────────────────────── */
+.calNoPlan {
+  padding: 40px 0 28px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-disabled);
+  line-height: 1.5;
+}
+
+/* ── Urgency badges ──────────────────────────────────────────────── */
+.urgBadge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.urgHigh {
+  background: #fff0f0;
+  color: var(--error);
+}
+
+.urgMed {
+  background: var(--accent-100);
+  color: #9a6200;
+}
+
+.urgLow {
+  background: #e6f9f2;
+  color: #1a7a50;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────── */
 .emptyState {
   display: flex;
   flex-direction: column;
@@ -69,246 +791,38 @@
   max-width: 360px;
 }
 
-.staleBanner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px 20px;
-  border: 0.5px solid var(--accent-500);
-  border-radius: var(--radius-md);
-  background: var(--accent-100);
-  margin-bottom: 24px;
+/* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 980px) {
+  .dashPage {
+    padding: 80px 20px 64px;
+  }
+
+  .dashHeader {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .dashStats {
+    gap: 28px;
+  }
+
+  .dashGreet {
+    font-size: 36px;
+  }
+
+  .uniRow {
+    grid-template-columns: 1fr;
+  }
+
+  .dashSplit {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
 }
 
-.staleBannerText {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
-
-.uniList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.uniCard {
-  background: var(--bg-surface);
-  border-radius: var(--radius-lg);
-  border: 0.5px solid var(--border-default);
-  padding: 20px 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  cursor: pointer;
-  transition: transform var(--duration-default) var(--ease-default),
-              box-shadow var(--duration-default) var(--ease-default);
-}
-
-.uniCard:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-}
-
-.uniCardLeft {
-  flex: 1;
-  min-width: 0;
-}
-
-.uniCardTop {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.uniName {
-  font-weight: 700;
-  font-size: 17px;
-  color: var(--text-primary);
-  margin-bottom: 3px;
-}
-
-.uniProgram {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.uniWhyFit {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  font-style: italic;
-}
-
-.progressBar {
-  height: 3px;
-  background: var(--border-default);
-  border-radius: var(--radius-full);
-  margin-top: 10px;
-  margin-bottom: 4px;
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background: var(--success);
-  border-radius: var(--radius-full);
-}
-
-.taskCount {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.uniArrow {
-  font-size: 18px;
-  color: var(--text-disabled);
-  flex-shrink: 0;
-  transition: color var(--duration-fast) var(--ease-default);
-}
-
-.uniCard:hover .uniArrow {
-  color: var(--primary-900);
-}
-
-.section {
-  margin-bottom: 40px;
-}
-
-/* Deadlines */
-.deadlineList {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  border: 0.5px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: var(--border-default);
-}
-
-.deadlineRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 20px;
-  background: var(--bg-surface);
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-default);
-}
-
-.deadlineRow:hover {
-  background: var(--bg-subtle);
-}
-
-.deadlineUni {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.deadlineMeta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.deadlineDays {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  background: var(--bg-subtle);
-  color: var(--text-secondary);
-}
-
-.deadlineUrgent {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  background: #fff3cd;
-  color: #856404;
-}
-
-/* Calendar */
-.calendarGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.calendarWeek {
-  border: 0.5px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.weekLabel {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 10px 16px;
-  background: var(--bg-subtle);
-  border-bottom: 0.5px solid var(--border-default);
-}
-
-.calendarTasks {
-  display: flex;
-  flex-direction: column;
-}
-
-.calendarTask {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--bg-surface);
-  cursor: pointer;
-  border-bottom: 0.5px solid var(--border-default);
-}
-
-.calendarTask:last-child {
-  border-bottom: none;
-}
-
-.calendarTask:hover {
-  background: var(--bg-subtle);
-}
-
-.calendarCheckbox {
-  width: 16px;
-  height: 16px;
-  margin-top: 2px;
-  flex-shrink: 0;
-  cursor: pointer;
-  accent-color: var(--primary-900);
-}
-
-.calendarTaskBody {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.calendarTaskTitle {
-  font-size: 14px;
-  color: var(--text-primary);
-  line-height: 1.4;
-}
-
-.calendarTaskDone {
-  text-decoration: line-through;
-  color: var(--text-secondary);
-}
-
-.calendarTaskUni {
-  font-size: 12px;
-  color: var(--text-secondary);
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
