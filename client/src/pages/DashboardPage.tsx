@@ -4,18 +4,35 @@ import { useTranslation } from 'react-i18next'
 import { useProfile } from '../contexts/ProfileContext'
 import { useApi } from '../contexts/ApiContext'
 import { Navbar } from '../components/Navbar'
-import type { ServerPlan } from '../types'
-import { toClientPlan } from '../types'
+import type { ServerPlan, ServerShortlist, ServerUniversity } from '../types'
+import { toClientPlan, type UniversityPlan } from '../types'
 import styles from './DashboardPage.module.css'
 
-interface TaskWithPlan {
-  taskId: string
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+interface UniEntry {
+  key: string
+  name: string
+  serverUni?: ServerUniversity
+  sp?: ServerPlan
+  plan?: UniversityPlan
+  done: number
+  total: number
+  daysLeft: number | null
+}
+
+interface DashTask {
+  id: string
   planId: string
   uniName: string
   title: string
-  week?: number
+  date: Date
+  urgency: 'urgent' | 'important' | 'later'
   done: boolean
+  isDeadline?: boolean
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const MONTH_NAMES = [
   'January',
@@ -32,6 +49,454 @@ const MONTH_NAMES = [
   'December',
 ]
 
+const estimateTaskDate = (monthLabel: string, week: number | undefined): Date => {
+  const parts = monthLabel.split(' ')
+  const monthIdx = MONTH_NAMES.indexOf(parts[0])
+  const year = parseInt(parts[1] ?? String(new Date().getFullYear()))
+  if (monthIdx === -1) return new Date()
+  const day = week ? Math.min((week - 1) * 7 + 4, 28) : 15
+  return new Date(year, monthIdx, day)
+}
+
+const sameDay = (a: Date, b: Date): boolean =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate()
+
+const daysBetween = (a: Date, b: Date): number => {
+  const msA = new Date(a.getFullYear(), a.getMonth(), a.getDate()).getTime()
+  const msB = new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime()
+  return Math.round((msB - msA) / 86_400_000)
+}
+
+const fmtRelative = (date: Date, today: Date): { label: string; overdue: boolean } => {
+  const d = daysBetween(today, date)
+  if (d < 0) return { label: `${Math.abs(d)}d overdue`, overdue: true }
+  if (d === 0) return { label: 'Today', overdue: false }
+  if (d === 1) return { label: 'Tomorrow', overdue: false }
+  if (d < 7)
+    return { label: date.toLocaleDateString('en-US', { weekday: 'short' }), overdue: false }
+  return { label: `${d}d`, overdue: false }
+}
+
+const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+
+// ── UniTileCard ───────────────────────────────────────────────────────────────
+
+interface UniTileCardProps {
+  entry: UniEntry
+  selected: boolean
+  dimmed: boolean
+  onClick: () => void
+  onNavigate: (name: string) => void
+}
+
+function UniTileCard({ entry, selected, dimmed, onClick, onNavigate }: UniTileCardProps) {
+  const { name, serverUni, sp, done, total, daysLeft } = entry
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0
+  const soon = daysLeft !== null && daysLeft > 0 && daysLeft <= 30
+  const hasPlan = !!sp
+
+  const tierChipClass: Record<string, string> = {
+    Reach: 'chip chip-amber',
+    Match: 'chip',
+    Safety: 'chip chip-success',
+  }
+
+  const tileClass = [styles.uniTile, selected ? styles.featured : '', dimmed ? styles.dimmed : '']
+    .filter(Boolean)
+    .join(' ')
+
+  return (
+    <div
+      className={tileClass}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      onKeyDown={(e) => e.key === 'Enter' && onClick()}
+    >
+      <span className={styles.uniTileArrow}>→</span>
+
+      <div>
+        {serverUni?.tier && (
+          <div className={styles.uniTileTop}>
+            <span className={tierChipClass[serverUni.tier] ?? 'chip'}>{serverUni.tier}</span>
+          </div>
+        )}
+        <div className={styles.uniTileName} style={{ marginTop: serverUni?.tier ? 12 : 0 }}>
+          {name}
+        </div>
+        {(serverUni?.program || serverUni?.city) && (
+          <div className={styles.uniTileProg}>
+            {serverUni.program}
+            {serverUni.program && serverUni.city && <span className={styles.dot}> · </span>}
+            {serverUni.city}
+          </div>
+        )}
+      </div>
+
+      {hasPlan ? (
+        <>
+          <div className={styles.tileProgress}>
+            <div className={styles.tileProgressRow}>
+              <span>
+                {done} of {total} tasks
+              </span>
+              <span className={styles.tilePct}>{pct}%</span>
+            </div>
+            <div className={styles.tileTrack}>
+              <div style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+
+          {daysLeft !== null && sp?.plan.applicationDeadline && (
+            <div className={styles.uniTileDeadline}>
+              <span className={styles.uniTileDeadlineLabel}>Deadline</span>
+              <span className={`${styles.uniTileDeadlineVal}${soon ? ` ${styles.soon}` : ''}`}>
+                {new Date(sp.plan.applicationDeadline).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+                {' · '}
+                {daysLeft > 0 ? `${daysLeft}d left` : 'Passed'}
+              </span>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className={styles.noPlanHint}>
+          No action plan yet —{' '}
+          <button
+            type="button"
+            className={styles.noPlanLink}
+            onClick={(e) => {
+              e.stopPropagation()
+              onNavigate(name)
+            }}
+          >
+            generate one
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── ThisWeekPanel ─────────────────────────────────────────────────────────────
+
+interface ThisWeekPanelProps {
+  tasks: DashTask[]
+  today: Date
+  onToggle: (planId: string, taskId: string, done: boolean) => void
+  filterUni: string | null
+  unisWithPlans: Set<string>
+}
+
+function ThisWeekPanel({ tasks, today, onToggle, filterUni, unisWithPlans }: ThisWeekPanelProps) {
+  const urgencyOrder: Record<string, number> = { urgent: 0, important: 1, later: 2 }
+  const weekEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7)
+
+  const filterHasPlan = !filterUni || unisWithPlans.has(filterUni)
+
+  const items = tasks
+    .filter(
+      (t) =>
+        !t.done && !t.isDeadline && t.date <= weekEnd && (!filterUni || t.uniName === filterUni),
+    )
+    .sort((a, b) => {
+      const dateDiff = a.date.getTime() - b.date.getTime()
+      if (dateDiff !== 0) return dateDiff
+      return (urgencyOrder[a.urgency] ?? 1) - (urgencyOrder[b.urgency] ?? 1)
+    })
+    .slice(0, 5)
+
+  const urgentCount = items.filter((t) => t.urgency === 'urgent').length
+
+  return (
+    <div className={styles.weekCard}>
+      <div className={styles.weekHead}>
+        <span className={styles.weekEyebrow}>This week</span>
+        <span className={`${styles.weekEyebrow} ${styles.weekEyebrowMuted}`}>
+          {urgentCount} urgent · {items.length} total
+        </span>
+      </div>
+      <h2 className={styles.weekTitle}>Get these done</h2>
+      <p className={styles.weekSub}>
+        Your top priorities through the week — check them off as you go.
+      </p>
+
+      <div className={styles.weekList}>
+        {!filterHasPlan ? (
+          <div className={styles.weekEmpty}>
+            No action plan for {filterUni} yet. Select a university and generate one first.
+          </div>
+        ) : items.length === 0 ? (
+          <div className={styles.weekEmpty}>All clear this week. Take a breath.</div>
+        ) : (
+          items.map((t) => {
+            const rel = fmtRelative(t.date, today)
+            const urgencyClass =
+              t.urgency === 'urgent'
+                ? `${styles.urgBadge} ${styles.urgHigh}`
+                : t.urgency === 'important'
+                  ? `${styles.urgBadge} ${styles.urgMed}`
+                  : `${styles.urgBadge} ${styles.urgLow}`
+            const urgencyLabel =
+              t.urgency === 'urgent' ? 'Urgent' : t.urgency === 'important' ? 'Important' : 'Later'
+
+            return (
+              <div key={`${t.planId}-${t.id}`} className={styles.weekItem}>
+                <button
+                  type="button"
+                  className={`${styles.weekCheck}${t.done ? ` ${styles.checked}` : ''}`}
+                  onClick={() => onToggle(t.planId, t.id, t.done)}
+                  aria-label={t.done ? 'Mark incomplete' : 'Mark complete'}
+                />
+                <div className={styles.weekTaskMain}>
+                  <span
+                    className={`${styles.weekTaskTitle}${t.done ? ` ${styles.weekTaskDone}` : ''}`}
+                  >
+                    {t.title}
+                  </span>
+                  <span className={styles.weekTaskMeta}>
+                    <span className={styles.uniNamePill}>{t.uniName}</span>
+                    <span className={styles.metaDot} />
+                    <span className={urgencyClass}>{urgencyLabel}</span>
+                  </span>
+                </div>
+                <span className={`${styles.weekDue}${rel.overdue ? ` ${styles.overdue}` : ''}`}>
+                  <strong>{rel.label}</strong>
+                  <br />
+                  <span className={styles.weekDueDate}>
+                    {t.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                </span>
+              </div>
+            )
+          })
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── MonthViewPanel ────────────────────────────────────────────────────────────
+
+interface MonthViewPanelProps {
+  tasks: DashTask[]
+  today: Date
+  filterUni: string | null
+  unisWithPlans: Set<string>
+}
+
+function MonthViewPanel({ tasks, today, filterUni, unisWithPlans }: MonthViewPanelProps) {
+  const [viewMonth, setViewMonth] = useState({ year: today.getFullYear(), month: today.getMonth() })
+  const [selectedDay, setSelectedDay] = useState<{
+    year: number
+    month: number
+    day: number
+  } | null>(null)
+
+  // Calendar bounds: current month → current month + 3
+  const minView = { year: today.getFullYear(), month: today.getMonth() }
+  const maxViewDate = new Date(today.getFullYear(), today.getMonth() + 3, 1)
+  const maxView = { year: maxViewDate.getFullYear(), month: maxViewDate.getMonth() }
+
+  const isAtMin = viewMonth.year === minView.year && viewMonth.month === minView.month
+  const isAtMax = viewMonth.year === maxView.year && viewMonth.month === maxView.month
+
+  const filterHasPlan = !filterUni || unisWithPlans.has(filterUni)
+
+  const filteredTasks = useMemo(
+    () => tasks.filter((t) => !filterUni || t.uniName === filterUni),
+    [tasks, filterUni],
+  )
+
+  const tasksByDay = useMemo(() => {
+    const m = new Map<string, DashTask[]>()
+    filteredTasks.forEach((t) => {
+      const key = `${t.date.getFullYear()}-${t.date.getMonth()}-${t.date.getDate()}`
+      if (!m.has(key)) m.set(key, [])
+      m.get(key)!.push(t)
+    })
+    return m
+  }, [filteredTasks])
+
+  const getDayTasks = (d: Date) =>
+    tasksByDay.get(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`) ?? []
+
+  const navigate = (delta: number) => {
+    if (delta < 0 && isAtMin) return
+    if (delta > 0 && isAtMax) return
+    setViewMonth((prev) => {
+      let m = prev.month + delta
+      let y = prev.year
+      if (m < 0) {
+        m = 11
+        y -= 1
+      }
+      if (m > 11) {
+        m = 0
+        y += 1
+      }
+      return { year: y, month: m }
+    })
+    setSelectedDay(null)
+  }
+
+  // Build 42-cell grid (Mon-first)
+  const firstOfMonth = new Date(viewMonth.year, viewMonth.month, 1)
+  const lastOfMonth = new Date(viewMonth.year, viewMonth.month + 1, 0)
+  const startWeekday = (firstOfMonth.getDay() + 6) % 7
+  const firstCell = new Date(viewMonth.year, viewMonth.month, 1 - startWeekday)
+  const cells: Date[] = Array.from(
+    { length: 42 },
+    (_, i) => new Date(firstCell.getFullYear(), firstCell.getMonth(), firstCell.getDate() + i),
+  )
+  const showRows = cells[35].getMonth() === viewMonth.month || cells[35] <= lastOfMonth ? 6 : 5
+  const visible = cells.slice(0, showRows * 7)
+
+  const dows = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  const selectedDate = selectedDay
+    ? new Date(selectedDay.year, selectedDay.month, selectedDay.day)
+    : null
+  const selectedTasks = selectedDate ? getDayTasks(selectedDate) : []
+
+  return (
+    <div className={styles.monthCard}>
+      <div className={styles.monthHead}>
+        <h2 className={styles.monthTitle}>{"What's coming"}</h2>
+        <div className={styles.monthNav}>
+          <button
+            type="button"
+            className={`${styles.monthNavBtn}${isAtMin ? ` ${styles.monthNavBtnDisabled}` : ''}`}
+            onClick={() => navigate(-1)}
+            disabled={isAtMin}
+            aria-label="Previous month"
+          >
+            ←
+          </button>
+          <span className={styles.monthNavLabel}>
+            {MONTH_NAMES[viewMonth.month]} {viewMonth.year}
+          </span>
+          <button
+            type="button"
+            className={`${styles.monthNavBtn}${isAtMax ? ` ${styles.monthNavBtnDisabled}` : ''}`}
+            onClick={() => navigate(1)}
+            disabled={isAtMax}
+            aria-label="Next month"
+          >
+            →
+          </button>
+        </div>
+      </div>
+
+      {!filterHasPlan ? (
+        <div className={styles.calNoPlan}>
+          No action plan for {filterUni} yet. Select a university and generate one first.
+        </div>
+      ) : (
+        <>
+          <div className={styles.cal}>
+            {dows.map((d) => (
+              <div key={d} className={styles.calDow}>
+                {d}
+              </div>
+            ))}
+            {visible.map((d, i) => {
+              const inMonth = d.getMonth() === viewMonth.month
+              const isToday = sameDay(d, today)
+              const items = getDayTasks(d)
+              const hasDeadline = items.some((t) => t.isDeadline)
+              const hasUrgent = items.some((t) => t.urgency === 'urgent' && !t.isDeadline)
+              const hasAny = items.length > 0
+              const isSel =
+                selectedDay !== null &&
+                d.getFullYear() === selectedDay.year &&
+                d.getMonth() === selectedDay.month &&
+                d.getDate() === selectedDay.day
+
+              const cls = [
+                styles.calDay,
+                !inMonth ? styles.muted : '',
+                isToday ? styles.today : '',
+                hasDeadline ? styles.calDeadline : hasAny ? styles.hasTask : '',
+                isSel ? styles.calSelected : '',
+              ]
+                .filter(Boolean)
+                .join(' ')
+
+              return (
+                <div
+                  key={i}
+                  className={cls}
+                  style={{ cursor: hasAny ? 'pointer' : 'default' }}
+                  onClick={() =>
+                    hasAny &&
+                    setSelectedDay(
+                      isSel
+                        ? null
+                        : { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() },
+                    )
+                  }
+                >
+                  <span className={styles.calDayNum}>{d.getDate()}</span>
+                  <div className={styles.calDots}>
+                    {hasDeadline && <span className={`${styles.calDot} ${styles.deadlineMark}`} />}
+                    {!hasDeadline && hasUrgent && (
+                      <span className={`${styles.calDot} ${styles.urgentDot}`} />
+                    )}
+                    {!hasDeadline && !hasUrgent && hasAny && <span className={styles.calDot} />}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {selectedDate && selectedTasks.length > 0 && (
+            <div className={styles.calDetail}>
+              <div className={styles.calDetailHead}>
+                {selectedDate.toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </div>
+              <div className={styles.calDetailList}>
+                {selectedTasks.map((t) => (
+                  <div key={`${t.planId}-${t.id}`} className={styles.calDetailRow}>
+                    <span style={{ flex: 1 }}>{t.title}</span>
+                    <span className={styles.calDetailUni}>{t.uniName}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className={styles.calLegend}>
+            <span className={styles.calLegendItem}>
+              <span className={`${styles.calLegendSwatch} ${styles.swatchToday}`} /> Today
+            </span>
+            <span className={styles.calLegendItem}>
+              <span className={`${styles.calLegendSwatch} ${styles.swatchTask}`} /> Task
+            </span>
+            <span className={styles.calLegendItem}>
+              <span className={`${styles.calLegendSwatch} ${styles.swatchUrgent}`} /> Urgent
+            </span>
+            <span className={styles.calLegendItem}>
+              <span className={`${styles.calLegendSwatch} ${styles.swatchDeadline}`} /> Deadline
+            </span>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── DashboardPage ─────────────────────────────────────────────────────────────
+
 export function DashboardPage() {
   const { profile } = useProfile()
   const api = useApi()
@@ -39,98 +504,145 @@ export function DashboardPage() {
   const navigate = useNavigate()
 
   const [plans, setPlans] = useState<ServerPlan[]>([])
+  const [shortlists, setShortlists] = useState<ServerShortlist[]>([])
   const [loading, setLoading] = useState(true)
+  const [filterUni, setFilterUni] = useState<string | null>(null)
 
   const name = profile?.name ?? t('dashboard.nameFallback')
 
   useEffect(() => {
-    void api
-      .getPlans()
-      .then(setPlans)
+    void Promise.all([api.getPlans(), api.getShortlists()])
+      .then(([p, s]) => {
+        setPlans(p)
+        setShortlists(s)
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, [api])
 
-  // ── In-progress universities (have a plan) ──────────────────────────────────
-  const inProgress = useMemo(
-    () =>
-      plans.map((sp) => {
-        const university = {
-          id: sp.university_name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          name: sp.university_name,
-          program: '',
-          city: '',
-          country: '',
-          language: '',
-          tuition: 0,
-          level: 'Match' as const,
-          whyFit: '',
-        }
-        const plan = toClientPlan(sp, university)
-        const done = plan.monthlyTasks.filter((t) => t.done).length
-        const total = plan.monthlyTasks.length
-        const deadlineDate = plan.applicationDeadline ? new Date(plan.applicationDeadline) : null
-        const daysLeft = deadlineDate
-          ? Math.ceil((deadlineDate.getTime() - Date.now()) / 86_400_000)
-          : null
-        return { sp, plan, done, total, daysLeft }
-      }),
-    [plans],
-  )
-
-  // ── Upcoming deadlines (future only, top 5) ─────────────────────────────────
-  const upcomingDeadlines = useMemo(
-    () =>
-      plans
-        .filter((sp) => sp.plan.applicationDeadline)
-        .map((sp) => ({
-          planId: sp.id,
-          uniName: sp.university_name,
-          deadline: new Date(sp.plan.applicationDeadline),
-          daysLeft: Math.ceil(
-            (new Date(sp.plan.applicationDeadline).getTime() - Date.now()) / 86_400_000,
-          ),
-        }))
-        .filter((d) => d.daysLeft > 0)
-        .sort((a, b) => a.daysLeft - b.daysLeft)
-        .slice(0, 5),
-    [plans],
-  )
-
-  // ── This month's tasks ──────────────────────────────────────────────────────
   const now = new Date()
-  const currentMonthLabel = `${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`
 
-  const thisMonthTasks = useMemo((): TaskWithPlan[] => {
-    const result: TaskWithPlan[] = []
-    for (const sp of plans) {
+  // All universities to display: shortlist unis + any plans not in shortlist
+  const allUnis = useMemo((): UniEntry[] => {
+    const latest = [...shortlists].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )[0]
+
+    const makeEntry = (
+      uniName: string,
+      serverUni: ServerUniversity | undefined,
+      sp: ServerPlan | undefined,
+    ): UniEntry => {
+      const key = sp?.id ?? slugify(uniName)
+      if (!sp) {
+        return {
+          key,
+          name: uniName,
+          serverUni,
+          sp: undefined,
+          plan: undefined,
+          done: 0,
+          total: 0,
+          daysLeft: null,
+        }
+      }
       const university = {
-        id: sp.university_name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        name: sp.university_name,
-        program: '',
-        city: '',
-        country: '',
-        language: '',
-        tuition: 0,
-        level: 'Match' as const,
-        whyFit: '',
+        id: slugify(uniName),
+        name: uniName,
+        program: serverUni?.program ?? '',
+        city: serverUni?.city ?? '',
+        country: serverUni?.country ?? '',
+        language: serverUni?.language ?? '',
+        tuition: serverUni?.tuitionUSD ?? 0,
+        level: (serverUni?.tier ?? 'Match') as 'Reach' | 'Match' | 'Safety',
+        whyFit: serverUni?.rationale ?? '',
       }
       const plan = toClientPlan(sp, university)
-      for (const task of plan.monthlyTasks) {
-        if (task.month === currentMonthLabel) {
-          result.push({
-            taskId: task.id,
-            planId: sp.id,
-            uniName: sp.university_name,
-            title: task.title,
-            week: task.week,
-            done: task.done,
-          })
+      const done = plan.monthlyTasks.filter((t) => t.done).length
+      const total = plan.monthlyTasks.length
+      const deadlineDate = plan.applicationDeadline ? new Date(plan.applicationDeadline) : null
+      const daysLeft = deadlineDate
+        ? Math.ceil((deadlineDate.getTime() - Date.now()) / 86_400_000)
+        : null
+      return { key, name: uniName, serverUni, sp, plan, done, total, daysLeft }
+    }
+
+    if (latest) {
+      const entries = latest.universities.map((serverUni) => {
+        const sp = plans.find((p) => p.university_name === serverUni.name)
+        return makeEntry(serverUni.name, serverUni, sp)
+      })
+      // Append plans whose university isn't in the shortlist
+      const shortlistNames = new Set(latest.universities.map((u) => u.name))
+      for (const sp of plans) {
+        if (!shortlistNames.has(sp.university_name)) {
+          entries.push(makeEntry(sp.university_name, undefined, sp))
         }
       }
+      return entries
     }
-    return result.sort((a, b) => (a.week ?? 5) - (b.week ?? 5))
-  }, [plans, currentMonthLabel])
+
+    // No shortlist yet — show plans only
+    return plans.map((sp) => makeEntry(sp.university_name, undefined, sp))
+  }, [plans, shortlists])
+
+  // Set of university names that have an action plan (for panel empty-state logic)
+  const unisWithPlans = useMemo(
+    () => new Set(allUnis.filter((u) => !!u.sp).map((u) => u.name)),
+    [allUnis],
+  )
+
+  // Flat task list with estimated dates — only from unis that have plans
+  const dashTasks = useMemo((): DashTask[] => {
+    const result: DashTask[] = []
+    for (const { name: uniName, sp, plan } of allUnis) {
+      if (!sp || !plan) continue
+      if (plan.applicationDeadline) {
+        result.push({
+          id: `deadline-${sp.id}`,
+          planId: sp.id,
+          uniName,
+          title: `${uniName} deadline`,
+          date: new Date(plan.applicationDeadline),
+          urgency: 'urgent',
+          done: false,
+          isDeadline: true,
+        })
+      }
+      for (const task of plan.monthlyTasks) {
+        result.push({
+          id: task.id,
+          planId: sp.id,
+          uniName,
+          title: task.title,
+          date: estimateTaskDate(task.month, task.week),
+          urgency:
+            task.importance === 'critical'
+              ? 'urgent'
+              : task.importance === 'important'
+                ? 'important'
+                : 'later',
+          done: task.done,
+        })
+      }
+    }
+    return result
+  }, [allUnis])
+
+  const weekEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7)
+  const urgentThisWeek = dashTasks.filter(
+    (t) => !t.done && !t.isDeadline && t.urgency === 'urgent' && t.date <= weekEnd,
+  ).length
+
+  const activeCount = allUnis.filter((u) => !!u.sp).length
+
+  const nextDeadline = useMemo(
+    () =>
+      allUnis
+        .filter((e) => e.daysLeft !== null && e.daysLeft > 0)
+        .sort((a, b) => (a.daysLeft ?? Infinity) - (b.daysLeft ?? Infinity))[0] ?? null,
+    [allUnis],
+  )
 
   const toggleTask = async (planId: string, taskId: string, currentDone: boolean) => {
     const newDone = !currentDone
@@ -158,41 +670,99 @@ export function DashboardPage() {
     }
   }
 
-  const weekGroups = useMemo(() => {
-    const groups = new Map<number, TaskWithPlan[]>()
-    for (const task of thisMonthTasks) {
-      const w = task.week ?? 0
-      if (!groups.has(w)) groups.set(w, [])
-      groups.get(w)!.push(task)
-    }
-    return [...groups.entries()].sort(([a], [b]) => a - b)
-  }, [thisMonthTasks])
-
   if (loading) {
     return (
       <div className={styles.page}>
         <Navbar showProfileActions />
-        <div className={styles.container}>
-          <p style={{ color: 'var(--color-muted)', fontSize: 'var(--text-sm)' }}>Loading...</p>
+        <div className={styles.dashPage}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Loading…</p>
         </div>
       </div>
     )
   }
 
+  const dayStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+
   return (
     <div className={styles.page}>
       <Navbar showProfileActions />
 
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <h1 className={styles.greeting}>{t('dashboard.greeting', { name })}</h1>
-          <p className={styles.subtitle}>{t('dashboard.subtitle')}</p>
-        </div>
+      <div className={styles.dashPage}>
+        {/* ── Header ──────────────────────────────────────────────────── */}
+        <header className={styles.dashHeader}>
+          <div>
+            <h1 className={styles.dashGreet}>{t('dashboard.greeting', { name })}</h1>
+            <p className={styles.dashSub}>
+              {activeCount > 0 ? (
+                <>
+                  {"You're juggling"}{' '}
+                  <strong>
+                    {activeCount} active application{activeCount !== 1 ? 's' : ''}
+                  </strong>
+                  .{' '}
+                  {urgentThisWeek > 0 ? (
+                    <>
+                      <strong>
+                        {urgentThisWeek} urgent thing{urgentThisWeek !== 1 ? 's' : ''}
+                      </strong>{' '}
+                      this week
+                      {nextDeadline && (
+                        <>
+                          {' '}
+                          — {nextDeadline.name.split(' ')[0]} closes in {nextDeadline.daysLeft}d
+                        </>
+                      )}
+                      . Stay on it.
+                    </>
+                  ) : (
+                    <>{"Nothing urgent this week — you're in good shape."}</>
+                  )}
+                </>
+              ) : (
+                t('dashboard.subtitle')
+              )}
+            </p>
+          </div>
 
-        {/* ── In Progress ───────────────────────────────────────────────── */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>{t('dashboard.inProgress')}</h2>
-          {inProgress.length === 0 ? (
+          <div className={styles.dashStats}>
+            <div className={styles.dashStat}>
+              <span className={styles.dashStatLabel}>Today</span>
+              <span className={`${styles.dashStatValue} ${styles.dashStatDate}`}>{dayStr}</span>
+            </div>
+            {nextDeadline && (
+              <div className={styles.dashStat}>
+                <span className={styles.dashStatLabel}>Next deadline</span>
+                <span className={styles.dashStatValue}>
+                  {nextDeadline.daysLeft}
+                  <span className={styles.unit}>days · {nextDeadline.name.split(' ')[0]}</span>
+                </span>
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* ── Your universities ────────────────────────────────────────── */}
+        <section className={styles.dashSection}>
+          <div className={styles.secHead}>
+            <h2 className={styles.secTitle}>Your universities</h2>
+            <span className={styles.secMeta}>
+              {filterUni ? (
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setFilterUni(null)
+                  }}
+                >
+                  ← Show all universities
+                </a>
+              ) : (
+                'Click a card to focus on one university'
+              )}
+            </span>
+          </div>
+
+          {allUnis.length === 0 ? (
             <div className={styles.emptyState}>
               <p className={styles.emptyTitle}>{t('dashboard.noPlansTitle')}</p>
               <p className={styles.emptyText}>{t('dashboard.noPlansText')}</p>
@@ -205,110 +775,41 @@ export function DashboardPage() {
               </button>
             </div>
           ) : (
-            <div className={styles.uniList}>
-              {inProgress.map(({ sp, done, total, daysLeft }) => {
-                const pct = total > 0 ? Math.round((done / total) * 100) : 0
-                return (
-                  <div
-                    key={sp.id}
-                    className={styles.uniCard}
-                    onClick={() => navigate(`/plan/${sp.id}`)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' && navigate(`/plan/${sp.id}`)}
-                  >
-                    <div className={styles.uniCardLeft}>
-                      <p className={styles.uniName}>{sp.university_name}</p>
-                      {daysLeft !== null && daysLeft > 0 && (
-                        <p className={styles.uniProgram}>
-                          {t('dashboard.daysUntilDeadline', { days: daysLeft })}
-                        </p>
-                      )}
-                      <div className={styles.progressBar}>
-                        <div className={styles.progressFill} style={{ width: `${pct}%` }} />
-                      </div>
-                      <p className={styles.taskCount}>{t('dashboard.tasks', { done, total })}</p>
-                    </div>
-                    <span className={styles.uniArrow}>→</span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* ── Upcoming Deadlines ────────────────────────────────────────── */}
-        {upcomingDeadlines.length > 0 && (
-          <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>{t('dashboard.upcomingDeadlines')}</h2>
-            <div className={styles.deadlineList}>
-              {upcomingDeadlines.map((d) => (
-                <div
-                  key={d.planId}
-                  className={styles.deadlineRow}
-                  onClick={() => navigate(`/plan/${d.planId}`)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && navigate(`/plan/${d.planId}`)}
-                >
-                  <span className={styles.deadlineUni}>{d.uniName}</span>
-                  <span className={styles.deadlineMeta}>
-                    {d.deadline.toLocaleDateString('en-GB', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                    <span
-                      className={d.daysLeft <= 30 ? styles.deadlineUrgent : styles.deadlineDays}
-                    >
-                      {d.daysLeft}d
-                    </span>
-                  </span>
-                </div>
+            <div className={styles.uniRow}>
+              {allUnis.map((entry) => (
+                <UniTileCard
+                  key={entry.key}
+                  entry={entry}
+                  selected={filterUni === entry.name}
+                  dimmed={filterUni !== null && filterUni !== entry.name}
+                  onClick={() => setFilterUni(filterUni === entry.name ? null : entry.name)}
+                  onNavigate={(uniName) => navigate(`/university/${slugify(uniName)}`)}
+                />
               ))}
             </div>
-          </div>
+          )}
+        </section>
+
+        {/* ── This week + Calendar ─────────────────────────────────────── */}
+        {allUnis.length > 0 && (
+          <section className={styles.dashSection}>
+            <div className={styles.dashSplit}>
+              <ThisWeekPanel
+                tasks={dashTasks}
+                today={now}
+                onToggle={toggleTask}
+                filterUni={filterUni}
+                unisWithPlans={unisWithPlans}
+              />
+              <MonthViewPanel
+                tasks={dashTasks}
+                today={now}
+                filterUni={filterUni}
+                unisWithPlans={unisWithPlans}
+              />
+            </div>
+          </section>
         )}
-
-        {/* ── This Month ────────────────────────────────────────────────── */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>{currentMonthLabel}</h2>
-          {weekGroups.length === 0 ? (
-            <p className={styles.emptyText} style={{ padding: '16px 0' }}>
-              {t('dashboard.noTasksThisMonth')}
-            </p>
-          ) : (
-            <div className={styles.calendarGrid}>
-              {weekGroups.map(([week, tasks]) => (
-                <div key={week} className={styles.calendarWeek}>
-                  <p className={styles.weekLabel}>
-                    {week > 0 ? t('dashboard.week', { n: week }) : t('dashboard.ongoing')}
-                  </p>
-                  <div className={styles.calendarTasks}>
-                    {tasks.map((task) => (
-                      <label key={`${task.planId}-${task.taskId}`} className={styles.calendarTask}>
-                        <input
-                          type="checkbox"
-                          checked={task.done}
-                          onChange={() => void toggleTask(task.planId, task.taskId, task.done)}
-                          className={styles.calendarCheckbox}
-                        />
-                        <div className={styles.calendarTaskBody}>
-                          <span
-                            className={`${styles.calendarTaskTitle} ${task.done ? styles.calendarTaskDone : ''}`}
-                          >
-                            {task.title}
-                          </span>
-                          <span className={styles.calendarTaskUni}>{task.uniName}</span>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   )
