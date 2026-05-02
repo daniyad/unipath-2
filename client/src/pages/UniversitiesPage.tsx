@@ -7,7 +7,7 @@ import { Navbar } from '../components/Navbar'
 import { AiGeneratingOverlay } from '../components/AiGeneratingOverlay'
 import type { University, ServerUniversity, ServerPlan } from '../types'
 import { toClientUniversity } from '../types'
-import styles from './DashboardPage.module.css'
+import styles from './UniversitiesPage.module.css'
 
 const levelColors: Record<string, string> = {
   Reach: 'chip-amber',

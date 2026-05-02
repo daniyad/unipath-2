@@ -226,6 +226,9 @@ export default {
       countryLabel: 'Country',
       countryPlaceholder: 'Kazakhstan',
       yearLabel: 'Target enrollment year?',
+      scoreLabel: 'Cumulative average score',
+      scorePlaceholder: '4.7',
+      scoreMaxLabel: 'Out of',
     },
     motivation: {
       whyLabel: 'Why do you want to study abroad? Be honest — not sure is fine.',

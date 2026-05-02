@@ -5,7 +5,7 @@ import { useProfile } from '../contexts/ProfileContext'
 import { useApi } from '../contexts/ApiContext'
 import { Navbar } from '../components/Navbar'
 import type { ServerPlan, ServerShortlist, ServerUniversity } from '../types'
-import { toClientPlan, type UniversityPlan } from '../types'
+import { toClientPlan, toClientUniversity, type UniversityPlan } from '../types'
 import styles from './DashboardPage.module.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -180,6 +180,18 @@ function UniTileCard({ entry, selected, dimmed, onClick, onNavigate }: UniTileCa
           </button>
         </div>
       )}
+
+      <button
+        type="button"
+        className={styles.noPlanLink}
+        style={{ marginTop: 8 }}
+        onClick={(e) => {
+          e.stopPropagation()
+          onNavigate(name)
+        }}
+      >
+        View details →
+      </button>
     </div>
   )
 }
@@ -783,7 +795,15 @@ export function DashboardPage() {
                   selected={filterUni === entry.name}
                   dimmed={filterUni !== null && filterUni !== entry.name}
                   onClick={() => setFilterUni(filterUni === entry.name ? null : entry.name)}
-                  onNavigate={(uniName) => navigate(`/university/${slugify(uniName)}`)}
+                  onNavigate={(uniName) => {
+                    const entry = allUnis.find((u) => u.name === uniName)
+                    if (entry?.serverUni) {
+                      const clientUni = toClientUniversity(entry.serverUni, entry.sp?.id)
+                      navigate(`/university/${slugify(uniName)}`, {
+                        state: { university: clientUni, serverUniversity: entry.serverUni },
+                      })
+                    }
+                  }}
                 />
               ))}
             </div>

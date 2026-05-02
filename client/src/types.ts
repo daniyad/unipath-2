@@ -21,6 +21,8 @@ export interface Profile {
   cityVibe: string
   activities: string[]
   strengths: string
+  academicScore: number
+  academicScoreMax: number
 }
 
 export type PartialProfile = Partial<Profile>
