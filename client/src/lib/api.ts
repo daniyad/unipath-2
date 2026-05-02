@@ -48,13 +48,23 @@ export const createApi = (getToken: () => Promise<string | null>) => {
       r<{ profile: PartialProfile; staleFields: string[] }>('PATCH', '/api/profile', profile),
 
     // Shortlist
-    generateShortlist: (profile: PartialProfile) =>
-      r<{ id: string } & { universities: ServerUniversity[] }>('POST', '/api/shortlist', profile),
+    generateShortlist: (profile: PartialProfile) => {
+      const lang = localStorage.getItem('unipath_lang') ?? 'en'
+      return r<{ id: string } & { universities: ServerUniversity[] }>('POST', '/api/shortlist', {
+        ...profile,
+        lang,
+      })
+    },
     getShortlists: () => r<ServerShortlist[]>('GET', '/api/shortlists'),
 
     // Plans
-    generatePlan: (profile: PartialProfile, university: ServerUniversity) =>
-      r<{ id: string } & ServerPlan['plan']>('POST', '/api/plan', { profile, university }),
+    generatePlan: (profile: PartialProfile, university: ServerUniversity) => {
+      const lang = localStorage.getItem('unipath_lang') ?? 'en'
+      return r<{ id: string } & ServerPlan['plan']>('POST', '/api/plan', {
+        profile: { ...profile, lang },
+        university,
+      })
+    },
     getPlans: () => r<ServerPlan[]>('GET', '/api/plans'),
     updateTask: (planId: string, taskId: string, done: boolean) =>
       r<ServerPlan>('PATCH', `/api/plans/${planId}/tasks`, { taskId, done }),

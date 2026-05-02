@@ -83,6 +83,12 @@ Prioritize universities that:
 3. Are in one of the student's target countries
 4. Have a track record of admitting international or Central Asian students
 
+DEADLINE RULES — apply these strictly before recommending any university:
+1. Never recommend a university where the application deadline for the target enrollment year has already passed (deadline is before today's date).
+2. Never recommend a university where fewer than 90 days remain between today and the deadline — the student cannot prepare a competitive application in that time.
+3. For universities with 90–180 days until the deadline, flag the tight timeline in the rationale and note the student must act immediately. Still include them if they are otherwise the best fit.
+4. Prefer universities where the student has the most time to prepare.
+
 Use web search to verify that each university's program exists, the tuition is current, and the application deadline is accurate. Drop or replace any candidate that doesn't check out.
 
 Respond with ONLY a valid JSON object — no explanation, no markdown, no code fences:
@@ -106,9 +112,16 @@ const PLAN_SYSTEM = `You are an expert university admissions counselor. Create a
 
 The plan must be:
 - Specific to the university and student profile provided
-- Realistic in timelines (assume applying for the next academic intake)
+- Grounded in today's actual date — all months in the checklist must be today or in the future
 - Tailored to international student requirements at this university
 - Include country-specific processes (Campus France, uni-assist, OUAC, etc.) where relevant
+
+CHECKLIST RULES — follow these exactly:
+1. The monthlyChecklist must start from the current month and year. Never include any month that has already passed.
+2. Calculate the number of months between today and the application deadline. The checklist covers exactly that window.
+3. If 6+ months remain: produce a full plan covering all task types (documents, tests, essays, financial aid, visa prep).
+4. If 3–6 months remain: compress the plan — prioritize 'critical' and 'important' tasks, reduce 'nice-to-have' tasks, and open the overview with a clear note that the timeline is tight and the student must act immediately.
+5. If fewer than 3 months remain: focus exclusively on 'critical' tasks, open the overview with a strong warning about the compressed timeline, and note which steps may need to be rushed or done in parallel.
 
 Use web search to verify: the application portal URL, the current application deadline, and any country-specific requirements.
 
@@ -124,13 +137,13 @@ Respond with ONLY a valid JSON object — no explanation, no markdown, no code f
     { "name": "string", "howToGet": "string (specific to the student's home country)", "urgency": "high" | "medium" | "low" }
   ],
   "tests": [
-    { "name": "string", "prepTime": "string (e.g. '3-4 months')", "startBy": "string (e.g. 'September 2025')" }
+    { "name": "string", "prepTime": "string (e.g. '3-4 months')", "startBy": "string (e.g. 'September 2026')" }
   ],
   "applicationSteps": [
     { "step": "string", "deadline": "string" }
   ],
   "monthlyChecklist": [
-    { "month": "string (e.g. 'May 2025')", "tasks": [{ "week": 1, "task": "string", "importance": "critical" | "important" | "nice-to-have" }] }
+    { "month": "string (e.g. 'May 2026')", "tasks": [{ "week": 1, "task": "string", "importance": "critical" | "important" | "nice-to-have" }] }
   ],
   "parentTalkingPoints": ["string (2-3 key points: cost, timeline, why this is a real plan)"]
 }`
@@ -138,11 +151,20 @@ Respond with ONLY a valid JSON object — no explanation, no markdown, no code f
 const formatLanguages = (lp: StudentProfile['languageProficiency']): string =>
   lp.length === 0 ? 'Not specified' : lp.map((l) => `${l.test}: ${l.score}`).join(', ')
 
-export const buildShortlistPrompt = (
-  profile: StudentProfile,
-): { system: string; user: string } => ({
-  system: SHORTLIST_SYSTEM,
-  user: `Student profile:
+const formatDate = (d: Date): string =>
+  d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+
+const langLabel = (lang: 'en' | 'ru'): string => (lang === 'ru' ? 'Russian' : 'English')
+
+export const buildShortlistPrompt = (profile: StudentProfile): { system: string; user: string } => {
+  const today = new Date()
+  return {
+    system: SHORTLIST_SYSTEM,
+    user: `Today's date: ${formatDate(today)}
+Target enrollment year: ${profile.targetYear}
+Response language: ${langLabel(profile.lang)} — write the entire response (all string fields) in ${langLabel(profile.lang)}
+
+Student profile:
 - Name: ${profile.name}
 - Nationality: ${profile.nationality}
 - GPA: ${profile.gpa}/4.0
@@ -153,15 +175,23 @@ export const buildShortlistPrompt = (
 - Extracurriculars: ${profile.extracurriculars.length > 0 ? profile.extracurriculars.join('; ') : 'None listed'}
 - Special circumstances: ${profile.specialCircumstances ?? 'None'}
 
-Please recommend 3 universities for this student.`,
-})
+Please recommend 3 universities for this student. Apply the deadline rules from the system prompt strictly.`,
+  }
+}
 
 export const buildPlanPrompt = (
   profile: StudentProfile,
   university: University,
-): { system: string; user: string } => ({
-  system: PLAN_SYSTEM,
-  user: `Student profile:
+): { system: string; user: string } => {
+  const today = new Date()
+  const monthYear = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  return {
+    system: PLAN_SYSTEM,
+    user: `Today's date: ${formatDate(today)} — the monthlyChecklist must start from ${monthYear} or later, never before.
+Target enrollment year: ${profile.targetYear}
+Response language: ${langLabel(profile.lang)} — write the entire response (all string fields) in ${langLabel(profile.lang)}
+
+Student profile:
 - Name: ${profile.name}
 - Nationality: ${profile.nationality}
 - GPA: ${profile.gpa}/4.0
@@ -177,5 +207,6 @@ Teaching language: ${university.language}
 Admission tier: ${university.tier}
 Estimated tuition: $${university.tuitionUSD.toLocaleString()}/yr
 
-Please create a detailed application plan for this student.`,
-})
+Please create a detailed application plan for this student. Apply the checklist rules from the system prompt strictly — all months must be ${monthYear} or later.`,
+  }
+}

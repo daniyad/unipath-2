@@ -12,6 +12,8 @@ const mapLanguages = (raw: unknown): StudentProfile['languageProficiency'] => {
 export const toStudentProfile = (data: ProfileData): StudentProfile => ({
   name: String(data.name ?? 'Student'),
   nationality: String(data.country ?? ''),
+  targetYear: Number(data.targetYear ?? new Date().getFullYear() + 1),
+  lang: data.lang === 'ru' ? 'ru' : 'en',
   gpa: (() => {
     const score = Number(data.academicScore ?? 0)
     const max = Number(data.academicScoreMax ?? 0)
