@@ -9,6 +9,8 @@ export const studentProfileSchema = z.object({
   name: z.string().min(1),
   nationality: z.string().min(1),
   gpa: z.number().min(0).max(4),
+  targetYear: z.number().int().min(2025).max(2035),
+  lang: z.enum(['en', 'ru']),
   targetCountries: z.array(z.string()).min(1),
   budgetUSD: z.number().positive(),
   intendedMajor: z.string().min(1),
