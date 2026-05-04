@@ -64,6 +64,17 @@ export const unlinkTelegramAccount = async (userId: string): Promise<void> => {
   if (error) throw new Error(`Failed to unlink Telegram account: ${error.message}`)
 }
 
+export const setRemindersEnabled = async (
+  telegramUserId: number,
+  enabled: boolean,
+): Promise<void> => {
+  const { error } = await supabase
+    .from('telegram_accounts')
+    .update({ reminders_enabled: enabled })
+    .eq('telegram_user_id', telegramUserId)
+  if (error) throw new Error(`Failed to update reminders_enabled: ${error.message}`)
+}
+
 // ─── Chat sessions ─────────────────────────────────────────────────────────────
 
 export const getChatSession = async (userId: string): Promise<ChatMessage[]> => {
@@ -81,17 +92,15 @@ export const upsertChatSession = async (
   telegramChatId: number,
   messages: ChatMessage[],
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('chat_sessions')
-    .upsert(
-      {
-        user_id: userId,
-        telegram_chat_id: telegramChatId,
-        messages,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id' },
-    )
+  const { error } = await supabase.from('chat_sessions').upsert(
+    {
+      user_id: userId,
+      telegram_chat_id: telegramChatId,
+      messages,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id' },
+  )
   if (error) throw new Error(`Failed to upsert chat session: ${error.message}`)
 }
 

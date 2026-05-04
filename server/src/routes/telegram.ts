@@ -10,6 +10,7 @@ import {
   unlinkTelegramAccount,
   getChatSession,
   upsertChatSession,
+  setRemindersEnabled,
 } from '../services/telegramDb.js'
 import { getProfile, getShortlists, getPlans } from '../services/db.js'
 import { toStudentProfile } from '../services/profileAdapter.js'
@@ -69,6 +70,24 @@ bot.start(async (ctx) => {
   await ctx.reply(
     'Your Unipath account is now connected! Ask me anything about your universities, deadlines, or application steps.',
   )
+})
+
+// ─── Bot: /stop ───────────────────────────────────────────────────────────────
+
+bot.command('stop', async (ctx) => {
+  const userId = await findUserByTelegramId(ctx.from.id)
+  if (!userId) return
+  await setRemindersEnabled(ctx.from.id, false)
+  await ctx.reply('Deadline reminders paused. Send /resume any time to turn them back on.')
+})
+
+// ─── Bot: /resume ─────────────────────────────────────────────────────────────
+
+bot.command('resume', async (ctx) => {
+  const userId = await findUserByTelegramId(ctx.from.id)
+  if (!userId) return
+  await setRemindersEnabled(ctx.from.id, true)
+  await ctx.reply("Reminders are back on. I'll notify you 7 days and 1 day before each deadline.")
 })
 
 // ─── Bot: text messages ────────────────────────────────────────────────────────
