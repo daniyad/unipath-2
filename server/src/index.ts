@@ -5,6 +5,8 @@ import { ZodError } from 'zod'
 import profileRouter from './routes/profile.js'
 import shortlistRouter from './routes/shortlist.js'
 import planRouter from './routes/plan.js'
+import telegramRouter from './routes/telegram.js'
+import { startDeadlineReminderCron } from './services/telegramCron.js'
 
 const app = express()
 const PORT = process.env.PORT ?? 4000
@@ -18,6 +20,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api', profileRouter)
 app.use('/api', shortlistRouter)
 app.use('/api', planRouter)
+app.use('/api', telegramRouter)
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
@@ -33,4 +36,5 @@ app.use(errorHandler)
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)
+  startDeadlineReminderCron()
 })

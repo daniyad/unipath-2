@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { useProfile } from '../contexts/ProfileContext'
+import { useApi } from '../contexts/ApiContext'
 import { Navbar } from '../components/Navbar'
 import type { PartialProfile } from '../types'
 import styles from './ProfilePage.module.css'
@@ -54,8 +55,60 @@ export function ProfilePage() {
   const { profile, saveProfileToAPI } = useProfile()
   const { user, logout } = useAuth()
   const { t } = useTranslation()
+  const api = useApi()
 
   const [data, setData] = useState<PartialProfile>(profile ?? {})
+
+  const [tg, setTg] = useState<{
+    linked: boolean
+    linkedAt?: string
+    loading: boolean
+    generating: boolean
+  }>({ linked: false, loading: true, generating: false })
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    void api
+      .getTelegramLinkStatus()
+      .then((d) =>
+        setTg({ linked: !!d, linkedAt: d?.linked_at, loading: false, generating: false }),
+      )
+      .catch(() => setTg({ linked: false, loading: false, generating: false }))
+  }, [api])
+
+  useEffect(
+    () => () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+    },
+    [],
+  )
+
+  const handleConnectTelegram = async () => {
+    setTg((s) => ({ ...s, generating: true }))
+    try {
+      const { deeplinkUrl } = await api.generateTelegramLinkToken()
+      window.open(deeplinkUrl, '_blank', 'noopener,noreferrer')
+      pollRef.current = setInterval(() => {
+        void api.getTelegramLinkStatus().then((d) => {
+          if (d) {
+            setTg({ linked: true, linkedAt: d.linked_at, loading: false, generating: false })
+            if (pollRef.current) clearInterval(pollRef.current)
+          }
+        })
+      }, 3000)
+      setTimeout(() => {
+        if (pollRef.current) clearInterval(pollRef.current)
+        setTg((s) => ({ ...s, generating: false }))
+      }, 120_000)
+    } catch {
+      setTg((s) => ({ ...s, generating: false }))
+    }
+  }
+
+  const handleUnlinkTelegram = async () => {
+    await api.unlinkTelegram()
+    setTg({ linked: false, loading: false, generating: false })
+  }
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [staleMsg, setStaleMsg] = useState(false)
@@ -448,6 +501,41 @@ export function ProfilePage() {
               />
             </div>
           </div>
+        </section>
+
+        {/* Telegram */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>{t('profile.telegram.sectionTitle')}</h2>
+          {tg.loading ? (
+            <p className={styles.hint}>{t('profile.telegram.loading')}</p>
+          ) : tg.linked ? (
+            <div className={styles.fields}>
+              <p className={styles.hint}>
+                {t('profile.telegram.connected')}
+                {tg.linkedAt &&
+                  ` ${t('profile.telegram.linkedOn')} ${new Date(tg.linkedAt).toLocaleDateString()}.`}
+              </p>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => void handleUnlinkTelegram()}
+              >
+                {t('profile.telegram.disconnect')}
+              </button>
+            </div>
+          ) : (
+            <div className={styles.fields}>
+              <p className={styles.hint}>{t('profile.telegram.hint')}</p>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => void handleConnectTelegram()}
+                disabled={tg.generating}
+              >
+                {tg.generating ? t('profile.telegram.connecting') : t('profile.telegram.connect')}
+              </button>
+            </div>
+          )}
         </section>
 
         {/* Footer actions */}

@@ -1,7 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk'
+import type { ChatMessage } from '../types.js'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const MODEL = process.env.CLAUDE_MODEL ?? 'claude-sonnet-4-6'
+const CHAT_MODEL = 'claude-haiku-4-5-20251001'
 
 const extractJson = (text: string): unknown => {
   const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
@@ -37,6 +39,29 @@ export const callClaude = async (systemPrompt: string, userMessage: string): Pro
     console.warn('Claude call failed, retrying once:', err instanceof Error ? err.message : err)
     return await runCall(systemPrompt, userMessage)
   }
+}
+
+// ─── Chat call (Haiku, conversation history, no tools) ───────────────────────
+
+export const callClaudeChat = async (
+  systemPrompt: string,
+  history: ChatMessage[],
+  userMessage: string,
+): Promise<unknown> => {
+  const message = await client.messages.create({
+    model: CHAT_MODEL,
+    max_tokens: 400,
+    system: systemPrompt,
+    messages: [...history, { role: 'user', content: userMessage }],
+  })
+
+  const content = message.content[0]
+  if (content.type !== 'text') throw new Error('Unexpected non-text response from Claude')
+
+  console.log(
+    `Claude chat usage: input=${message.usage.input_tokens} output=${message.usage.output_tokens}`,
+  )
+  return extractJson(content.text.trim())
 }
 
 // ─── Web search call ─────────────────────────────────────────────────────────
