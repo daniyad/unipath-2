@@ -310,6 +310,16 @@ export default {
     save: 'Сохранить изменения',
     saved: 'Сохранено',
     signOut: 'Выйти',
+    telegram: {
+      sectionTitle: 'Telegram',
+      loading: 'Проверяем подключение…',
+      connected: 'Твой аккаунт Telegram подключён.',
+      linkedOn: 'Подключено',
+      disconnect: 'Отключить Telegram',
+      hint: 'Подключи Telegram, чтобы задавать вопросы на ходу и получать напоминания о дедлайнах.',
+      connect: 'Подключить Telegram',
+      connecting: 'Открываем Telegram…',
+    },
   },
   university: {
     tuitionFree: 'Бесплатно',

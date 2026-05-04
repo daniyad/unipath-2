@@ -34,6 +34,12 @@ export const universitySchema = z.object({
 export type StudentProfile = z.infer<typeof studentProfileSchema>
 export type University = z.infer<typeof universitySchema>
 
+export const chatMessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string(),
+})
+export type ChatMessage = z.infer<typeof chatMessageSchema>
+
 // Augment Express Request type
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace

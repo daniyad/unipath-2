@@ -312,6 +312,16 @@ export default {
     save: 'Save changes',
     saved: 'Saved',
     signOut: 'Sign out',
+    telegram: {
+      sectionTitle: 'Telegram',
+      loading: 'Checking connection…',
+      connected: 'Your Telegram account is connected.',
+      linkedOn: 'Linked on',
+      disconnect: 'Disconnect Telegram',
+      hint: 'Connect Telegram to ask questions on the go and get deadline reminders.',
+      connect: 'Connect Telegram',
+      connecting: 'Opening Telegram…',
+    },
   },
   university: {
     tuitionFree: 'Free',

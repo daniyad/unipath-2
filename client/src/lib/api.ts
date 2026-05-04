@@ -68,6 +68,13 @@ export const createApi = (getToken: () => Promise<string | null>) => {
     getPlans: () => r<ServerPlan[]>('GET', '/api/plans'),
     updateTask: (planId: string, taskId: string, done: boolean) =>
       r<ServerPlan>('PATCH', `/api/plans/${planId}/tasks`, { taskId, done }),
+
+    // Telegram
+    generateTelegramLinkToken: () =>
+      r<{ token: string; deeplinkUrl: string }>('POST', '/api/telegram/link-token'),
+    getTelegramLinkStatus: () =>
+      r<{ telegram_user_id: number; linked_at: string } | null>('GET', '/api/telegram/link'),
+    unlinkTelegram: () => r<null>('DELETE', '/api/telegram/link'),
   }
 }
 

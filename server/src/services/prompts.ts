@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { StudentProfile, University } from '../types.js'
+import type { StudentProfile, University, ChatMessage } from '../types.js'
 
 // ─── Response validation schemas ───────────────────────────────────────────
 
@@ -63,6 +63,19 @@ export const planResponseSchema = z.object({
 
 export type ShortlistResult = z.infer<typeof shortlistResponseSchema>
 export type PlanResult = z.infer<typeof planResponseSchema>
+
+export const chatResponseSchema = z.object({
+  answer: z.string(),
+})
+export type ChatResult = z.infer<typeof chatResponseSchema>
+
+export interface ChatContext {
+  profile: StudentProfile
+  shortlistUniversities: Array<{ name: string; tier: string; tuitionUSD: number }>
+  upcomingDeadlines: Array<{ universityName: string; applicationDeadline: string }>
+  history: ChatMessage[]
+  userMessage: string
+}
 
 // ─── Prompt builders ────────────────────────────────────────────────────────
 
@@ -176,6 +189,58 @@ Student profile:
 - Special circumstances: ${profile.specialCircumstances ?? 'None'}
 
 Please recommend 3 universities for this student. Apply the deadline rules from the system prompt strictly.`,
+  }
+}
+
+const CHAT_SYSTEM = `You are Unipath, a university admissions assistant for Central Asian high school students. You answer questions strictly about university applications, admissions, deadlines, documents, tests, scholarships, and programs.
+
+STRICT RULES:
+1. If the user's message is NOT about university admissions or their application — respond with exactly one sentence redirecting them: "I can only help with university admissions questions." Do not expand on it.
+2. Never fabricate deadlines, test scores, acceptance rates, or URLs. If you don't have the data, say so in one sentence.
+3. Reply in the SAME language as the user's message. If they write in Russian, reply in Russian. If English, reply in English.
+4. Be concise — under 200 words. No unnecessary preamble.
+5. Use the student context below. Do not ask for information you already have.
+
+Respond with ONLY a valid JSON object:
+{"answer": "your response here"}`
+
+export const buildChatPrompt = (ctx: ChatContext): { system: string } => {
+  const profileBlock = [
+    `Name: ${ctx.profile.name}`,
+    `Nationality: ${ctx.profile.nationality}`,
+    `GPA: ${ctx.profile.gpa}/4.0`,
+    `Target year: ${ctx.profile.targetYear}`,
+    `Major: ${ctx.profile.intendedMajor}`,
+    `Countries: ${ctx.profile.targetCountries.join(', ')}`,
+    `Budget: $${ctx.profile.budgetUSD.toLocaleString()}/yr`,
+    `Languages: ${ctx.profile.languageProficiency.length > 0 ? ctx.profile.languageProficiency.map((l) => `${l.test} ${l.score}`).join(', ') : 'not specified'}`,
+  ].join('\n')
+
+  const shortlistBlock =
+    ctx.shortlistUniversities.length > 0
+      ? ctx.shortlistUniversities
+          .map((u) => `- ${u.name} (${u.tier}) — $${u.tuitionUSD.toLocaleString()}/yr`)
+          .join('\n')
+      : 'No shortlist yet'
+
+  const deadlineBlock =
+    ctx.upcomingDeadlines.length > 0
+      ? ctx.upcomingDeadlines
+          .map((d) => `- ${d.universityName}: ${d.applicationDeadline}`)
+          .join('\n')
+      : 'No upcoming deadlines'
+
+  return {
+    system: `${CHAT_SYSTEM}
+
+--- Student profile ---
+${profileBlock}
+
+--- Shortlist ---
+${shortlistBlock}
+
+--- Upcoming deadlines ---
+${deadlineBlock}`,
   }
 }
 
