@@ -73,7 +73,12 @@ export const createApi = (getToken: () => Promise<string | null>) => {
     generateTelegramLinkToken: () =>
       r<{ token: string; deeplinkUrl: string }>('POST', '/api/telegram/link-token'),
     getTelegramLinkStatus: () =>
-      r<{ telegram_user_id: number; linked_at: string } | null>('GET', '/api/telegram/link'),
+      r<{ telegram_user_id: number; linked_at: string; reminders_enabled: boolean } | null>(
+        'GET',
+        '/api/telegram/link',
+      ),
+    updateTelegramReminder: (enabled: boolean) =>
+      r<{ reminders_enabled: boolean }>('PATCH', '/api/telegram/reminder', { enabled }),
     unlinkTelegram: () => r<null>('DELETE', '/api/telegram/link'),
   }
 }

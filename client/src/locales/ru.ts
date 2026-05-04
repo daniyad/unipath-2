@@ -319,6 +319,7 @@ export default {
       hint: 'Подключи Telegram, чтобы задавать вопросы на ходу и получать напоминания о дедлайнах.',
       connect: 'Подключить Telegram',
       connecting: 'Открываем Telegram…',
+      reminders: 'Напоминания о дедлайнах',
     },
   },
   university: {

@@ -321,6 +321,7 @@ export default {
       hint: 'Connect Telegram to ask questions on the go and get deadline reminders.',
       connect: 'Connect Telegram',
       connecting: 'Opening Telegram…',
+      reminders: 'Deadline reminders',
     },
   },
   university: {

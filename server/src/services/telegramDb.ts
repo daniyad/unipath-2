@@ -49,14 +49,14 @@ export const findUserByTelegramId = async (telegramUserId: number): Promise<stri
 
 export const getTelegramLinkByUserId = async (
   userId: string,
-): Promise<{ telegram_user_id: number; linked_at: string } | null> => {
+): Promise<{ telegram_user_id: number; linked_at: string; reminders_enabled: boolean } | null> => {
   const { data, error } = await supabase
     .from('telegram_accounts')
-    .select('telegram_user_id, linked_at')
+    .select('telegram_user_id, linked_at, reminders_enabled')
     .eq('user_id', userId)
     .maybeSingle()
   if (error) throw new Error(`Failed to get Telegram link: ${error.message}`)
-  return data as { telegram_user_id: number; linked_at: string } | null
+  return data as { telegram_user_id: number; linked_at: string; reminders_enabled: boolean } | null
 }
 
 export const unlinkTelegramAccount = async (userId: string): Promise<void> => {

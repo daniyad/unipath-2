@@ -62,18 +62,27 @@ export function ProfilePage() {
   const [tg, setTg] = useState<{
     linked: boolean
     linkedAt?: string
+    remindersEnabled: boolean
     loading: boolean
     generating: boolean
-  }>({ linked: false, loading: true, generating: false })
+  }>({ linked: false, remindersEnabled: true, loading: true, generating: false })
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     void api
       .getTelegramLinkStatus()
       .then((d) =>
-        setTg({ linked: !!d, linkedAt: d?.linked_at, loading: false, generating: false }),
+        setTg({
+          linked: !!d,
+          linkedAt: d?.linked_at,
+          remindersEnabled: d?.reminders_enabled ?? true,
+          loading: false,
+          generating: false,
+        }),
       )
-      .catch(() => setTg({ linked: false, loading: false, generating: false }))
+      .catch(() =>
+        setTg({ linked: false, remindersEnabled: true, loading: false, generating: false }),
+      )
   }, [api])
 
   useEffect(
@@ -91,7 +100,13 @@ export function ProfilePage() {
       pollRef.current = setInterval(() => {
         void api.getTelegramLinkStatus().then((d) => {
           if (d) {
-            setTg({ linked: true, linkedAt: d.linked_at, loading: false, generating: false })
+            setTg({
+              linked: true,
+              linkedAt: d.linked_at,
+              remindersEnabled: d.reminders_enabled ?? true,
+              loading: false,
+              generating: false,
+            })
             if (pollRef.current) clearInterval(pollRef.current)
           }
         })
@@ -105,9 +120,18 @@ export function ProfilePage() {
     }
   }
 
+  const handleToggleReminders = async (enabled: boolean) => {
+    setTg((s) => ({ ...s, remindersEnabled: enabled }))
+    try {
+      await api.updateTelegramReminder(enabled)
+    } catch {
+      setTg((s) => ({ ...s, remindersEnabled: !enabled }))
+    }
+  }
+
   const handleUnlinkTelegram = async () => {
     await api.unlinkTelegram()
-    setTg({ linked: false, loading: false, generating: false })
+    setTg({ linked: false, remindersEnabled: true, loading: false, generating: false })
   }
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -515,6 +539,16 @@ export function ProfilePage() {
                 {tg.linkedAt &&
                   ` ${t('profile.telegram.linkedOn')} ${new Date(tg.linkedAt).toLocaleDateString()}.`}
               </p>
+              <label
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+              >
+                <input
+                  type="checkbox"
+                  checked={tg.remindersEnabled}
+                  onChange={(e) => void handleToggleReminders(e.target.checked)}
+                />
+                {t('profile.telegram.reminders')}
+              </label>
               <button
                 type="button"
                 className="btn btn-ghost"

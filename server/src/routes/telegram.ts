@@ -213,6 +213,23 @@ router.get('/telegram/link', authMiddleware, async (req, res, next) => {
   }
 })
 
+// ─── HTTP: toggle reminders ────────────────────────────────────────────────────
+
+router.patch('/telegram/reminder', authMiddleware, async (req, res, next) => {
+  try {
+    const { enabled } = req.body as { enabled: boolean }
+    const link = await getTelegramLinkByUserId(req.user!.id)
+    if (!link) {
+      res.status(404).json({ success: false, error: 'Telegram not linked' })
+      return
+    }
+    await setRemindersEnabled(link.telegram_user_id, enabled)
+    res.json({ success: true, data: { reminders_enabled: enabled } })
+  } catch (err) {
+    next(err)
+  }
+})
+
 // ─── HTTP: unlink ──────────────────────────────────────────────────────────────
 
 router.delete('/telegram/link', authMiddleware, async (req, res, next) => {
