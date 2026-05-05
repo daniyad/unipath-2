@@ -1,63 +1,196 @@
+/* Profile page — flat editorial layout */
+
 .page {
   min-height: 100vh;
   background: var(--bg-base);
-  padding: 72px 16px 64px;
 }
 
-.container {
-  max-width: 680px;
+.profPage {
+  min-height: 100vh;
+  padding: 88px 32px 96px;
+  max-width: 880px;
   margin: 0 auto;
 }
 
-.title {
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
+/* ───────── Header ───────── */
+.profHeader {
+  padding-bottom: 32px;
+  margin-bottom: 36px;
+  border-bottom: 0.5px solid var(--border-default);
+}
+
+.profName {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.profMeta {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.profMeta a {
   color: var(--text-primary);
-  margin-bottom: 32px;
-}
-
-/* Sections */
-.section {
-  background: var(--bg-surface);
-  border: 0.5px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  padding: 28px;
-  margin-bottom: 12px;
-}
-
-.sectionTitle {
-  font-size: 13px;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-disabled);
-  margin-bottom: 20px;
+  text-decoration: none;
 }
 
-/* Fields */
-.fields {
+.profMeta a:hover {
+  color: var(--primary-400);
+}
+
+/* ───────── Block frame ───────── */
+.stackBlocks {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 36px;
 }
 
-.grid2 {
+.block {
+  display: flex;
+  flex-direction: column;
+}
+
+.blockHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 0.5px solid var(--border-default);
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-disabled);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.eyebrowDanger {
+  color: var(--error);
+}
+
+.blockTitle {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.titleDanger {
+  color: var(--error);
+}
+
+.blockSub {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 8px;
+  max-width: 60ch;
+}
+
+.blockAction {
+  flex-shrink: 0;
+}
+
+.blockBody {
+  display: flex;
+  flex-direction: column;
+}
+
+.blockDanger {
+  margin-top: 16px;
+}
+
+/* ───────── Field grid ───────── */
+.grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px 32px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 }
 
-.label {
+.fieldLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-disabled);
+}
+
+.optional {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  color: var(--text-disabled);
+  margin-left: 4px;
+}
+
+.fieldValue {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.divider {
+  height: 0.5px;
+  background: var(--border-default);
+  margin: 28px 0;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stackGap {
+  margin-top: 20px;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  background: var(--bg-subtle);
+  border: 0.5px solid var(--border-default);
+  border-radius: var(--radius-full);
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.quote {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  margin-top: 4px;
+  max-width: 60ch;
 }
 
 .hint {
@@ -65,143 +198,264 @@
   color: var(--text-secondary);
 }
 
-.textarea {
-  resize: vertical;
-}
-
-/* Options */
-.options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.optionBtn {
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
+.editLink {
   font-size: 14px;
   font-weight: 500;
-  border: 0.5px solid var(--border-default);
-  background: var(--bg-subtle);
   color: var(--text-primary);
-  cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-default);
-}
-
-.optionBtn:hover {
-  border-color: var(--primary-900);
-}
-
-.optionBtnActive {
-  background: var(--primary-900);
-  border-color: var(--primary-900);
-  color: #fff;
-  font-weight: 600;
-}
-
-/* Chips */
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.chipBtn {
-  padding: 6px 14px;
-  border-radius: var(--radius-full);
-  font-size: 13px;
-  font-weight: 500;
-  border: 0.5px solid var(--border-default);
-  background: var(--bg-subtle);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-default);
-}
-
-.chipBtn:hover {
-  border-color: var(--primary-900);
-  color: var(--primary-900);
-}
-
-.chipBtnActive {
-  background: var(--primary-900);
-  border-color: var(--primary-900);
-  color: #fff;
-  font-weight: 600;
-}
-
-/* Languages */
-.langRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 12px;
-  align-items: end;
-}
-
-.removeBtn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  color: var(--text-disabled);
-  background: none;
-  border: 0.5px solid var(--border-default);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-default);
-  margin-bottom: 0;
-  align-self: end;
-}
-
-.removeBtn:hover {
-  color: var(--error);
-  border-color: var(--error);
-}
-
-.addBtn {
-  align-self: flex-start;
-}
-
-/* Footer */
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 32px;
-  padding: 24px 0;
-  border-top: 0.5px solid var(--border-default);
-}
-
-.footerLeft {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.email {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.footerRight {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.signOutBtn {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
   background: none;
   border: none;
   cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--border-strong);
   padding: 0;
-  transition: color var(--duration-fast) var(--ease-default);
+  transition: color 150ms var(--ease-default), text-decoration-color 150ms var(--ease-default);
 }
 
-.signOutBtn:hover {
+.editLink:hover {
+  color: var(--primary-900);
+  text-decoration-color: var(--primary-900);
+}
+
+/* ───────── Inline edit ───────── */
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.editGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.editField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ───────── Telegram ───────── */
+.tgConnected {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tgStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c0392b;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.statusConnected {
+  background: var(--success);
+}
+
+.tgReminderRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.tgReminderLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* ───────── Toggle ───────── */
+.toggle {
+  width: 40px;
+  height: 24px;
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+  padding: 2px;
+  border: none;
+  flex-shrink: 0;
+  transition: background 200ms var(--ease-default);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.toggleOn {
+  background: var(--primary-900);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--primary-900);
+  outline-offset: 2px;
+}
+
+.toggleKnob {
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  display: block;
+  transition: transform 200ms var(--ease-default);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+.toggleOn .toggleKnob {
+  transform: translateX(16px);
+}
+
+/* ───────── Notifications ───────── */
+.prefList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+}
+
+.prefRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 0;
+  border-top: 0.5px solid var(--border-default);
+}
+
+.prefRow:first-child {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.prefRow:last-child {
+  padding-bottom: 0;
+}
+
+.prefText {
+  flex: 1;
+  min-width: 0;
+}
+
+.prefTitle {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.prefSub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 60ch;
+}
+
+/* ───────── Preferences ───────── */
+.prefField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 420px;
+}
+
+/* ───────── Danger zone ───────── */
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  background: #fff;
   color: var(--error);
+  border: 1px solid var(--error);
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 150ms var(--ease-default), color 150ms var(--ease-default);
+}
+
+.btnDanger:hover {
+  background: var(--error);
+  color: #fff;
+}
+
+.btnDanger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #fff;
+  color: var(--error);
+}
+
+.btnDanger:disabled:hover {
+  background: #fff;
+  color: var(--error);
+}
+
+.dangerConfirm {
+  background: #fff;
+  border: 0.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dangerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ───────── Responsive ───────── */
+@media (max-width: 760px) {
+  .profPage {
+    padding: 80px 20px 64px;
+  }
+
+  .profName {
+    font-size: 32px;
+  }
+
+  .blockTitle {
+    font-size: 22px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .editGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .blockHead {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

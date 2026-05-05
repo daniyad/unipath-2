@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { authMiddleware } from '../middleware/auth.js'
-import { getProfile, upsertProfile, markAllStale } from '../services/db.js'
+import { getProfile, upsertProfile, markAllStale, deleteAllUserData } from '../services/db.js'
 import { diffProfile } from '../services/profileDiff.js'
 
 const router = Router()
@@ -29,6 +29,15 @@ router.patch('/profile', authMiddleware, async (req, res, next) => {
     }
 
     res.json({ success: true, data: { profile: saved.data, staleFields } })
+  } catch (err) {
+    next(err)
+  }
+})
+
+router.delete('/profile', authMiddleware, async (req, res, next) => {
+  try {
+    await deleteAllUserData(req.user!.id)
+    res.json({ success: true, data: null })
   } catch (err) {
     next(err)
   }

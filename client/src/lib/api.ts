@@ -80,6 +80,9 @@ export const createApi = (getToken: () => Promise<string | null>) => {
     updateTelegramReminder: (enabled: boolean) =>
       r<{ reminders_enabled: boolean }>('PATCH', '/api/telegram/reminder', { enabled }),
     unlinkTelegram: () => r<null>('DELETE', '/api/telegram/link'),
+
+    // Account
+    deleteAccount: () => r<null>('DELETE', '/api/profile'),
   }
 }
 

@@ -29,6 +29,22 @@ export const upsertProfile = async (userId: string, profileData: Record<string, 
   return data
 }
 
+export const deleteAllUserData = async (userId: string): Promise<void> => {
+  // Delete dependent rows first to avoid FK violations
+  await Promise.all([
+    supabase.from('telegram_accounts').delete().eq('user_id', userId),
+    supabase.from('chat_sessions').delete().eq('user_id', userId),
+    supabase.from('link_tokens').delete().eq('user_id', userId),
+  ])
+  await Promise.all([
+    supabase.from('shortlists').delete().eq('user_id', userId),
+    supabase.from('plans').delete().eq('user_id', userId),
+  ])
+  await supabase.from('profiles').delete().eq('user_id', userId)
+  const { error } = await supabase.auth.admin.deleteUser(userId)
+  if (error) throw new Error(`Failed to delete auth user: ${error.message}`)
+}
+
 // ─── Stale marking ────────────────────────────────────────────────────────────
 
 export const markAllStale = async (userId: string) => {
