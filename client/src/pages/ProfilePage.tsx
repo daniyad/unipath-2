@@ -1,63 +1,467 @@
 import { useState, useEffect, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useProfile } from '../contexts/ProfileContext'
 import { useApi } from '../contexts/ApiContext'
 import { Navbar } from '../components/Navbar'
-import type { PartialProfile } from '../types'
 import styles from './ProfilePage.module.css'
 
-const SUBJECT_KEYS = [
-  'math',
-  'physics',
-  'chemistry',
-  'biology',
-  'it',
-  'economics',
-  'history',
-  'languages',
-  'art',
-  'medicine',
-  'law',
-  'psychology',
-]
-const ACTIVITY_KEYS = [
-  'sports',
-  'music',
-  'volunteering',
-  'olympiads',
-  'debate',
-  'council',
-  'startup',
-  'art',
-  'science',
-]
-const LEVEL_KEYS = ['beginner', 'elementary', 'intermediate', 'advanced', 'native']
-const COUNTRY_OPTIONS = ['USA', 'Canada', 'UK', 'Germany', 'South Korea', 'UAE']
+// ─── Block frame ──────────────────────────────────────────────────────────────
 
-const CIS_COUNTRIES = [
-  'Kazakhstan',
-  'Kyrgyzstan',
-  'Tajikistan',
-  'Turkmenistan',
-  'Uzbekistan',
-  'Russia',
-  'Belarus',
-  'Ukraine',
-  'Armenia',
-  'Azerbaijan',
-  'Georgia',
-  'Moldova',
-]
-const VIBE_KEYS = ['cityBig', 'citySmall', 'cityTown', 'cityAny'] as const
+interface BlockProps {
+  eyebrow: string
+  title: string
+  sub?: string
+  action?: React.ReactNode
+  children: React.ReactNode
+}
+
+function Block({ eyebrow, title, sub, action, children }: Readonly<BlockProps>) {
+  return (
+    <section className={styles.block}>
+      <div className={styles.blockHead}>
+        <div>
+          <span className={styles.eyebrow}>{eyebrow}</span>
+          <h2 className={styles.blockTitle}>{title}</h2>
+          {sub && <p className={styles.blockSub}>{sub}</p>}
+        </div>
+        {action && <div className={styles.blockAction}>{action}</div>}
+      </div>
+      <div className={styles.blockBody}>{children}</div>
+    </section>
+  )
+}
+
+interface FieldProps {
+  label: string
+  children: React.ReactNode
+}
+
+function Field({ label, children }: Readonly<FieldProps>) {
+  return (
+    <div className={styles.field}>
+      <div className={styles.fieldLabel}>{label}</div>
+      <div className={styles.fieldValue}>{children}</div>
+    </div>
+  )
+}
+
+// ─── Sections ─────────────────────────────────────────────────────────────────
+
+interface AccountInfoProps {
+  name: string | undefined
+  email: string
+  country: string | undefined
+  targetYear: number | undefined
+  onSave: (name: string, country: string) => Promise<void>
+}
+
+function AccountInfo({ name, email, country, targetYear, onSave }: Readonly<AccountInfoProps>) {
+  const [editing, setEditing] = useState(false)
+  const [editName, setEditName] = useState(name ?? '')
+  const [editCountry, setEditCountry] = useState(country ?? '')
+  const [saving, setSaving] = useState(false)
+
+  const handleEdit = () => {
+    setEditName(name ?? '')
+    setEditCountry(country ?? '')
+    setEditing(true)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await onSave(editName, editCountry)
+      setEditing(false)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const gradYear = targetYear ? `Class of ${targetYear}` : '—'
+
+  return (
+    <Block
+      eyebrow="Account"
+      title="Who you are"
+      sub="We use this to personalize your shortlist and address letters of motivation. Nothing here leaves Unipath."
+      action={
+        editing ? undefined : (
+          <button className="btn btn-ghost" onClick={handleEdit} type="button">
+            Edit
+          </button>
+        )
+      }
+    >
+      {editing ? (
+        <div className={styles.editForm}>
+          <div className={styles.editGrid}>
+            <div className={styles.editField}>
+              <label className={styles.fieldLabel}>Full name</label>
+              <input
+                className="input"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Your name"
+                autoFocus
+              />
+            </div>
+            <div className={styles.editField}>
+              <label className={styles.fieldLabel}>Country</label>
+              <input
+                className="input"
+                value={editCountry}
+                onChange={(e) => setEditCountry(e.target.value)}
+                placeholder="Kazakhstan"
+              />
+            </div>
+          </div>
+          <div className={styles.editActions}>
+            <button className="btn btn-ghost" onClick={() => setEditing(false)} type="button">
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={() => void handleSave()}
+              disabled={saving}
+              type="button"
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className={styles.grid}>
+          <Field label="Full name">{name || '—'}</Field>
+          <Field label="Email">{email}</Field>
+          <Field label="Country">{country || '—'}</Field>
+          <Field label="Graduating">{gradYear}</Field>
+        </div>
+      )}
+    </Block>
+  )
+}
+
+interface ProfileAnswersProps {
+  careerDirection: string | undefined
+  academicScore: number | undefined
+  academicScoreMax: number | undefined
+  languages: Array<{ language: string; level: string }> | undefined
+  tuitionMin: number | undefined
+  tuitionMax: number | undefined
+  preferredCountries: string[] | undefined
+  whyAbroad: string | undefined
+  onEditAnswers: () => void
+}
+
+function ProfileAnswers({
+  careerDirection,
+  academicScore,
+  academicScoreMax,
+  languages,
+  tuitionMin,
+  tuitionMax,
+  preferredCountries,
+  whyAbroad,
+  onEditAnswers,
+}: Readonly<ProfileAnswersProps>) {
+  const gpa =
+    academicScore != null && academicScoreMax != null
+      ? `${academicScore} / ${academicScoreMax}`
+      : '—'
+
+  const englishLang = languages?.find(
+    (l) => l.language.toLowerCase().includes('english') || l.language.toLowerCase() === 'en',
+  )
+  const englishLevel = englishLang ? `${englishLang.language} — ${englishLang.level}` : '—'
+
+  const budget =
+    tuitionMin != null && tuitionMax != null
+      ? `$${tuitionMin.toLocaleString()}–$${tuitionMax.toLocaleString()}`
+      : '—'
+
+  const regions = preferredCountries ?? []
+
+  return (
+    <Block
+      eyebrow="Your profile"
+      title="What you told us"
+      sub="These are the answers we used to build your shortlist. Update anything here and we'll re-check your recommendations."
+      action={
+        <button className={styles.editLink} onClick={onEditAnswers} type="button">
+          Edit answers
+        </button>
+      }
+    >
+      <div className={styles.grid}>
+        <Field label="Field of study">{careerDirection || '—'}</Field>
+        <Field label="GPA / average">{gpa}</Field>
+        <Field label="English level">{englishLevel}</Field>
+        <Field label="Annual budget">{budget}</Field>
+      </div>
+
+      <div className={styles.divider} />
+
+      <div className={styles.stack}>
+        <div className={styles.fieldLabel}>Regions you&apos;d consider</div>
+        <div className={styles.chipRow}>
+          {regions.length > 0 ? (
+            regions.map((r) => (
+              <span key={r} className={styles.chip}>
+                {r}
+              </span>
+            ))
+          ) : (
+            <span className={styles.fieldValue}>—</span>
+          )}
+        </div>
+      </div>
+
+      {whyAbroad && (
+        <div className={`${styles.stack} ${styles.stackGap}`}>
+          <div className={styles.fieldLabel}>Why you want to study abroad</div>
+          <p className={styles.quote}>{whyAbroad}</p>
+        </div>
+      )}
+    </Block>
+  )
+}
+
+interface TelegramBlockProps {
+  linked: boolean
+  loading: boolean
+  generating: boolean
+  linkedAt: string | undefined
+  remindersEnabled: boolean
+  onConnect: () => Promise<void>
+  onToggleReminders: (enabled: boolean) => Promise<void>
+  onUnlink: () => Promise<void>
+}
+
+function Toggle({
+  on,
+  onChange,
+  label,
+}: Readonly<{ on: boolean; onChange: (v: boolean) => void; label: string }>) {
+  return (
+    <button
+      className={`${styles.toggle} ${on ? styles.toggleOn : ''}`}
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      onClick={() => onChange(!on)}
+      type="button"
+    >
+      <span className={styles.toggleKnob} />
+    </button>
+  )
+}
+
+function TelegramBlock({
+  linked,
+  loading,
+  generating,
+  linkedAt,
+  remindersEnabled,
+  onConnect,
+  onToggleReminders,
+  onUnlink,
+}: Readonly<TelegramBlockProps>) {
+  if (loading) {
+    return (
+      <Block eyebrow="Stay on track" title="Connect the Telegram bot">
+        <p className={styles.hint}>Checking connection…</p>
+      </Block>
+    )
+  }
+
+  if (linked) {
+    const linkedDate = linkedAt ? new Date(linkedAt).toLocaleDateString() : null
+    return (
+      <Block
+        eyebrow="Stay on track"
+        title="Telegram connected"
+        sub={
+          linkedDate
+            ? `Connected on ${linkedDate}. The bot sends your daily check-in — you can pause it any time.`
+            : 'The bot sends your daily check-in — you can pause it any time.'
+        }
+      >
+        <div className={styles.tgConnected}>
+          <div className={styles.tgStatus}>
+            <span className={`${styles.statusDot} ${styles.statusConnected}`} />
+            <span>Connected</span>
+          </div>
+          <label className={styles.tgReminderRow}>
+            <Toggle
+              on={remindersEnabled}
+              onChange={(v) => void onToggleReminders(v)}
+              label="Daily reminders"
+            />
+            <span className={styles.tgReminderLabel}>Daily reminders on</span>
+          </label>
+          <button className="btn btn-ghost" onClick={() => void onUnlink()} type="button">
+            Disconnect
+          </button>
+        </div>
+      </Block>
+    )
+  }
+
+  return (
+    <Block
+      eyebrow="Stay on track"
+      title="Connect the Telegram bot"
+      sub="Daily nudges in your pocket. The bot sends one message a day with what's due — no spam, no marketing. You can pause it any time."
+    >
+      <button
+        className="btn btn-primary"
+        onClick={() => void onConnect()}
+        disabled={generating}
+        type="button"
+      >
+        {generating ? 'Opening Telegram…' : 'Connect via Telegram'}
+      </button>
+    </Block>
+  )
+}
+
+interface NotificationsProps {
+  deadlinesEnabled: boolean
+  onDeadlinesChange: (enabled: boolean) => void
+}
+
+function Notifications({ deadlinesEnabled, onDeadlinesChange }: Readonly<NotificationsProps>) {
+  return (
+    <Block
+      eyebrow="Reminders"
+      title="What we'll nudge you about"
+      sub="The whole point of Unipath is that you actually do the work. Pick what helps and turn off what doesn't."
+    >
+      <ul className={styles.prefList}>
+        <li className={styles.prefRow}>
+          <div className={styles.prefText}>
+            <div className={styles.prefTitle}>Deadline countdowns</div>
+            <div className={styles.prefSub}>
+              A heads-up at 7 and 1 day before each application closes.
+            </div>
+          </div>
+          <Toggle on={deadlinesEnabled} onChange={onDeadlinesChange} label="Deadline countdowns" />
+        </li>
+      </ul>
+    </Block>
+  )
+}
+
+interface PreferencesBlockProps {
+  parentEmail: string
+  onChange: (val: string) => void
+}
+
+function PreferencesBlock({ parentEmail, onChange }: Readonly<PreferencesBlockProps>) {
+  return (
+    <Block
+      eyebrow="Preferences"
+      title="Extra contacts"
+      sub="Optional — used only for the weekly recap if you turn it on above."
+    >
+      <div className={styles.prefField}>
+        <div className={styles.fieldLabel}>
+          Parent / guardian email <span className={styles.optional}>(optional)</span>
+        </div>
+        <input
+          className="input"
+          placeholder="parent@email.com"
+          value={parentEmail}
+          onChange={(e) => onChange(e.target.value)}
+          type="email"
+        />
+      </div>
+    </Block>
+  )
+}
+
+interface DeleteProfileProps {
+  onDelete: () => Promise<void>
+}
+
+function DeleteProfile({ onDelete }: Readonly<DeleteProfileProps>) {
+  const [confirming, setConfirming] = useState(false)
+  const [text, setText] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    try {
+      await onDelete()
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  return (
+    <section className={`${styles.block} ${styles.blockDanger}`}>
+      <div className={styles.blockHead}>
+        <div>
+          <span className={`${styles.eyebrow} ${styles.eyebrowDanger}`}>Danger zone</span>
+          <h2 className={`${styles.blockTitle} ${styles.titleDanger}`}>Delete your profile</h2>
+          <p className={styles.blockSub}>
+            Permanently deletes your account, shortlist, action plans, task history, and disconnects
+            the Telegram bot. This can&apos;t be undone.
+          </p>
+        </div>
+      </div>
+      <div className={styles.blockBody}>
+        {!confirming ? (
+          <button className={styles.btnDanger} onClick={() => setConfirming(true)} type="button">
+            Delete my profile
+          </button>
+        ) : (
+          <div className={styles.dangerConfirm}>
+            <div className={styles.fieldLabel}>
+              Type <strong>delete my profile</strong> to confirm
+            </div>
+            <input
+              className="input"
+              placeholder="delete my profile"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              autoFocus
+            />
+            <div className={styles.dangerActions}>
+              <button
+                className="btn btn-ghost"
+                onClick={() => {
+                  setConfirming(false)
+                  setText('')
+                }}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.btnDanger}
+                disabled={text.trim().toLowerCase() !== 'delete my profile' || deleting}
+                onClick={() => void handleDelete()}
+                type="button"
+              >
+                {deleting ? 'Deleting…' : 'Delete forever'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function ProfilePage() {
-  const { profile, saveProfileToAPI } = useProfile()
   const { user, logout } = useAuth()
-  const { t } = useTranslation()
+  const { profile, saveProfileToAPI, clearProfile } = useProfile()
   const api = useApi()
-
-  const [data, setData] = useState<PartialProfile>(profile ?? {})
+  const navigate = useNavigate()
 
   const [tg, setTg] = useState<{
     linked: boolean
@@ -66,23 +470,22 @@ export function ProfilePage() {
     loading: boolean
     generating: boolean
   }>({ linked: false, remindersEnabled: true, loading: true, generating: false })
+
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     void api
       .getTelegramLinkStatus()
       .then((d) =>
-        setTg({
+        setTg((s) => ({
+          ...s,
           linked: !!d,
           linkedAt: d?.linked_at,
           remindersEnabled: d?.reminders_enabled ?? true,
           loading: false,
-          generating: false,
-        }),
+        })),
       )
-      .catch(() =>
-        setTg({ linked: false, remindersEnabled: true, loading: false, generating: false }),
-      )
+      .catch(() => setTg((s) => ({ ...s, loading: false })))
   }, [api])
 
   useEffect(
@@ -92,7 +495,7 @@ export function ProfilePage() {
     [],
   )
 
-  const handleConnectTelegram = async () => {
+  const handleConnect = async () => {
     setTg((s) => ({ ...s, generating: true }))
     try {
       const { deeplinkUrl } = await api.generateTelegramLinkToken()
@@ -133,469 +536,76 @@ export function ProfilePage() {
     await api.unlinkTelegram()
     setTg({ linked: false, remindersEnabled: true, loading: false, generating: false })
   }
-  const [saved, setSaved] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [staleMsg, setStaleMsg] = useState(false)
 
-  const update = (updates: PartialProfile) => setData((prev) => ({ ...prev, ...updates }))
+  const [parentEmail, setParentEmail] = useState('')
 
-  const handleSave = async () => {
-    setSaving(true)
-    try {
-      const result = await saveProfileToAPI(data)
-      if (result.staleFields.length > 0) {
-        setStaleMsg(true)
-        setTimeout(() => setStaleMsg(false), 4000)
-      } else {
-        setSaved(true)
-        setTimeout(() => setSaved(false), 2000)
-      }
-    } catch {
-      // silently fail — user can retry
-    } finally {
-      setSaving(false)
-    }
+  const handleSaveAccount = async (name: string, country: string) => {
+    await saveProfileToAPI({ name, country })
   }
 
-  const toggleChip = (field: 'subjects' | 'activities' | 'preferredCountries', val: string) => {
-    const arr = (data[field] as string[]) ?? []
-    update({ [field]: arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val] })
+  const handleDelete = async () => {
+    await api.deleteAccount()
+    clearProfile()
+    await logout()
   }
 
-  const updateLang = (idx: number, field: 'language' | 'level', value: string) => {
-    const langs = data.languages ?? [{ language: '', level: '' }]
-    update({ languages: langs.map((l, i) => (i === idx ? { ...l, [field]: value } : l)) })
-  }
-
-  const addLang = () => {
-    const langs = data.languages ?? []
-    update({ languages: [...langs, { language: '', level: '' }] })
-  }
-
-  const removeLang = (idx: number) => {
-    const langs = data.languages ?? []
-    update({ languages: langs.filter((_, i) => i !== idx) })
-  }
-
-  const langs = data.languages ?? [{ language: '', level: '' }]
+  const name = profile?.name
+  const email = user?.email ?? ''
 
   return (
     <div className={styles.page}>
       <Navbar showProfileActions />
 
-      <div className={styles.container}>
-        <h1 className={styles.title}>{t('profile.title')}</h1>
+      <div className={styles.profPage}>
+        {/* Header */}
+        <header className={styles.profHeader}>
+          <h1 className={styles.profName}>{name || 'Your Profile'}</h1>
+          <p className={styles.profMeta}>
+            <a href={`mailto:${email}`}>{email}</a>
+          </p>
+        </header>
 
-        {/* Basics */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>{t('wizard.steps.basics')}</h2>
-          <div className={styles.grid2}>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.basics.nameLabel')}</label>
-              <input
-                className="input"
-                value={data.name ?? ''}
-                onChange={(e) => update({ name: e.target.value })}
-                placeholder={t('wizard.basics.namePlaceholder')}
-              />
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.basics.countryLabel')}</label>
-              <select
-                className="input"
-                value={data.country ?? ''}
-                onChange={(e) => update({ country: e.target.value })}
-              >
-                <option value="">Select your country</option>
-                {CIS_COUNTRIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.basics.ageLabel')}</label>
-              <input
-                className="input"
-                type="number"
-                min={16}
-                max={20}
-                value={data.age ?? ''}
-                onChange={(e) => update({ age: Number(e.target.value) })}
-                placeholder="16"
-              />
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.basics.gradeLabel')}</label>
-              <input
-                className="input"
-                type="number"
-                min={9}
-                max={12}
-                value={data.grade ?? ''}
-                onChange={(e) => update({ grade: Number(e.target.value) })}
-                placeholder="11"
-              />
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.basics.yearLabel')}</label>
-              <input
-                className="input"
-                type="number"
-                min={2025}
-                max={2030}
-                value={data.targetYear ?? ''}
-                onChange={(e) => update({ targetYear: Number(e.target.value) })}
-                placeholder="2026"
-              />
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.basics.scoreLabel')}</label>
-              <input
-                className="input"
-                type="number"
-                min={0}
-                step={0.1}
-                value={data.academicScore ?? ''}
-                onChange={(e) => update({ academicScore: Number(e.target.value) })}
-                placeholder={t('wizard.basics.scorePlaceholder')}
-              />
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.basics.scoreMaxLabel')}</label>
-              <select
-                className="input"
-                value={data.academicScoreMax ?? ''}
-                onChange={(e) => update({ academicScoreMax: Number(e.target.value) })}
-              >
-                <option value="">—</option>
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={100}>100</option>
-              </select>
-            </div>
-          </div>
-        </section>
+        <div className={styles.stackBlocks}>
+          <AccountInfo
+            name={name}
+            email={email}
+            country={profile?.country}
+            targetYear={profile?.targetYear}
+            onSave={handleSaveAccount}
+          />
 
-        {/* Motivation */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>{t('wizard.steps.motivation')}</h2>
-          <div className={styles.fields}>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.motivation.whyLabel')}</label>
-              <textarea
-                className={`input ${styles.textarea}`}
-                value={data.whyAbroad ?? ''}
-                onChange={(e) => update({ whyAbroad: e.target.value })}
-                placeholder={t('wizard.motivation.whyPlaceholder')}
-                rows={4}
-              />
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.motivation.returnLabel')}</label>
-              <div className={styles.options}>
-                {[
-                  { value: true as boolean | null, key: 'wizard.motivation.returnYes' },
-                  { value: false as boolean | null, key: 'wizard.motivation.returnNo' },
-                  { value: null as boolean | null, key: 'wizard.motivation.returnUnknown' },
-                ].map((opt) => (
-                  <button
-                    key={String(opt.value)}
-                    type="button"
-                    className={`${styles.optionBtn} ${data.planToReturn === opt.value ? styles.optionBtnActive : ''}`}
-                    onClick={() => update({ planToReturn: opt.value })}
-                  >
-                    {t(opt.key)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
+          <ProfileAnswers
+            careerDirection={profile?.careerDirection}
+            academicScore={profile?.academicScore}
+            academicScoreMax={profile?.academicScoreMax}
+            languages={profile?.languages}
+            tuitionMin={profile?.tuitionMin}
+            tuitionMax={profile?.tuitionMax}
+            preferredCountries={profile?.preferredCountries}
+            whyAbroad={profile?.whyAbroad}
+            onEditAnswers={() => navigate('/setup')}
+          />
 
-        {/* Interests */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>{t('wizard.steps.interests')}</h2>
-          <div className={styles.fields}>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.interests.subjectsLabel')}</label>
-              <div className={styles.chips}>
-                {SUBJECT_KEYS.map((key) => {
-                  const val = t(`wizard.interests.subjects.${key}`)
-                  const active = (data.subjects ?? []).includes(val)
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      className={`${styles.chipBtn} ${active ? styles.chipBtnActive : ''}`}
-                      onClick={() => toggleChip('subjects', val)}
-                    >
-                      {val}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.interests.careerLabel')}</label>
-              <input
-                className="input"
-                value={data.careerDirection ?? ''}
-                onChange={(e) => update({ careerDirection: e.target.value })}
-                placeholder={t('wizard.interests.careerPlaceholder')}
-              />
-            </div>
-          </div>
-        </section>
+          <TelegramBlock
+            linked={tg.linked}
+            loading={tg.loading}
+            generating={tg.generating}
+            linkedAt={tg.linkedAt}
+            remindersEnabled={tg.remindersEnabled}
+            onConnect={handleConnect}
+            onToggleReminders={handleToggleReminders}
+            onUnlink={handleUnlinkTelegram}
+          />
 
-        {/* Languages */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>{t('wizard.steps.languages')}</h2>
-          <div className={styles.fields}>
-            {langs.map((l, idx) => (
-              <div key={idx} className={styles.langRow}>
-                <div className={styles.field}>
-                  <label className={styles.label}>{t('wizard.languages.languageLabel')}</label>
-                  <input
-                    className="input"
-                    value={l.language}
-                    onChange={(e) => updateLang(idx, 'language', e.target.value)}
-                    placeholder={t('wizard.languages.languagePlaceholder')}
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label className={styles.label}>{t('wizard.languages.levelLabel')}</label>
-                  <select
-                    className="input"
-                    value={l.level}
-                    onChange={(e) => updateLang(idx, 'level', e.target.value)}
-                  >
-                    <option value="">{t('wizard.languages.levelPlaceholder')}</option>
-                    {LEVEL_KEYS.map((key) => (
-                      <option key={key} value={t(`wizard.languages.levels.${key}`)}>
-                        {t(`wizard.languages.levels.${key}`)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {langs.length > 1 && (
-                  <button
-                    type="button"
-                    className={styles.removeBtn}
-                    onClick={() => removeLang(idx)}
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-            ))}
-            <button type="button" className={`btn btn-ghost ${styles.addBtn}`} onClick={addLang}>
-              {t('wizard.languages.addLanguage')}
-            </button>
-          </div>
-        </section>
+          <Notifications
+            deadlinesEnabled={tg.remindersEnabled}
+            onDeadlinesChange={(enabled) => void handleToggleReminders(enabled)}
+          />
 
-        {/* Budget */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>{t('wizard.steps.budget')}</h2>
-          <div className={styles.fields}>
-            <p className={styles.hint}>{t('wizard.budget.hint')}</p>
-            <div className={styles.grid2}>
-              <div className={styles.field}>
-                <label className={styles.label}>{t('wizard.budget.fromLabel')}</label>
-                <input
-                  className="input"
-                  type="number"
-                  min={0}
-                  step={1000}
-                  value={data.tuitionMin ?? ''}
-                  onChange={(e) => update({ tuitionMin: Number(e.target.value) })}
-                  placeholder="5000"
-                />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label}>{t('wizard.budget.toLabel')}</label>
-                <input
-                  className="input"
-                  type="number"
-                  min={0}
-                  step={1000}
-                  value={data.tuitionMax ?? ''}
-                  onChange={(e) => update({ tuitionMax: Number(e.target.value) })}
-                  placeholder="20000"
-                />
-              </div>
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.budget.scholarshipLabel')}</label>
-              <div className={styles.options}>
-                {[
-                  { value: true, key: 'wizard.budget.scholarshipYes' },
-                  { value: false, key: 'wizard.budget.scholarshipNo' },
-                ].map((opt) => (
-                  <button
-                    key={String(opt.value)}
-                    type="button"
-                    className={`${styles.optionBtn} ${data.openToScholarship === opt.value ? styles.optionBtnActive : ''}`}
-                    onClick={() => update({ openToScholarship: opt.value })}
-                  >
-                    {t(opt.key)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Preferences */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>{t('wizard.steps.preferences')}</h2>
-          <div className={styles.fields}>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.preferences.countriesLabel')}</label>
-              <div className={styles.chips}>
-                {COUNTRY_OPTIONS.map((c) => {
-                  const active = (data.preferredCountries ?? []).includes(c)
-                  return (
-                    <button
-                      key={c}
-                      type="button"
-                      className={`${styles.chipBtn} ${active ? styles.chipBtnActive : ''}`}
-                      onClick={() => toggleChip('preferredCountries', c)}
-                    >
-                      {c}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.preferences.cityLabel')}</label>
-              <div className={styles.options}>
-                {VIBE_KEYS.map((key) => {
-                  const val = t(`wizard.preferences.${key}`)
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      className={`${styles.optionBtn} ${data.cityVibe === val ? styles.optionBtnActive : ''}`}
-                      onClick={() => update({ cityVibe: val })}
-                    >
-                      {val}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Extracurriculars */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>{t('wizard.steps.extracurriculars')}</h2>
-          <div className={styles.fields}>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.extracurriculars.activitiesLabel')}</label>
-              <div className={styles.chips}>
-                {ACTIVITY_KEYS.map((key) => {
-                  const val = t(`wizard.extracurriculars.activities.${key}`)
-                  const active = (data.activities ?? []).includes(val)
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      className={`${styles.chipBtn} ${active ? styles.chipBtnActive : ''}`}
-                      onClick={() => toggleChip('activities', val)}
-                    >
-                      {val}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label}>{t('wizard.extracurriculars.strengthsLabel')}</label>
-              <textarea
-                className={`input ${styles.textarea}`}
-                value={data.strengths ?? ''}
-                onChange={(e) => update({ strengths: e.target.value })}
-                placeholder={t('wizard.extracurriculars.strengthsPlaceholder')}
-                rows={3}
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Telegram */}
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>{t('profile.telegram.sectionTitle')}</h2>
-          {tg.loading ? (
-            <p className={styles.hint}>{t('profile.telegram.loading')}</p>
-          ) : tg.linked ? (
-            <div className={styles.fields}>
-              <p className={styles.hint}>
-                {t('profile.telegram.connected')}
-                {tg.linkedAt &&
-                  ` ${t('profile.telegram.linkedOn')} ${new Date(tg.linkedAt).toLocaleDateString()}.`}
-              </p>
-              <label
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-              >
-                <input
-                  type="checkbox"
-                  checked={tg.remindersEnabled}
-                  onChange={(e) => void handleToggleReminders(e.target.checked)}
-                />
-                {t('profile.telegram.reminders')}
-              </label>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => void handleUnlinkTelegram()}
-              >
-                {t('profile.telegram.disconnect')}
-              </button>
-            </div>
-          ) : (
-            <div className={styles.fields}>
-              <p className={styles.hint}>{t('profile.telegram.hint')}</p>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => void handleConnectTelegram()}
-                disabled={tg.generating}
-              >
-                {tg.generating ? t('profile.telegram.connecting') : t('profile.telegram.connect')}
-              </button>
-            </div>
-          )}
-        </section>
-
-        {/* Footer actions */}
-        <div className={styles.footer}>
-          <div className={styles.footerLeft}>
-            <span className={styles.email}>{user?.email}</span>
-          </div>
-          <div className={styles.footerRight}>
-            {staleMsg && (
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-muted)' }}>
-                Saved — your recommendations may update
-              </span>
-            )}
-            <button type="button" className={styles.signOutBtn} onClick={() => void logout()}>
-              {t('profile.signOut')}
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => void handleSave()}
-              disabled={saving}
-            >
-              {saving ? '...' : saved ? t('profile.saved') : t('profile.save')}
-            </button>
-          </div>
+          <PreferencesBlock parentEmail={parentEmail} onChange={setParentEmail} />
         </div>
+
+        <DeleteProfile onDelete={handleDelete} />
       </div>
     </div>
   )

@@ -222,6 +222,11 @@ input, select, textarea {
   background: var(--border-default);
 }
 
+.btn-sm {
+  padding: 7px 14px;
+  font-size: 13px;
+}
+
 .input {
   width: 100%;
   padding: 11px 14px;
