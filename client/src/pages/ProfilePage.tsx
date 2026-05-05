@@ -15,10 +15,19 @@ interface BlockProps {
   action?: React.ReactNode
   children: React.ReactNode
   danger?: boolean
+  defaultOpen?: boolean
 }
 
-function Block({ eyebrow, title, sub, action, children, danger }: Readonly<BlockProps>) {
-  const [open, setOpen] = useState(false)
+function Block({
+  eyebrow,
+  title,
+  sub,
+  action,
+  children,
+  danger,
+  defaultOpen = false,
+}: Readonly<BlockProps>) {
+  const [open, setOpen] = useState(defaultOpen)
 
   return (
     <section className={`${styles.block} ${danger ? styles.blockDanger : ''}`}>
@@ -29,8 +38,10 @@ function Block({ eyebrow, title, sub, action, children, danger }: Readonly<Block
         aria-expanded={open}
       >
         <div className={styles.blockHeadText}>
-          <span className={styles.eyebrow}>{eyebrow}</span>
-          <h2 className={styles.blockTitle}>{title}</h2>
+          <span className={`${styles.eyebrow} ${danger ? styles.eyebrowDanger : ''}`}>
+            {eyebrow}
+          </span>
+          <h2 className={`${styles.blockTitle} ${danger ? styles.titleDanger : ''}`}>{title}</h2>
         </div>
         <div className={styles.blockHeadRight}>
           {action && !open && (
@@ -84,6 +95,7 @@ function AccountInfo({ name, email, country, targetYear }: Readonly<AccountInfoP
       eyebrow="Account"
       title="Who you are"
       sub="We use this to personalize your shortlist and address letters of motivation. Nothing here leaves Unipath."
+      defaultOpen
     >
       <div className={styles.grid}>
         <Field label="Full name">{name || '—'}</Field>
@@ -188,7 +200,6 @@ interface TelegramBlockProps {
   remindersEnabled: boolean
   onConnect: () => Promise<void>
   onToggleReminders: (enabled: boolean) => Promise<void>
-  onUnlink: () => Promise<void>
 }
 
 function Toggle({
@@ -218,7 +229,6 @@ function TelegramBlock({
   remindersEnabled,
   onConnect,
   onToggleReminders,
-  onUnlink,
 }: Readonly<TelegramBlockProps>) {
   if (loading) {
     return (
@@ -240,23 +250,21 @@ function TelegramBlock({
             : 'The bot sends your daily check-in — you can pause it any time.'
         }
       >
-        <div className={styles.tgConnected}>
-          <div className={styles.tgStatus}>
-            <span className={`${styles.statusDot} ${styles.statusConnected}`} />
-            <span>Connected</span>
-          </div>
-          <label className={styles.tgReminderRow}>
+        <ul className={styles.prefList}>
+          <li className={styles.prefRow}>
+            <div className={styles.prefText}>
+              <div className={styles.prefTitle}>Daily reminders</div>
+              <div className={styles.prefSub}>
+                One message a day with what&apos;s due — sent via Telegram.
+              </div>
+            </div>
             <Toggle
               on={remindersEnabled}
               onChange={(v) => void onToggleReminders(v)}
               label="Daily reminders"
             />
-            <span className={styles.tgReminderLabel}>Daily reminders on</span>
-          </label>
-          <button className={styles.btnDisconnect} onClick={() => void onUnlink()} type="button">
-            Disconnect
-          </button>
-        </div>
+          </li>
+        </ul>
       </Block>
     )
   }
@@ -478,11 +486,6 @@ export function ProfilePage() {
     }
   }
 
-  const handleUnlinkTelegram = async () => {
-    await api.unlinkTelegram()
-    setTg({ linked: false, remindersEnabled: true, loading: false, generating: false })
-  }
-
   const [parentEmail, setParentEmail] = useState('')
 
   const handleDelete = async () => {
@@ -535,7 +538,6 @@ export function ProfilePage() {
             remindersEnabled={tg.remindersEnabled}
             onConnect={handleConnect}
             onToggleReminders={handleToggleReminders}
-            onUnlink={handleUnlinkTelegram}
           />
 
           <Notifications
