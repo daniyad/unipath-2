@@ -46,22 +46,66 @@
 .stackBlocks {
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: 0;
+  border-top: 0.5px solid var(--border-default);
 }
 
 .block {
   display: flex;
   flex-direction: column;
+  border-bottom: 0.5px solid var(--border-default);
+}
+
+.blockDanger .blockHead {
+  padding-top: 24px;
 }
 
 .blockHead {
+  width: 100%;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 0.5px solid var(--border-default);
+  gap: 16px;
+  padding: 20px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: opacity 150ms var(--ease-default);
+}
+
+.blockHead:hover {
+  opacity: 0.75;
+}
+
+.blockHeadText {
+  display: flex;
+  flex-direction: column;
+}
+
+.blockHeadRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.blockHeadOpen {
+  padding-bottom: 0;
+}
+
+.chevron {
+  font-size: 20px;
+  color: var(--text-disabled);
+  line-height: 1;
+  display: block;
+  transform: rotate(0deg);
+  transition: transform 200ms var(--ease-default), color 150ms var(--ease-default);
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+  color: var(--text-primary);
 }
 
 .eyebrow {
@@ -71,7 +115,7 @@
   text-transform: uppercase;
   color: var(--text-disabled);
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .eyebrowDanger {
@@ -79,10 +123,10 @@
 }
 
 .blockTitle {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.1;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .titleDanger {
@@ -93,7 +137,7 @@
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.5;
-  margin-top: 8px;
+  margin-top: 12px;
   max-width: 60ch;
 }
 
@@ -101,13 +145,21 @@
   flex-shrink: 0;
 }
 
+.blockActionInline {
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
 .blockBody {
   display: flex;
   flex-direction: column;
+  padding-bottom: 24px;
+  margin-top: 20px;
 }
 
 .blockDanger {
-  margin-top: 16px;
+  border-bottom: none;
+  margin-top: 8px;
 }
 
 /* ───────── Field grid ───────── */
@@ -217,31 +269,6 @@
   text-decoration-color: var(--primary-900);
 }
 
-/* ───────── Inline edit ───────── */
-.editForm {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.editGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-.editField {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.editActions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 /* ───────── Telegram ───────── */
 .tgConnected {
   display: flex;
@@ -282,6 +309,25 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
+}
+
+.btnDisconnect {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: color 150ms var(--ease-default), border-color 150ms var(--ease-default);
+}
+
+.btnDisconnect:hover {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
 }
 
 /* ───────── Toggle ───────── */

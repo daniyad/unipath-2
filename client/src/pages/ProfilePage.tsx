@@ -14,20 +14,41 @@ interface BlockProps {
   sub?: string
   action?: React.ReactNode
   children: React.ReactNode
+  danger?: boolean
 }
 
-function Block({ eyebrow, title, sub, action, children }: Readonly<BlockProps>) {
+function Block({ eyebrow, title, sub, action, children, danger }: Readonly<BlockProps>) {
+  const [open, setOpen] = useState(false)
+
   return (
-    <section className={styles.block}>
-      <div className={styles.blockHead}>
-        <div>
+    <section className={`${styles.block} ${danger ? styles.blockDanger : ''}`}>
+      <button
+        className={`${styles.blockHead} ${open ? styles.blockHeadOpen : ''}`}
+        onClick={() => setOpen((v) => !v)}
+        type="button"
+        aria-expanded={open}
+      >
+        <div className={styles.blockHeadText}>
           <span className={styles.eyebrow}>{eyebrow}</span>
           <h2 className={styles.blockTitle}>{title}</h2>
-          {sub && <p className={styles.blockSub}>{sub}</p>}
         </div>
-        {action && <div className={styles.blockAction}>{action}</div>}
-      </div>
-      <div className={styles.blockBody}>{children}</div>
+        <div className={styles.blockHeadRight}>
+          {action && !open && (
+            <div className={styles.blockAction} onClick={(e) => e.stopPropagation()}>
+              {action}
+            </div>
+          )}
+          <span className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`}>›</span>
+        </div>
+      </button>
+
+      {open && (
+        <>
+          {sub && <p className={styles.blockSub}>{sub}</p>}
+          {action && open && <div className={styles.blockActionInline}>{action}</div>}
+          <div className={styles.blockBody}>{children}</div>
+        </>
+      )}
     </section>
   )
 }
@@ -53,31 +74,9 @@ interface AccountInfoProps {
   email: string
   country: string | undefined
   targetYear: number | undefined
-  onSave: (name: string, country: string) => Promise<void>
 }
 
-function AccountInfo({ name, email, country, targetYear, onSave }: Readonly<AccountInfoProps>) {
-  const [editing, setEditing] = useState(false)
-  const [editName, setEditName] = useState(name ?? '')
-  const [editCountry, setEditCountry] = useState(country ?? '')
-  const [saving, setSaving] = useState(false)
-
-  const handleEdit = () => {
-    setEditName(name ?? '')
-    setEditCountry(country ?? '')
-    setEditing(true)
-  }
-
-  const handleSave = async () => {
-    setSaving(true)
-    try {
-      await onSave(editName, editCountry)
-      setEditing(false)
-    } finally {
-      setSaving(false)
-    }
-  }
-
+function AccountInfo({ name, email, country, targetYear }: Readonly<AccountInfoProps>) {
   const gradYear = targetYear ? `Class of ${targetYear}` : '—'
 
   return (
@@ -85,59 +84,13 @@ function AccountInfo({ name, email, country, targetYear, onSave }: Readonly<Acco
       eyebrow="Account"
       title="Who you are"
       sub="We use this to personalize your shortlist and address letters of motivation. Nothing here leaves Unipath."
-      action={
-        editing ? undefined : (
-          <button className="btn btn-ghost" onClick={handleEdit} type="button">
-            Edit
-          </button>
-        )
-      }
     >
-      {editing ? (
-        <div className={styles.editForm}>
-          <div className={styles.editGrid}>
-            <div className={styles.editField}>
-              <label className={styles.fieldLabel}>Full name</label>
-              <input
-                className="input"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="Your name"
-                autoFocus
-              />
-            </div>
-            <div className={styles.editField}>
-              <label className={styles.fieldLabel}>Country</label>
-              <input
-                className="input"
-                value={editCountry}
-                onChange={(e) => setEditCountry(e.target.value)}
-                placeholder="Kazakhstan"
-              />
-            </div>
-          </div>
-          <div className={styles.editActions}>
-            <button className="btn btn-ghost" onClick={() => setEditing(false)} type="button">
-              Cancel
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => void handleSave()}
-              disabled={saving}
-              type="button"
-            >
-              {saving ? 'Saving…' : 'Save'}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className={styles.grid}>
-          <Field label="Full name">{name || '—'}</Field>
-          <Field label="Email">{email}</Field>
-          <Field label="Country">{country || '—'}</Field>
-          <Field label="Graduating">{gradYear}</Field>
-        </div>
-      )}
+      <div className={styles.grid}>
+        <Field label="Full name">{name || '—'}</Field>
+        <Field label="Email">{email}</Field>
+        <Field label="Country">{country || '—'}</Field>
+        <Field label="Graduating">{gradYear}</Field>
+      </div>
     </Block>
   )
 }
@@ -300,7 +253,7 @@ function TelegramBlock({
             />
             <span className={styles.tgReminderLabel}>Daily reminders on</span>
           </label>
-          <button className="btn btn-ghost" onClick={() => void onUnlink()} type="button">
+          <button className={styles.btnDisconnect} onClick={() => void onUnlink()} type="button">
             Disconnect
           </button>
         </div>
@@ -400,58 +353,51 @@ function DeleteProfile({ onDelete }: Readonly<DeleteProfileProps>) {
   }
 
   return (
-    <section className={`${styles.block} ${styles.blockDanger}`}>
-      <div className={styles.blockHead}>
-        <div>
-          <span className={`${styles.eyebrow} ${styles.eyebrowDanger}`}>Danger zone</span>
-          <h2 className={`${styles.blockTitle} ${styles.titleDanger}`}>Delete your profile</h2>
-          <p className={styles.blockSub}>
-            Permanently deletes your account, shortlist, action plans, task history, and disconnects
-            the Telegram bot. This can&apos;t be undone.
-          </p>
-        </div>
-      </div>
-      <div className={styles.blockBody}>
-        {!confirming ? (
-          <button className={styles.btnDanger} onClick={() => setConfirming(true)} type="button">
-            Delete my profile
-          </button>
-        ) : (
-          <div className={styles.dangerConfirm}>
-            <div className={styles.fieldLabel}>
-              Type <strong>delete my profile</strong> to confirm
-            </div>
-            <input
-              className="input"
-              placeholder="delete my profile"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              autoFocus
-            />
-            <div className={styles.dangerActions}>
-              <button
-                className="btn btn-ghost"
-                onClick={() => {
-                  setConfirming(false)
-                  setText('')
-                }}
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                className={styles.btnDanger}
-                disabled={text.trim().toLowerCase() !== 'delete my profile' || deleting}
-                onClick={() => void handleDelete()}
-                type="button"
-              >
-                {deleting ? 'Deleting…' : 'Delete forever'}
-              </button>
-            </div>
+    <Block
+      eyebrow="Danger zone"
+      title="Delete your profile"
+      sub="Permanently deletes your account, shortlist, action plans, task history, and disconnects the Telegram bot. This can't be undone."
+      danger
+    >
+      {!confirming ? (
+        <button className={styles.btnDanger} onClick={() => setConfirming(true)} type="button">
+          Delete my profile
+        </button>
+      ) : (
+        <div className={styles.dangerConfirm}>
+          <div className={styles.fieldLabel}>
+            Type <strong>delete my profile</strong> to confirm
           </div>
-        )}
-      </div>
-    </section>
+          <input
+            className="input"
+            placeholder="delete my profile"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            autoFocus
+          />
+          <div className={styles.dangerActions}>
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                setConfirming(false)
+                setText('')
+              }}
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              className={styles.btnDanger}
+              disabled={text.trim().toLowerCase() !== 'delete my profile' || deleting}
+              onClick={() => void handleDelete()}
+              type="button"
+            >
+              {deleting ? 'Deleting…' : 'Delete forever'}
+            </button>
+          </div>
+        </div>
+      )}
+    </Block>
   )
 }
 
@@ -459,7 +405,7 @@ function DeleteProfile({ onDelete }: Readonly<DeleteProfileProps>) {
 
 export function ProfilePage() {
   const { user, logout } = useAuth()
-  const { profile, saveProfileToAPI, clearProfile } = useProfile()
+  const { profile, clearProfile } = useProfile()
   const api = useApi()
   const navigate = useNavigate()
 
@@ -539,10 +485,6 @@ export function ProfilePage() {
 
   const [parentEmail, setParentEmail] = useState('')
 
-  const handleSaveAccount = async (name: string, country: string) => {
-    await saveProfileToAPI({ name, country })
-  }
-
   const handleDelete = async () => {
     await api.deleteAccount()
     clearProfile()
@@ -571,7 +513,6 @@ export function ProfilePage() {
             email={email}
             country={profile?.country}
             targetYear={profile?.targetYear}
-            onSave={handleSaveAccount}
           />
 
           <ProfileAnswers
@@ -603,9 +544,9 @@ export function ProfilePage() {
           />
 
           <PreferencesBlock parentEmail={parentEmail} onChange={setParentEmail} />
-        </div>
 
-        <DeleteProfile onDelete={handleDelete} />
+          <DeleteProfile onDelete={handleDelete} />
+        </div>
       </div>
     </div>
   )
