@@ -109,7 +109,7 @@ router.get('/:token', async (req, res, next) => {
     const now = new Date()
     const weekEnd = new Date(now.getTime() + 7 * 86_400_000)
 
-    const universities: Array<{
+    interface UniShareData {
       universityName: string
       program: string
       country: string
@@ -120,23 +120,58 @@ router.get('/:token', async (req, res, next) => {
       totalTasks: number
       completedTasks: number
       dueThisWeek: number
-    }> = []
+      hasPlan: boolean
+    }
 
+    interface FlatTask {
+      id: string
+      title: string
+      month: string
+      week: number
+      importance: string
+      done: boolean
+    }
+
+    const universities: UniShareData[] = []
     const planInfos: PlanSummaryInfo[] = []
 
-    for (const planRow of planRows) {
+    // Build plan lookup by university name
+    const planByName = new Map(planRows.map((p) => [p.university_name, p]))
+
+    // Iterate shortlist as the primary source; merge plan data if available
+    for (const su of shortlistUnis) {
+      const uniName = su.name as string
+      const level = ((su.tier as string | undefined) ?? 'Match') as 'Reach' | 'Match' | 'Safety'
+      const planRow = planByName.get(uniName)
+
+      if (!planRow) {
+        universities.push({
+          universityName: uniName,
+          program: (su.program as string | undefined) ?? '',
+          country: (su.country as string | undefined) ?? '',
+          language: (su.language as string | undefined) ?? '',
+          tuition: (su.tuitionUSD as number | undefined) ?? 0,
+          level,
+          deadline: '',
+          totalTasks: 0,
+          completedTasks: 0,
+          dueThisWeek: 0,
+          hasPlan: false,
+        })
+        planInfos.push({
+          universityName: uniName,
+          level,
+          completedTasks: 0,
+          totalTasks: 0,
+          deadline: '',
+          urgentIncompleteTasks: [],
+          hasPlan: false,
+        })
+        continue
+      }
+
       const planData = planRow.plan as PlanData
       const completions = (planRow.task_completions ?? {}) as Record<string, boolean>
-      const shortlistUni = shortlistUnis.find((u) => u.name === planRow.university_name)
-
-      interface FlatTask {
-        id: string
-        title: string
-        month: string
-        week: number
-        importance: string
-        done: boolean
-      }
 
       const allTasks: FlatTask[] = []
       planData.monthlyChecklist?.forEach(
@@ -165,7 +200,6 @@ router.get('/:token', async (req, res, next) => {
 
       const totalTasks = allTasks.length
       const completedTasks = allTasks.filter((t) => t.done).length
-
       const dueThisWeek = allTasks.filter((t) => {
         if (t.done) return false
         const d = estimateTaskDate(t.month, t.week)
@@ -184,36 +218,87 @@ router.get('/:token', async (req, res, next) => {
         }
       }
 
-      const level = ((shortlistUni?.tier as string | undefined) ?? 'Match') as
-        | 'Reach'
-        | 'Match'
-        | 'Safety'
-
       universities.push({
-        universityName: planRow.university_name,
-        program: (shortlistUni?.program as string | undefined) ?? '',
-        country: (shortlistUni?.country as string | undefined) ?? '',
-        language: (shortlistUni?.language as string | undefined) ?? '',
-        tuition: (shortlistUni?.tuitionUSD as number | undefined) ?? 0,
+        universityName: uniName,
+        program: (su.program as string | undefined) ?? '',
+        country: (su.country as string | undefined) ?? '',
+        language: (su.language as string | undefined) ?? '',
+        tuition: (su.tuitionUSD as number | undefined) ?? 0,
         level,
         deadline: planData.applicationDeadline ?? '',
         totalTasks,
         completedTasks,
         dueThisWeek,
+        hasPlan: true,
       })
 
       planInfos.push({
-        universityName: planRow.university_name,
+        universityName: uniName,
         level,
         completedTasks,
         totalTasks,
         deadline: planData.applicationDeadline ?? '',
         urgentIncompleteTasks,
+        hasPlan: true,
+      })
+    }
+
+    // Include any plans whose university is no longer in the shortlist
+    for (const planRow of planRows) {
+      if (shortlistUnis.some((u) => u.name === planRow.university_name)) continue
+
+      const planData = planRow.plan as PlanData
+      const completions = (planRow.task_completions ?? {}) as Record<string, boolean>
+      const allTasks: FlatTask[] = []
+      planData.monthlyChecklist?.forEach(
+        (
+          month: {
+            month: string
+            tasks: Array<{ week: number; task: string; importance?: string }>
+          },
+          mi: number,
+        ) => {
+          month.tasks.forEach(
+            (t: { week: number; task: string; importance?: string }, ti: number) => {
+              const id = `m${mi}-t${ti}`
+              allTasks.push({
+                id,
+                title: t.task,
+                month: month.month,
+                week: t.week,
+                importance: t.importance ?? 'important',
+                done: !!completions[id],
+              })
+            },
+          )
+        },
+      )
+
+      const totalTasks = allTasks.length
+      const completedTasks = allTasks.filter((t) => t.done).length
+      const dueThisWeek = allTasks.filter((t) => {
+        if (t.done) return false
+        const d = estimateTaskDate(t.month, t.week)
+        return d >= now && d <= weekEnd
+      }).length
+
+      universities.push({
+        universityName: planRow.university_name,
+        program: '',
+        country: '',
+        language: '',
+        tuition: 0,
+        level: 'Match',
+        deadline: planData.applicationDeadline ?? '',
+        totalTasks,
+        completedTasks,
+        dueThisWeek,
+        hasPlan: true,
       })
     }
 
     let summary = ''
-    if (planInfos.length > 0) {
+    if (universities.length > 0) {
       try {
         summary = await getOrGenerateSummary(userId, planInfos, firstName, lang)
       } catch (err) {

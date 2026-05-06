@@ -134,6 +134,7 @@ export interface SharedUniversityData {
   totalTasks: number
   completedTasks: number
   dueThisWeek: number
+  hasPlan: boolean
 }
 
 export interface SharedDashboardData {

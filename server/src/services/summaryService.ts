@@ -10,6 +10,7 @@ export interface PlanSummaryInfo {
   totalTasks: number
   deadline: string
   urgentIncompleteTasks: Array<{ title: string; month: string }>
+  hasPlan: boolean
 }
 
 export const getOrGenerateSummary = async (
@@ -33,14 +34,22 @@ export const getOrGenerateSummary = async (
 const buildPrompt = (firstName: string, lang: 'en' | 'ru', plans: PlanSummaryInfo[]): string => {
   const langLabel = lang === 'ru' ? 'Russian' : 'English'
 
-  const plansText = plans
+  const withPlan = plans.filter((p) => p.hasPlan)
+  const noPlan = plans.filter((p) => !p.hasPlan)
+
+  const plansText = withPlan
     .map(
       (p) =>
         `- ${p.universityName} (${p.level}): ${p.completedTasks} of ${p.totalTasks} tasks done, deadline ${p.deadline}`,
     )
     .join('\n')
 
-  const urgentTasks = plans
+  const noPlanText =
+    noPlan.length > 0
+      ? `\nAlso shortlisted but no action plan started yet:\n${noPlan.map((p) => `- ${p.universityName} (${p.level})`).join('\n')}`
+      : ''
+
+  const urgentTasks = withPlan
     .flatMap((p) =>
       p.urgentIncompleteTasks
         .slice(0, 2)
@@ -51,21 +60,22 @@ const buildPrompt = (firstName: string, lang: 'en' | 'ru', plans: PlanSummaryInf
   const urgentText =
     urgentTasks.length > 0 ? urgentTasks.join('\n') : 'No urgent upcoming tasks identified.'
 
+  const hasActivePlans = withPlan.length > 0
+
   return `You are writing a brief progress update for someone checking in on a student's university applications.
 
 Student first name: ${firstName}
 Language to write in: ${langLabel}
 
-Their university applications:
-${plansText}
+Their university shortlist:
+${hasActivePlans ? plansText : '(no action plans started yet)'}${noPlanText}
 
-Most urgent upcoming tasks across all applications:
-${urgentText}
+${hasActivePlans ? `Most urgent upcoming tasks:\n${urgentText}` : ''}
 
 Write 3–4 sentences in ${langLabel}:
-1. Where the student is overall in their journey (early, mid, or late stage)
-2. Which application needs the most attention right now and why
-3. The single most important thing to do next
+1. Where the student is in their journey overall
+2. ${hasActivePlans ? 'Which application needs the most attention and why' : 'That they have shortlisted universities and should start their action plans'}
+3. The single most important next step
 
 Tone: warm, clear, encouraging. No bullet points. Plain prose only. Do not use markdown.`
 }

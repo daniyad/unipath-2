@@ -63,25 +63,30 @@ function UniCard({ uni }: { uni: SharedUniversityData }) {
         )}
       </div>
 
-      {uni.totalTasks > 0 && (
-        <div className={styles.progressRow}>
-          <div className={styles.progressTrack}>
-            <div className={styles.progressFill} style={{ width: `${pct}%` }} />
-          </div>
-          <div className={styles.progressLabel}>
-            <span>
-              {uni.completedTasks} of {uni.totalTasks} tasks done
-            </span>
-            <span>{pct}%</span>
-          </div>
-        </div>
-      )}
-
-      {uni.dueThisWeek > 0 && (
-        <div className={styles.dueThisWeek}>
-          <span className={styles.dueThisWeekBold}>{uni.dueThisWeek}</span>{' '}
-          {uni.dueThisWeek === 1 ? 'task' : 'tasks'} due this week
-        </div>
+      {uni.hasPlan ? (
+        <>
+          {uni.totalTasks > 0 && (
+            <div className={styles.progressRow}>
+              <div className={styles.progressTrack}>
+                <div className={styles.progressFill} style={{ width: `${pct}%` }} />
+              </div>
+              <div className={styles.progressLabel}>
+                <span>
+                  {uni.completedTasks} of {uni.totalTasks} tasks done
+                </span>
+                <span>{pct}%</span>
+              </div>
+            </div>
+          )}
+          {uni.dueThisWeek > 0 && (
+            <div className={styles.dueThisWeek}>
+              <span className={styles.dueThisWeekBold}>{uni.dueThisWeek}</span>{' '}
+              {uni.dueThisWeek === 1 ? 'task' : 'tasks'} due this week
+            </div>
+          )}
+        </>
+      ) : (
+        <div className={styles.noPlan}>No action plan started yet</div>
       )}
     </div>
   )
