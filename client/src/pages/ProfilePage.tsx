@@ -314,30 +314,49 @@ function Notifications({ deadlinesEnabled, onDeadlinesChange }: Readonly<Notific
   )
 }
 
-interface PreferencesBlockProps {
-  parentEmail: string
-  onChange: (val: string) => void
+interface SharingBlockProps {
+  shareToken: string | null | undefined
+  shareCopied: boolean
+  onShare: () => void
+  onCopy: () => void
+  onRevoke: () => void
 }
 
-function PreferencesBlock({ parentEmail, onChange }: Readonly<PreferencesBlockProps>) {
+function SharingBlock({
+  shareToken,
+  shareCopied,
+  onShare,
+  onCopy,
+  onRevoke,
+}: Readonly<SharingBlockProps>) {
   return (
     <Block
-      eyebrow="Preferences"
-      title="Extra contacts"
-      sub="Optional — used only for the weekly recap if you turn it on above."
+      eyebrow="Family & friends"
+      title="Share your progress"
+      sub="Send a read-only view of your dashboard to parents, mentors, or anyone else. They can see your universities and progress but can't change anything or sign up."
     >
-      <div className={styles.prefField}>
-        <div className={styles.fieldLabel}>
-          Parent / guardian email <span className={styles.optional}>(optional)</span>
+      {shareToken === undefined ? (
+        <p className={styles.hint}>Loading…</p>
+      ) : shareToken ? (
+        <div className={styles.shareRow}>
+          <span className={styles.shareActiveLabel}>Link active</span>
+          <button type="button" className={styles.shareAction} onClick={onCopy}>
+            {shareCopied ? 'Copied!' : 'Copy link'}
+          </button>
+          <span className={styles.shareSepInline}>·</span>
+          <button
+            type="button"
+            className={`${styles.shareAction} ${styles.shareRevoke}`}
+            onClick={onRevoke}
+          >
+            Revoke
+          </button>
         </div>
-        <input
-          className="input"
-          placeholder="parent@email.com"
-          value={parentEmail}
-          onChange={(e) => onChange(e.target.value)}
-          type="email"
-        />
-      </div>
+      ) : (
+        <button type="button" className="btn btn-primary" onClick={onShare}>
+          Create shareable link
+        </button>
+      )}
     </Block>
   )
 }
@@ -486,7 +505,45 @@ export function ProfilePage() {
     }
   }
 
-  const [parentEmail, setParentEmail] = useState('')
+  const [shareToken, setShareToken] = useState<string | null | undefined>(undefined)
+  const [shareCopied, setShareCopied] = useState(false)
+
+  useEffect(() => {
+    void api
+      .getShareLink()
+      .then((data) => setShareToken(data?.token ?? null))
+      .catch(() => setShareToken(null))
+  }, [api])
+
+  const handleShare = async () => {
+    try {
+      const data = await api.createShareLink()
+      setShareToken(data.token)
+      const url = `${window.location.origin}/share/${data.token}`
+      await navigator.clipboard.writeText(url)
+      setShareCopied(true)
+      setTimeout(() => setShareCopied(false), 2000)
+    } catch {
+      // ignore
+    }
+  }
+
+  const handleCopyLink = async () => {
+    if (!shareToken) return
+    const url = `${window.location.origin}/share/${shareToken}`
+    await navigator.clipboard.writeText(url)
+    setShareCopied(true)
+    setTimeout(() => setShareCopied(false), 2000)
+  }
+
+  const handleRevoke = async () => {
+    try {
+      await api.deleteShareLink()
+      setShareToken(null)
+    } catch {
+      // ignore
+    }
+  }
 
   const handleDelete = async () => {
     await api.deleteAccount()
@@ -545,7 +602,13 @@ export function ProfilePage() {
             onDeadlinesChange={(enabled) => void handleToggleReminders(enabled)}
           />
 
-          <PreferencesBlock parentEmail={parentEmail} onChange={setParentEmail} />
+          <SharingBlock
+            shareToken={shareToken}
+            shareCopied={shareCopied}
+            onShare={() => void handleShare()}
+            onCopy={() => void handleCopyLink()}
+            onRevoke={() => void handleRevoke()}
+          />
 
           <DeleteProfile onDelete={handleDelete} />
         </div>

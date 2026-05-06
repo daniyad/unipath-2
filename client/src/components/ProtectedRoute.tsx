@@ -9,11 +9,12 @@ interface Props {
 }
 
 export function ProtectedRoute({ children, requireProfile = false }: Props) {
-  const { user, loading } = useAuth()
-  const { profile } = useProfile()
+  const { user, loading: authLoading } = useAuth()
+  const { profile, profileLoading } = useProfile()
 
-  if (loading) return null
+  if (authLoading) return null
   if (!user) return <Navigate to="/login" replace />
+  if (requireProfile && profileLoading) return null
   if (requireProfile && !profile?.name) return <Navigate to="/setup" replace />
 
   return <>{children}</>

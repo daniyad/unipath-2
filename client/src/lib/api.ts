@@ -81,6 +81,11 @@ export const createApi = (getToken: () => Promise<string | null>) => {
       r<{ reminders_enabled: boolean }>('PATCH', '/api/telegram/reminder', { enabled }),
     unlinkTelegram: () => r<null>('DELETE', '/api/telegram/link'),
 
+    // Share
+    getShareLink: () => r<{ token: string } | null>('GET', '/api/share/me'),
+    createShareLink: () => r<{ token: string }>('POST', '/api/share'),
+    deleteShareLink: () => r<null>('DELETE', '/api/share'),
+
     // Account
     deleteAccount: () => r<null>('DELETE', '/api/profile'),
   }

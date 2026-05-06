@@ -5,6 +5,7 @@ import { useApi } from './ApiContext'
 
 interface ProfileContextValue {
   profile: PartialProfile | null
+  profileLoading: boolean
   hasStaleRecommendations: boolean
   setProfile: (p: PartialProfile) => void
   saveProfileToAPI: (p: PartialProfile) => Promise<{ staleFields: string[] }>
@@ -21,10 +22,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return stored ? (JSON.parse(stored) as PartialProfile) : null
   })
   const [hasStaleRecommendations, setHasStaleRecommendations] = useState(false)
+  const [profileLoading, setProfileLoading] = useState(true)
 
   // When user is authenticated, sync with API (API is source of truth)
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      setProfileLoading(false)
+      return
+    }
+    setProfileLoading(true)
     void api
       .getProfile()
       .then((apiProfile) => {
@@ -36,6 +42,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       .catch(() => {
         // Network error — keep localStorage data
       })
+      .finally(() => {
+        setProfileLoading(false)
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   const setProfile = (p: PartialProfile) => {
@@ -62,7 +72,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   return (
     <ProfileContext.Provider
-      value={{ profile, hasStaleRecommendations, setProfile, saveProfileToAPI, clearProfile }}
+      value={{
+        profile,
+        profileLoading,
+        hasStaleRecommendations,
+        setProfile,
+        saveProfileToAPI,
+        clearProfile,
+      }}
     >
       {children}
     </ProfileContext.Provider>

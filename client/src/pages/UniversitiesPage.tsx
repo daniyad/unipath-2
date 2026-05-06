@@ -23,7 +23,6 @@ export function UniversitiesPage() {
 
   const [universities, setUniversities] = useState<University[]>([])
   const [serverUniversities, setServerUniversities] = useState<ServerUniversity[]>([])
-  const [isStale, setIsStale] = useState(false)
   const [loading, setLoading] = useState(true)
   const [regenerating, setRegenerating] = useState(false)
 
@@ -34,7 +33,6 @@ export function UniversitiesPage() {
 
       if (shortlists.length > 0) {
         const latest = shortlists[0]
-        setIsStale(latest.is_stale || hasStaleRecommendations)
 
         const planMap = new Map<string, ServerPlan>(plans.map((p) => [p.university_name, p]))
 
@@ -62,11 +60,11 @@ export function UniversitiesPage() {
 
   useEffect(() => {
     void loadShortlists()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => {
-    if (hasStaleRecommendations) setIsStale(true)
-  }, [hasStaleRecommendations])
+  // Stale banner and regeneration intentionally hidden — re-enable when UX is finalized
+  void hasStaleRecommendations
 
   const handleRegenerate = async () => {
     if (!profile) return
@@ -74,13 +72,13 @@ export function UniversitiesPage() {
     try {
       await api.generateShortlist(profile)
       await loadShortlists()
-      setIsStale(false)
     } catch (err) {
       console.error('Failed to regenerate:', err)
     } finally {
       setRegenerating(false)
     }
   }
+  void handleRegenerate
 
   const handleUniClick = (uni: University, serverUni: ServerUniversity) => {
     navigate(`/university/${uni.id}`, { state: { university: uni, serverUniversity: serverUni } })
@@ -114,20 +112,6 @@ export function UniversitiesPage() {
           <h1 className={styles.greeting}>{t('dashboard.yourUnis')}</h1>
           <p className={styles.subtitle}>{t('dashboard.uniSummary')}</p>
         </div>
-
-        {isStale && (
-          <div className={styles.staleBanner}>
-            <p className={styles.staleBannerText}>{t('dashboard.profileChanged')}</p>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => void handleRegenerate()}
-              disabled={regenerating}
-            >
-              {regenerating ? t('dashboard.refreshing') : t('dashboard.refreshRecommendations')}
-            </button>
-          </div>
-        )}
 
         {universities.length === 0 ? (
           <div className={styles.emptyState}>

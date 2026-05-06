@@ -64,6 +64,22 @@ export const callClaudeChat = async (
   return extractJson(content.text.trim())
 }
 
+// ─── Haiku plain-text call (no JSON extraction) ──────────────────────────────
+
+export const callClaudeHaikuText = async (userMessage: string): Promise<string> => {
+  const message = await client.messages.create({
+    model: CHAT_MODEL,
+    max_tokens: 300,
+    messages: [{ role: 'user', content: userMessage }],
+  })
+  const content = message.content[0]
+  if (content.type !== 'text') throw new Error('Unexpected non-text response from Claude')
+  console.log(
+    `Claude haiku text usage: input=${message.usage.input_tokens} output=${message.usage.output_tokens}`,
+  )
+  return content.text.trim()
+}
+
 // ─── Web search call ─────────────────────────────────────────────────────────
 
 const runCallWithSearch = async (systemPrompt: string, userMessage: string): Promise<unknown> => {

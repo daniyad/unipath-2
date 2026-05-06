@@ -499,6 +499,45 @@
   }
 }
 
+/* ── Sharing block ───────────────────────────────────────────────── */
+.shareRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.shareActiveLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.shareAction {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+
+.shareAction:hover {
+  color: var(--text-primary);
+}
+
+.shareRevoke:hover {
+  color: var(--error);
+}
+
+.shareSepInline {
+  font-size: 13px;
+  color: var(--text-disabled);
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;

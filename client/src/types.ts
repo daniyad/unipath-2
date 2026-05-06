@@ -121,6 +121,27 @@ export interface ServerPlan {
   created_at: string
 }
 
+// ─── Shared dashboard (public read-only view) ─────────────────────────────────
+
+export interface SharedUniversityData {
+  universityName: string
+  program: string
+  country: string
+  language: string
+  tuition: number
+  level: 'Reach' | 'Match' | 'Safety'
+  deadline: string
+  totalTasks: number
+  completedTasks: number
+  dueThisWeek: number
+}
+
+export interface SharedDashboardData {
+  student: { firstName: string }
+  summary: string
+  universities: SharedUniversityData[]
+}
+
 // ─── Mapping helpers ──────────────────────────────────────────────────────────
 
 export const toClientUniversity = (
