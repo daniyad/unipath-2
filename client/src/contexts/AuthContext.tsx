@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import type { User } from '../types'
@@ -28,7 +28,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, s) => {
-      setUser(s ? { id: s.user.id, email: s.user.email ?? '' } : null)
+      setUser((prev) => {
+        if (!s) return null
+        if (prev?.id === s.user.id) return prev
+        return { id: s.user.id, email: s.user.email ?? '' }
+      })
     })
 
     return () => subscription.unsubscribe()
@@ -49,10 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('unipath_profile')
   }
 
-  const getToken = async (): Promise<string | null> => {
+  const getToken = useCallback(async (): Promise<string | null> => {
     const { data } = await supabase.auth.getSession()
     return data.session?.access_token ?? null
-  }
+  }, [])
 
   return (
     <AuthContext.Provider value={{ user, loading, login, signup, logout, getToken }}>

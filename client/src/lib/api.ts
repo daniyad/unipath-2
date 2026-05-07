@@ -17,6 +17,8 @@ export class ApiError extends Error {
   }
 }
 
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
+
 const request = async <T>(
   getToken: () => Promise<string | null>,
   method: string,
@@ -27,7 +29,7 @@ const request = async <T>(
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (token) headers['Authorization'] = `Bearer ${token}`
 
-  const res = await fetch(path, {
+  const res = await fetch(API_BASE + path, {
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
