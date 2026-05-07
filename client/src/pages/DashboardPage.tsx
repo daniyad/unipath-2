@@ -4,7 +4,14 @@ import { useTranslation } from 'react-i18next'
 import { useProfile } from '../contexts/ProfileContext'
 import { useApi } from '../contexts/ApiContext'
 import { Navbar } from '../components/Navbar'
-import type { ServerPlan, ServerShortlist, ServerUniversity } from '../types'
+import { ShareDialog } from '../components/ShareDialog'
+import type {
+  ServerPlan,
+  ServerShortlist,
+  ServerUniversity,
+  ShareDetails,
+  ShareSettings,
+} from '../types'
 import { toClientPlan, toClientUniversity, type UniversityPlan } from '../types'
 import styles from './DashboardPage.module.css'
 
@@ -520,9 +527,9 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [filterUni, setFilterUni] = useState<string | null>(null)
 
-  // Share link state: undefined = loading, null = no link, string = token
-  const [shareToken, setShareToken] = useState<string | null | undefined>(undefined)
-  const [shareCopied, setShareCopied] = useState(false)
+  // Share state: undefined = loading, null = no active link, ShareDetails = active
+  const [shareDetails, setShareDetails] = useState<ShareDetails | null | undefined>(undefined)
+  const [showShareDialog, setShowShareDialog] = useState(false)
 
   const name = profile?.name ?? t('dashboard.nameFallback')
 
@@ -538,36 +545,35 @@ export function DashboardPage() {
 
   useEffect(() => {
     void api
-      .getShareLink()
-      .then((data) => setShareToken(data?.token ?? null))
-      .catch(() => setShareToken(null))
+      .getShareDetails()
+      .then((data) => setShareDetails(data))
+      .catch(() => setShareDetails(null))
   }, [api])
 
   const handleShare = async () => {
     try {
       const data = await api.createShareLink()
-      setShareToken(data.token)
-      const url = `${window.location.origin}/share/${data.token}`
-      await navigator.clipboard.writeText(url)
-      setShareCopied(true)
-      setTimeout(() => setShareCopied(false), 2000)
+      setShareDetails(data)
+      setShowShareDialog(true)
     } catch {
       // ignore
     }
   }
 
-  const handleCopyLink = async () => {
-    if (!shareToken) return
-    const url = `${window.location.origin}/share/${shareToken}`
-    await navigator.clipboard.writeText(url)
-    setShareCopied(true)
-    setTimeout(() => setShareCopied(false), 2000)
-  }
-
   const handleRevoke = async () => {
     try {
       await api.deleteShareLink()
-      setShareToken(null)
+      setShareDetails(null)
+      setShowShareDialog(false)
+    } catch {
+      // ignore
+    }
+  }
+
+  const handleSettingsChange = async (settings: ShareSettings) => {
+    try {
+      const updated = await api.updateShareSettings(settings)
+      setShareDetails(updated)
     } catch {
       // ignore
     }
@@ -775,39 +781,6 @@ export function DashboardPage() {
                 t('dashboard.subtitle')
               )}
             </p>
-
-            {shareToken !== undefined && (
-              <div className={styles.shareControl}>
-                {shareToken ? (
-                  <>
-                    <span className={styles.shareActive}>Shared</span>
-                    <button
-                      type="button"
-                      className={styles.shareBtn}
-                      onClick={() => void handleCopyLink()}
-                    >
-                      {shareCopied ? 'Copied!' : 'Copy link'}
-                    </button>
-                    <span className={styles.shareSep}>·</span>
-                    <button
-                      type="button"
-                      className={`${styles.shareBtn} ${styles.shareBtnRevoke}`}
-                      onClick={() => void handleRevoke()}
-                    >
-                      Revoke
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    className={styles.shareBtn}
-                    onClick={() => void handleShare()}
-                  >
-                    Share dashboard →
-                  </button>
-                )}
-              </div>
-            )}
           </div>
 
           <div className={styles.dashStats}>
@@ -904,7 +877,49 @@ export function DashboardPage() {
             </div>
           </section>
         )}
+
+        {/* ── Share section ────────────────────────────────────────────── */}
+        {shareDetails !== undefined && (
+          <section className={styles.shareSection}>
+            <div className={styles.shareSectionLeft}>
+              <div className={styles.shareSectionTitle}>Keep your parents in the loop</div>
+              <p className={styles.shareSectionSub}>
+                Send a read-only link to anyone — parents, mentors, a friend. They&apos;ll see your
+                shortlist and progress, nothing else. No sign-up required.
+              </p>
+            </div>
+            <div className={styles.shareSectionRight}>
+              {shareDetails ? (
+                <button
+                  type="button"
+                  className={styles.shareSectionBtn}
+                  onClick={() => setShowShareDialog(true)}
+                >
+                  Manage link →
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.shareSectionBtn}
+                  onClick={() => void handleShare()}
+                >
+                  Create share link →
+                </button>
+              )}
+              {shareDetails && <span className={styles.shareSectionActive}>Link active</span>}
+            </div>
+          </section>
+        )}
       </div>
+
+      {showShareDialog && shareDetails && (
+        <ShareDialog
+          details={shareDetails}
+          onClose={() => setShowShareDialog(false)}
+          onRevoke={() => void handleRevoke()}
+          onSettingsChange={(settings) => void handleSettingsChange(settings)}
+        />
+      )}
     </div>
   )
 }

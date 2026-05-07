@@ -3,14 +3,17 @@ import { authMiddleware } from '../middleware/auth.js'
 import {
   getOrCreateShareLink,
   deleteShareLink,
-  getShareLinkByUserId,
+  getShareDetails,
+  updateShareSettings,
+  incrementViewCount,
   getShareLinkByToken,
+  type ShareSettings,
 } from '../services/shareDb.js'
-import { getOrGenerateSummary, type PlanSummaryInfo } from '../services/summaryService.js'
 import { getProfile, getShortlists, getPlans } from '../services/db.js'
 
 interface PlanData {
   applicationDeadline?: string
+  parentTalkingPoints?: string[]
   monthlyChecklist?: Array<{
     month: string
     tasks: Array<{ week: number; task: string; importance?: string }>
@@ -34,6 +37,8 @@ const MONTH_NAMES = [
   'December',
 ]
 
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
 const estimateTaskDate = (monthLabel: string, week: number): Date => {
   const parts = monthLabel.split(' ')
   const monthIdx = MONTH_NAMES.indexOf(parts[0])
@@ -43,12 +48,25 @@ const estimateTaskDate = (monthLabel: string, week: number): Date => {
   return new Date(year, monthIdx, day)
 }
 
-// ─── GET /api/share/me — current user's share link ────────────────────────────
+const formatDueLabel = (date: Date, now: Date): string => {
+  const msA = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const msB = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+  const diff = Math.round((msB - msA) / 86_400_000)
+  if (diff === 0) return 'Today'
+  if (diff === 1) return 'Tomorrow'
+  if (diff > 1 && diff < 7) return DAY_NAMES[date.getDay()]!
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+const formatDueShort = (date: Date): string =>
+  date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+
+// ─── GET /api/share/me — current user's share details ─────────────────────────
 
 router.get('/me', authMiddleware, async (req, res, next) => {
   try {
-    const token = await getShareLinkByUserId(req.user!.id)
-    res.json({ success: true, data: token ? { token } : null })
+    const details = await getShareDetails(req.user!.id)
+    res.json({ success: true, data: details })
   } catch (err) {
     next(err)
   }
@@ -58,8 +76,26 @@ router.get('/me', authMiddleware, async (req, res, next) => {
 
 router.post('/', authMiddleware, async (req, res, next) => {
   try {
-    const token = await getOrCreateShareLink(req.user!.id)
-    res.json({ success: true, data: { token } })
+    await getOrCreateShareLink(req.user!.id)
+    const details = await getShareDetails(req.user!.id)
+    res.json({ success: true, data: details })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// ─── PATCH /api/share — update share settings ─────────────────────────────────
+
+router.patch('/', authMiddleware, async (req, res, next) => {
+  try {
+    const { settings } = req.body as { settings?: ShareSettings }
+    if (!settings) {
+      res.status(400).json({ success: false, error: 'settings required' })
+      return
+    }
+    await updateShareSettings(req.user!.id, settings)
+    const details = await getShareDetails(req.user!.id)
+    res.json({ success: true, data: details })
   } catch (err) {
     next(err)
   }
@@ -81,11 +117,16 @@ router.delete('/', authMiddleware, async (req, res, next) => {
 router.get('/:token', async (req, res, next) => {
   try {
     const { token } = req.params
-    const userId = await getShareLinkByToken(token)
-    if (!userId) {
+    const linkData = await getShareLinkByToken(token)
+    if (!linkData) {
       res.status(404).json({ success: false, error: 'Link not found or revoked' })
       return
     }
+
+    const { userId, settings } = linkData
+
+    // Increment view count — fire and forget, non-blocking
+    void incrementViewCount(token).catch(() => undefined)
 
     const [profileRow, shortlistRows, planRows] = await Promise.all([
       getProfile(userId),
@@ -101,7 +142,6 @@ router.get('/:token', async (req, res, next) => {
     const profileData = profileRow.data as Record<string, unknown>
     const firstName =
       typeof profileData.name === 'string' ? profileData.name.split(' ')[0] : 'Student'
-    const lang = (profileData.lang as 'en' | 'ru' | undefined) ?? 'en'
 
     const latestShortlist = shortlistRows[0]
     const shortlistUnis = (latestShortlist?.universities ?? []) as Array<Record<string, unknown>>
@@ -126,14 +166,17 @@ router.get('/:token', async (req, res, next) => {
     interface FlatTask {
       id: string
       title: string
+      uniName: string
       month: string
       week: number
       importance: string
       done: boolean
+      date: Date
     }
 
     const universities: UniShareData[] = []
-    const planInfos: PlanSummaryInfo[] = []
+    const allFlatTasks: FlatTask[] = []
+    const allTalkingPoints: string[] = []
 
     // Build plan lookup by university name
     const planByName = new Map(planRows.map((p) => [p.university_name, p]))
@@ -158,22 +201,22 @@ router.get('/:token', async (req, res, next) => {
           dueThisWeek: 0,
           hasPlan: false,
         })
-        planInfos.push({
-          universityName: uniName,
-          level,
-          completedTasks: 0,
-          totalTasks: 0,
-          deadline: '',
-          urgentIncompleteTasks: [],
-          hasPlan: false,
-        })
         continue
       }
 
       const planData = planRow.plan as PlanData
       const completions = (planRow.task_completions ?? {}) as Record<string, boolean>
 
-      const allTasks: FlatTask[] = []
+      // Collect parent talking points
+      if (Array.isArray(planData.parentTalkingPoints)) {
+        for (const pt of planData.parentTalkingPoints) {
+          if (typeof pt === 'string' && !allTalkingPoints.includes(pt)) {
+            allTalkingPoints.push(pt)
+          }
+        }
+      }
+
+      const tasks: FlatTask[] = []
       planData.monthlyChecklist?.forEach(
         (
           month: {
@@ -185,38 +228,32 @@ router.get('/:token', async (req, res, next) => {
           month.tasks.forEach(
             (t: { week: number; task: string; importance?: string }, ti: number) => {
               const id = `m${mi}-t${ti}`
-              allTasks.push({
+              tasks.push({
                 id,
                 title: t.task,
+                uniName,
                 month: month.month,
                 week: t.week,
                 importance: t.importance ?? 'important',
                 done: !!completions[id],
+                date: estimateTaskDate(month.month, t.week),
               })
             },
           )
         },
       )
 
-      const totalTasks = allTasks.length
-      const completedTasks = allTasks.filter((t) => t.done).length
-      const dueThisWeek = allTasks.filter((t) => {
-        if (t.done) return false
-        const d = estimateTaskDate(t.month, t.week)
-        return d >= now && d <= weekEnd
-      }).length
-
-      const urgentIncompleteTasks = allTasks
-        .filter((t) => !t.done && t.importance === 'critical')
-        .slice(0, 2)
-        .map((t) => ({ title: t.title, month: t.month }))
-
-      if (urgentIncompleteTasks.length < 2) {
-        for (const t of allTasks.filter((t) => !t.done && t.importance !== 'critical')) {
-          if (urgentIncompleteTasks.length >= 2) break
-          urgentIncompleteTasks.push({ title: t.title, month: t.month })
-        }
+      // Collect incomplete tasks that fall within this week for the weekTasks list
+      for (const t of tasks) {
+        if (!t.done) allFlatTasks.push(t)
       }
+
+      const totalTasks = tasks.length
+      const completedTasks = tasks.filter((t) => t.done).length
+      const dueThisWeek = tasks.filter((t) => {
+        if (t.done) return false
+        return t.date >= now && t.date <= weekEnd
+      }).length
 
       universities.push({
         universityName: uniName,
@@ -231,25 +268,24 @@ router.get('/:token', async (req, res, next) => {
         dueThisWeek,
         hasPlan: true,
       })
-
-      planInfos.push({
-        universityName: uniName,
-        level,
-        completedTasks,
-        totalTasks,
-        deadline: planData.applicationDeadline ?? '',
-        urgentIncompleteTasks,
-        hasPlan: true,
-      })
     }
 
-    // Include any plans whose university is no longer in the shortlist
+    // Include plans whose university is no longer in the shortlist
     for (const planRow of planRows) {
       if (shortlistUnis.some((u) => u.name === planRow.university_name)) continue
 
       const planData = planRow.plan as PlanData
       const completions = (planRow.task_completions ?? {}) as Record<string, boolean>
-      const allTasks: FlatTask[] = []
+
+      if (Array.isArray(planData.parentTalkingPoints)) {
+        for (const pt of planData.parentTalkingPoints) {
+          if (typeof pt === 'string' && !allTalkingPoints.includes(pt)) {
+            allTalkingPoints.push(pt)
+          }
+        }
+      }
+
+      const tasks: FlatTask[] = []
       planData.monthlyChecklist?.forEach(
         (
           month: {
@@ -261,25 +297,30 @@ router.get('/:token', async (req, res, next) => {
           month.tasks.forEach(
             (t: { week: number; task: string; importance?: string }, ti: number) => {
               const id = `m${mi}-t${ti}`
-              allTasks.push({
+              tasks.push({
                 id,
                 title: t.task,
+                uniName: planRow.university_name,
                 month: month.month,
                 week: t.week,
                 importance: t.importance ?? 'important',
                 done: !!completions[id],
+                date: estimateTaskDate(month.month, t.week),
               })
             },
           )
         },
       )
 
-      const totalTasks = allTasks.length
-      const completedTasks = allTasks.filter((t) => t.done).length
-      const dueThisWeek = allTasks.filter((t) => {
+      for (const t of tasks) {
+        if (!t.done) allFlatTasks.push(t)
+      }
+
+      const totalTasks = tasks.length
+      const completedTasks = tasks.filter((t) => t.done).length
+      const dueThisWeek = tasks.filter((t) => {
         if (t.done) return false
-        const d = estimateTaskDate(t.month, t.week)
-        return d >= now && d <= weekEnd
+        return t.date >= now && t.date <= weekEnd
       }).length
 
       universities.push({
@@ -297,18 +338,41 @@ router.get('/:token', async (req, res, next) => {
       })
     }
 
-    let summary = ''
-    if (universities.length > 0) {
-      try {
-        summary = await getOrGenerateSummary(userId, planInfos, firstName, lang)
-      } catch (err) {
-        console.error('[share] Summary generation failed:', err)
-      }
-    }
+    // Build week tasks: incomplete tasks in the next 7 days, sorted by date asc then urgency desc
+    const urgencyOrder: Record<string, number> = { critical: 0, important: 1, 'nice-to-have': 2 }
+    const weekTasks = allFlatTasks
+      .filter((t) => t.date >= now && t.date <= weekEnd)
+      .sort((a, b) => {
+        const dateDiff = a.date.getTime() - b.date.getTime()
+        if (dateDiff !== 0) return dateDiff
+        return (urgencyOrder[a.importance] ?? 1) - (urgencyOrder[b.importance] ?? 1)
+      })
+      .slice(0, 5)
+      .map((t) => ({
+        title: t.title,
+        uniName: t.uniName,
+        urgency:
+          t.importance === 'critical'
+            ? ('urgent' as const)
+            : t.importance === 'important'
+              ? ('important' as const)
+              : ('later' as const),
+        dueLabel: formatDueLabel(t.date, now),
+        dueShort: formatDueShort(t.date),
+      }))
+
+    // Build help items
+    const DEFAULT_HELP_ITEMS = [
+      'Ask about the nearest upcoming deadline and how you can help prepare',
+      'Offer to help with paperwork — translations, notarizations, or printing take time',
+      "Just ask how it's going — not about grades, but about the process itself",
+    ]
+    const helpItems =
+      allTalkingPoints.slice(0, 3).length > 0 ? allTalkingPoints.slice(0, 3) : DEFAULT_HELP_ITEMS
 
     res.json({
       success: true,
-      data: { student: { firstName }, summary, universities },
+      data: { student: { firstName }, settings, universities, weekTasks, helpItems },
     })
   } catch (err) {
     next(err)

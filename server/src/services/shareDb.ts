@@ -1,6 +1,19 @@
 import { randomBytes } from 'crypto'
 import { supabase } from './db.js'
 
+export interface ShareSettings {
+  expiresIn: '24h' | '7d' | '30d' | 'never'
+  showTuition: boolean
+}
+
+const DEFAULT_SETTINGS: ShareSettings = { expiresIn: 'never', showTuition: true }
+
+export interface ShareDetails {
+  token: string
+  viewCount: number
+  settings: ShareSettings
+}
+
 export const getOrCreateShareLink = async (userId: string): Promise<string> => {
   const { data: existing } = await supabase
     .from('share_links')
@@ -43,14 +56,54 @@ export const getShareLinkByUserId = async (userId: string): Promise<string | nul
   return (data?.token as string | undefined) ?? null
 }
 
-export const getShareLinkByToken = async (token: string): Promise<string | null> => {
+export const getShareDetails = async (userId: string): Promise<ShareDetails | null> => {
   const { data, error } = await supabase
     .from('share_links')
-    .select('user_id')
+    .select('token, view_count, settings')
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (error) throw new Error(`Failed to get share details: ${error.message}`)
+  if (!data) return null
+  const row = data as { token: string; view_count?: number; settings?: unknown }
+  return {
+    token: row.token,
+    viewCount: row.view_count ?? 0,
+    settings: (row.settings as ShareSettings | null) ?? DEFAULT_SETTINGS,
+  }
+}
+
+export const updateShareSettings = async (
+  userId: string,
+  settings: ShareSettings,
+): Promise<void> => {
+  const { error } = await supabase.from('share_links').update({ settings }).eq('user_id', userId)
+  if (error) throw new Error(`Failed to update share settings: ${error.message}`)
+}
+
+export const incrementViewCount = async (token: string): Promise<void> => {
+  // Try the RPC (requires migration 006 to have run); silently ignore if function missing
+  try {
+    await supabase.rpc('increment_share_view_count', { p_token: token })
+  } catch {
+    // Silently swallow — view count is non-critical and migration may not be applied yet
+  }
+}
+
+export const getShareLinkByToken = async (
+  token: string,
+): Promise<{ userId: string; settings: ShareSettings } | null> => {
+  const { data, error } = await supabase
+    .from('share_links')
+    .select('user_id, settings')
     .eq('token', token)
     .maybeSingle()
   if (error) throw new Error(`Failed to look up share token: ${error.message}`)
-  return (data?.user_id as string | undefined) ?? null
+  if (!data) return null
+  const row = data as { user_id: string; settings?: unknown }
+  return {
+    userId: row.user_id,
+    settings: (row.settings as ShareSettings | null) ?? DEFAULT_SETTINGS,
+  }
 }
 
 export const getSummary = async (

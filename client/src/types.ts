@@ -123,6 +123,25 @@ export interface ServerPlan {
 
 // ─── Shared dashboard (public read-only view) ─────────────────────────────────
 
+export interface ShareSettings {
+  expiresIn: '24h' | '7d' | '30d' | 'never'
+  showTuition: boolean
+}
+
+export interface ShareDetails {
+  token: string
+  viewCount: number
+  settings: ShareSettings
+}
+
+export interface WeekTaskShareData {
+  title: string
+  uniName: string
+  urgency: 'urgent' | 'important' | 'later'
+  dueLabel: string
+  dueShort: string
+}
+
 export interface SharedUniversityData {
   universityName: string
   program: string
@@ -139,8 +158,10 @@ export interface SharedUniversityData {
 
 export interface SharedDashboardData {
   student: { firstName: string }
-  summary: string
+  settings: ShareSettings
   universities: SharedUniversityData[]
+  weekTasks: WeekTaskShareData[]
+  helpItems: string[]
 }
 
 // ─── Mapping helpers ──────────────────────────────────────────────────────────

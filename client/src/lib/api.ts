@@ -1,4 +1,11 @@
-import type { PartialProfile, ServerUniversity, ServerShortlist, ServerPlan } from '../types'
+import type {
+  PartialProfile,
+  ServerUniversity,
+  ServerShortlist,
+  ServerPlan,
+  ShareDetails,
+  ShareSettings,
+} from '../types'
 
 export class ApiError extends Error {
   constructor(
@@ -82,8 +89,10 @@ export const createApi = (getToken: () => Promise<string | null>) => {
     unlinkTelegram: () => r<null>('DELETE', '/api/telegram/link'),
 
     // Share
-    getShareLink: () => r<{ token: string } | null>('GET', '/api/share/me'),
-    createShareLink: () => r<{ token: string }>('POST', '/api/share'),
+    getShareDetails: () => r<ShareDetails | null>('GET', '/api/share/me'),
+    createShareLink: () => r<ShareDetails>('POST', '/api/share'),
+    updateShareSettings: (settings: ShareSettings) =>
+      r<ShareDetails>('PATCH', '/api/share', { settings }),
     deleteShareLink: () => r<null>('DELETE', '/api/share'),
 
     // Account

@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { useProfile } from '../contexts/ProfileContext'
 import { useApi } from '../contexts/ApiContext'
 import { Navbar } from '../components/Navbar'
+import { ShareDialog } from '../components/ShareDialog'
+import type { ShareDetails, ShareSettings } from '../types'
 import styles from './ProfilePage.module.css'
 
 // ─── Block frame ──────────────────────────────────────────────────────────────
@@ -315,41 +317,25 @@ function Notifications({ deadlinesEnabled, onDeadlinesChange }: Readonly<Notific
 }
 
 interface SharingBlockProps {
-  shareToken: string | null | undefined
-  shareCopied: boolean
+  shareDetails: ShareDetails | null | undefined
   onShare: () => void
-  onCopy: () => void
-  onRevoke: () => void
+  onManage: () => void
 }
 
-function SharingBlock({
-  shareToken,
-  shareCopied,
-  onShare,
-  onCopy,
-  onRevoke,
-}: Readonly<SharingBlockProps>) {
+function SharingBlock({ shareDetails, onShare, onManage }: Readonly<SharingBlockProps>) {
   return (
     <Block
       eyebrow="Family & friends"
       title="Share your progress"
       sub="Send a read-only view of your dashboard to parents, mentors, or anyone else. They can see your universities and progress but can't change anything or sign up."
     >
-      {shareToken === undefined ? (
+      {shareDetails === undefined ? (
         <p className={styles.hint}>Loading…</p>
-      ) : shareToken ? (
+      ) : shareDetails ? (
         <div className={styles.shareRow}>
           <span className={styles.shareActiveLabel}>Link active</span>
-          <button type="button" className={styles.shareAction} onClick={onCopy}>
-            {shareCopied ? 'Copied!' : 'Copy link'}
-          </button>
-          <span className={styles.shareSepInline}>·</span>
-          <button
-            type="button"
-            className={`${styles.shareAction} ${styles.shareRevoke}`}
-            onClick={onRevoke}
-          >
-            Revoke
+          <button type="button" className={styles.shareAction} onClick={onManage}>
+            Manage →
           </button>
         </div>
       ) : (
@@ -505,41 +491,40 @@ export function ProfilePage() {
     }
   }
 
-  const [shareToken, setShareToken] = useState<string | null | undefined>(undefined)
-  const [shareCopied, setShareCopied] = useState(false)
+  const [shareDetails, setShareDetails] = useState<ShareDetails | null | undefined>(undefined)
+  const [showShareDialog, setShowShareDialog] = useState(false)
 
   useEffect(() => {
     void api
-      .getShareLink()
-      .then((data) => setShareToken(data?.token ?? null))
-      .catch(() => setShareToken(null))
+      .getShareDetails()
+      .then((data) => setShareDetails(data))
+      .catch(() => setShareDetails(null))
   }, [api])
 
   const handleShare = async () => {
     try {
       const data = await api.createShareLink()
-      setShareToken(data.token)
-      const url = `${window.location.origin}/share/${data.token}`
-      await navigator.clipboard.writeText(url)
-      setShareCopied(true)
-      setTimeout(() => setShareCopied(false), 2000)
+      setShareDetails(data)
+      setShowShareDialog(true)
     } catch {
       // ignore
     }
   }
 
-  const handleCopyLink = async () => {
-    if (!shareToken) return
-    const url = `${window.location.origin}/share/${shareToken}`
-    await navigator.clipboard.writeText(url)
-    setShareCopied(true)
-    setTimeout(() => setShareCopied(false), 2000)
-  }
-
   const handleRevoke = async () => {
     try {
       await api.deleteShareLink()
-      setShareToken(null)
+      setShareDetails(null)
+      setShowShareDialog(false)
+    } catch {
+      // ignore
+    }
+  }
+
+  const handleSettingsChange = async (settings: ShareSettings) => {
+    try {
+      const updated = await api.updateShareSettings(settings)
+      setShareDetails(updated)
     } catch {
       // ignore
     }
@@ -603,16 +588,23 @@ export function ProfilePage() {
           />
 
           <SharingBlock
-            shareToken={shareToken}
-            shareCopied={shareCopied}
+            shareDetails={shareDetails}
             onShare={() => void handleShare()}
-            onCopy={() => void handleCopyLink()}
-            onRevoke={() => void handleRevoke()}
+            onManage={() => setShowShareDialog(true)}
           />
 
           <DeleteProfile onDelete={handleDelete} />
         </div>
       </div>
+
+      {showShareDialog && shareDetails && (
+        <ShareDialog
+          details={shareDetails}
+          onClose={() => setShowShareDialog(false)}
+          onRevoke={() => void handleRevoke()}
+          onSettingsChange={(settings) => void handleSettingsChange(settings)}
+        />
+      )}
     </div>
   )
 }
