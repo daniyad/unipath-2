@@ -587,11 +587,13 @@ export function ProfilePage() {
             onDeadlinesChange={(enabled) => void handleToggleReminders(enabled)}
           />
 
-          <SharingBlock
-            shareDetails={shareDetails}
-            onShare={() => void handleShare()}
-            onManage={() => setShowShareDialog(true)}
-          />
+          {profile?.name && (
+            <SharingBlock
+              shareDetails={shareDetails}
+              onShare={() => void handleShare()}
+              onManage={() => setShowShareDialog(true)}
+            />
+          )}
 
           <DeleteProfile onDelete={handleDelete} />
         </div>
