@@ -99,6 +99,7 @@ interface UniTileCardProps {
 }
 
 function UniTileCard({ entry, selected, dimmed, onClick, onNavigate }: UniTileCardProps) {
+  const { t, i18n } = useTranslation()
   const { name, serverUni, sp, done, total, daysLeft } = entry
   const pct = total > 0 ? Math.round((done / total) * 100) : 0
   const soon = daysLeft !== null && daysLeft > 0 && daysLeft <= 30
@@ -113,6 +114,8 @@ function UniTileCard({ entry, selected, dimmed, onClick, onNavigate }: UniTileCa
   const tileClass = [styles.uniTile, selected ? styles.featured : '', dimmed ? styles.dimmed : '']
     .filter(Boolean)
     .join(' ')
+
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US'
 
   return (
     <div
@@ -147,9 +150,7 @@ function UniTileCard({ entry, selected, dimmed, onClick, onNavigate }: UniTileCa
         <>
           <div className={styles.tileProgress}>
             <div className={styles.tileProgressRow}>
-              <span>
-                {done} of {total} tasks
-              </span>
+              <span>{t('dashboard.tasks', { done, total })}</span>
               <span className={styles.tilePct}>{pct}%</span>
             </div>
             <div className={styles.tileTrack}>
@@ -159,22 +160,24 @@ function UniTileCard({ entry, selected, dimmed, onClick, onNavigate }: UniTileCa
 
           {daysLeft !== null && sp?.plan.applicationDeadline && (
             <div className={styles.uniTileDeadline}>
-              <span className={styles.uniTileDeadlineLabel}>Deadline</span>
+              <span className={styles.uniTileDeadlineLabel}>{t('plan.deadline')}</span>
               <span className={`${styles.uniTileDeadlineVal}${soon ? ` ${styles.soon}` : ''}`}>
-                {new Date(sp.plan.applicationDeadline).toLocaleDateString('en-US', {
+                {new Date(sp.plan.applicationDeadline).toLocaleDateString(locale, {
                   month: 'long',
                   day: 'numeric',
                   year: 'numeric',
                 })}
                 {' · '}
-                {daysLeft > 0 ? `${daysLeft}d left` : 'Passed'}
+                {daysLeft > 0
+                  ? t('dashboard.daysLeft', { days: daysLeft })
+                  : t('dashboard.deadlinePassed')}
               </span>
             </div>
           )}
         </>
       ) : (
         <div className={styles.noPlanHint}>
-          No action plan yet —{' '}
+          {t('dashboard.noPlanHint')}
           <button
             type="button"
             className={styles.noPlanLink}
@@ -183,7 +186,7 @@ function UniTileCard({ entry, selected, dimmed, onClick, onNavigate }: UniTileCa
               onNavigate(name)
             }}
           >
-            generate one
+            {t('dashboard.noPlanCta')}
           </button>
         </div>
       )}
@@ -197,7 +200,7 @@ function UniTileCard({ entry, selected, dimmed, onClick, onNavigate }: UniTileCa
           onNavigate(name)
         }}
       >
-        View details →
+        {t('dashboard.viewDetails')}
       </button>
     </div>
   )
@@ -214,6 +217,7 @@ interface ThisWeekPanelProps {
 }
 
 function ThisWeekPanel({ tasks, today, onToggle, filterUni, unisWithPlans }: ThisWeekPanelProps) {
+  const { t, i18n } = useTranslation()
   const urgencyOrder: Record<string, number> = { urgent: 0, important: 1, later: 2 }
   const weekEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7)
 
@@ -221,8 +225,11 @@ function ThisWeekPanel({ tasks, today, onToggle, filterUni, unisWithPlans }: Thi
 
   const items = tasks
     .filter(
-      (t) =>
-        !t.done && !t.isDeadline && t.date <= weekEnd && (!filterUni || t.uniName === filterUni),
+      (task) =>
+        !task.done &&
+        !task.isDeadline &&
+        task.date <= weekEnd &&
+        (!filterUni || task.uniName === filterUni),
     )
     .sort((a, b) => {
       const dateDiff = a.date.getTime() - b.date.getTime()
@@ -231,56 +238,58 @@ function ThisWeekPanel({ tasks, today, onToggle, filterUni, unisWithPlans }: Thi
     })
     .slice(0, 5)
 
-  const urgentCount = items.filter((t) => t.urgency === 'urgent').length
+  const urgentCount = items.filter((task) => task.urgency === 'urgent').length
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US'
+
+  const urgencyKeyMap: Record<string, string> = {
+    urgent: 'plan.urgencyLabels.high',
+    important: 'plan.urgencyLabels.medium',
+    later: 'plan.urgencyLabels.low',
+  }
 
   return (
     <div className={styles.weekCard}>
       <div className={styles.weekHead}>
-        <span className={styles.weekEyebrow}>This week</span>
+        <span className={styles.weekEyebrow}>{t('dashboard.thisWeekEyebrow')}</span>
         <span className={`${styles.weekEyebrow} ${styles.weekEyebrowMuted}`}>
-          {urgentCount} urgent · {items.length} total
+          {t('dashboard.urgentCount', { urgent: urgentCount, total: items.length })}
         </span>
       </div>
-      <h2 className={styles.weekTitle}>Get these done</h2>
-      <p className={styles.weekSub}>
-        Your top priorities through the week — check them off as you go.
-      </p>
+      <h2 className={styles.weekTitle}>{t('dashboard.thisWeekTitle')}</h2>
+      <p className={styles.weekSub}>{t('dashboard.thisWeekSub')}</p>
 
       <div className={styles.weekList}>
         {!filterHasPlan ? (
-          <div className={styles.weekEmpty}>
-            No action plan for {filterUni} yet. Select a university and generate one first.
-          </div>
+          <div className={styles.weekEmpty}>{t('dashboard.noPlanFilter', { uni: filterUni })}</div>
         ) : items.length === 0 ? (
-          <div className={styles.weekEmpty}>All clear this week. Take a breath.</div>
+          <div className={styles.weekEmpty}>{t('dashboard.allClearWeek')}</div>
         ) : (
-          items.map((t) => {
-            const rel = fmtRelative(t.date, today)
+          items.map((task) => {
+            const rel = fmtRelative(task.date, today)
             const urgencyClass =
-              t.urgency === 'urgent'
+              task.urgency === 'urgent'
                 ? `${styles.urgBadge} ${styles.urgHigh}`
-                : t.urgency === 'important'
+                : task.urgency === 'important'
                   ? `${styles.urgBadge} ${styles.urgMed}`
                   : `${styles.urgBadge} ${styles.urgLow}`
-            const urgencyLabel =
-              t.urgency === 'urgent' ? 'Urgent' : t.urgency === 'important' ? 'Important' : 'Later'
+            const urgencyLabel = t(urgencyKeyMap[task.urgency] ?? 'plan.urgencyLabels.low')
 
             return (
-              <div key={`${t.planId}-${t.id}`} className={styles.weekItem}>
+              <div key={`${task.planId}-${task.id}`} className={styles.weekItem}>
                 <button
                   type="button"
-                  className={`${styles.weekCheck}${t.done ? ` ${styles.checked}` : ''}`}
-                  onClick={() => onToggle(t.planId, t.id, t.done)}
-                  aria-label={t.done ? 'Mark incomplete' : 'Mark complete'}
+                  className={`${styles.weekCheck}${task.done ? ` ${styles.checked}` : ''}`}
+                  onClick={() => onToggle(task.planId, task.id, task.done)}
+                  aria-label={task.done ? t('dashboard.markUndone') : t('dashboard.markDone')}
                 />
                 <div className={styles.weekTaskMain}>
                   <span
-                    className={`${styles.weekTaskTitle}${t.done ? ` ${styles.weekTaskDone}` : ''}`}
+                    className={`${styles.weekTaskTitle}${task.done ? ` ${styles.weekTaskDone}` : ''}`}
                   >
-                    {t.title}
+                    {task.title}
                   </span>
                   <span className={styles.weekTaskMeta}>
-                    <span className={styles.uniNamePill}>{t.uniName}</span>
+                    <span className={styles.uniNamePill}>{task.uniName}</span>
                     <span className={styles.metaDot} />
                     <span className={urgencyClass}>{urgencyLabel}</span>
                   </span>
@@ -289,7 +298,7 @@ function ThisWeekPanel({ tasks, today, onToggle, filterUni, unisWithPlans }: Thi
                   <strong>{rel.label}</strong>
                   <br />
                   <span className={styles.weekDueDate}>
-                    {t.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {task.date.toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
                   </span>
                 </span>
               </div>
@@ -311,6 +320,7 @@ interface MonthViewPanelProps {
 }
 
 function MonthViewPanel({ tasks, today, filterUni, unisWithPlans }: MonthViewPanelProps) {
+  const { t, i18n } = useTranslation()
   const [viewMonth, setViewMonth] = useState({ year: today.getFullYear(), month: today.getMonth() })
   const [selectedDay, setSelectedDay] = useState<{
     year: number
@@ -377,7 +387,15 @@ function MonthViewPanel({ tasks, today, filterUni, unisWithPlans }: MonthViewPan
   const showRows = cells[35].getMonth() === viewMonth.month || cells[35] <= lastOfMonth ? 6 : 5
   const visible = cells.slice(0, showRows * 7)
 
-  const dows = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US'
+  // Jan 6 2025 is a Monday — generate day abbreviations starting from it
+  const dows = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(2025, 0, 6 + i)
+    return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(d)
+  })
+  const monthLabel = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(
+    new Date(viewMonth.year, viewMonth.month, 1),
+  )
   const selectedDate = selectedDay
     ? new Date(selectedDay.year, selectedDay.month, selectedDay.day)
     : null
@@ -386,26 +404,24 @@ function MonthViewPanel({ tasks, today, filterUni, unisWithPlans }: MonthViewPan
   return (
     <div className={styles.monthCard}>
       <div className={styles.monthHead}>
-        <h2 className={styles.monthTitle}>{"What's coming"}</h2>
+        <h2 className={styles.monthTitle}>{t('dashboard.whatsComingTitle')}</h2>
         <div className={styles.monthNav}>
           <button
             type="button"
             className={`${styles.monthNavBtn}${isAtMin ? ` ${styles.monthNavBtnDisabled}` : ''}`}
             onClick={() => navigate(-1)}
             disabled={isAtMin}
-            aria-label="Previous month"
+            aria-label={t('nav.back')}
           >
             ←
           </button>
-          <span className={styles.monthNavLabel}>
-            {MONTH_NAMES[viewMonth.month]} {viewMonth.year}
-          </span>
+          <span className={styles.monthNavLabel}>{monthLabel}</span>
           <button
             type="button"
             className={`${styles.monthNavBtn}${isAtMax ? ` ${styles.monthNavBtnDisabled}` : ''}`}
             onClick={() => navigate(1)}
             disabled={isAtMax}
-            aria-label="Next month"
+            aria-label={t('nav.back')}
           >
             →
           </button>
@@ -413,9 +429,7 @@ function MonthViewPanel({ tasks, today, filterUni, unisWithPlans }: MonthViewPan
       </div>
 
       {!filterHasPlan ? (
-        <div className={styles.calNoPlan}>
-          No action plan for {filterUni} yet. Select a university and generate one first.
-        </div>
+        <div className={styles.calNoPlan}>{t('dashboard.calNoPlan', { uni: filterUni })}</div>
       ) : (
         <>
           <div className={styles.cal}>
@@ -477,17 +491,17 @@ function MonthViewPanel({ tasks, today, filterUni, unisWithPlans }: MonthViewPan
           {selectedDate && selectedTasks.length > 0 && (
             <div className={styles.calDetail}>
               <div className={styles.calDetailHead}>
-                {selectedDate.toLocaleDateString('en-US', {
+                {selectedDate.toLocaleDateString(locale, {
                   weekday: 'long',
                   month: 'long',
                   day: 'numeric',
                 })}
               </div>
               <div className={styles.calDetailList}>
-                {selectedTasks.map((t) => (
-                  <div key={`${t.planId}-${t.id}`} className={styles.calDetailRow}>
-                    <span style={{ flex: 1 }}>{t.title}</span>
-                    <span className={styles.calDetailUni}>{t.uniName}</span>
+                {selectedTasks.map((task) => (
+                  <div key={`${task.planId}-${task.id}`} className={styles.calDetailRow}>
+                    <span style={{ flex: 1 }}>{task.title}</span>
+                    <span className={styles.calDetailUni}>{task.uniName}</span>
                   </div>
                 ))}
               </div>
@@ -496,16 +510,20 @@ function MonthViewPanel({ tasks, today, filterUni, unisWithPlans }: MonthViewPan
 
           <div className={styles.calLegend}>
             <span className={styles.calLegendItem}>
-              <span className={`${styles.calLegendSwatch} ${styles.swatchToday}`} /> Today
+              <span className={`${styles.calLegendSwatch} ${styles.swatchToday}`} />{' '}
+              {t('dashboard.calToday')}
             </span>
             <span className={styles.calLegendItem}>
-              <span className={`${styles.calLegendSwatch} ${styles.swatchTask}`} /> Task
+              <span className={`${styles.calLegendSwatch} ${styles.swatchTask}`} />{' '}
+              {t('dashboard.calTask')}
             </span>
             <span className={styles.calLegendItem}>
-              <span className={`${styles.calLegendSwatch} ${styles.swatchUrgent}`} /> Urgent
+              <span className={`${styles.calLegendSwatch} ${styles.swatchUrgent}`} />{' '}
+              {t('dashboard.calUrgent')}
             </span>
             <span className={styles.calLegendItem}>
-              <span className={`${styles.calLegendSwatch} ${styles.swatchDeadline}`} /> Deadline
+              <span className={`${styles.calLegendSwatch} ${styles.swatchDeadline}`} />{' '}
+              {t('dashboard.calDeadline')}
             </span>
           </div>
         </>
@@ -519,7 +537,7 @@ function MonthViewPanel({ tasks, today, filterUni, unisWithPlans }: MonthViewPan
 export function DashboardPage() {
   const { profile } = useProfile()
   const api = useApi()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
 
   const [plans, setPlans] = useState<ServerPlan[]>([])
@@ -734,13 +752,16 @@ export function DashboardPage() {
       <div className={styles.page}>
         <Navbar showProfileActions />
         <div className={styles.dashPage}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Loading…</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+            {t('dashboard.loading')}
+          </p>
         </div>
       </div>
     )
   }
 
-  const dayStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US'
+  const dayStr = now.toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })
 
   return (
     <div className={styles.page}>
@@ -785,12 +806,12 @@ export function DashboardPage() {
 
           <div className={styles.dashStats}>
             <div className={styles.dashStat}>
-              <span className={styles.dashStatLabel}>Today</span>
+              <span className={styles.dashStatLabel}>{t('dashboard.calToday')}</span>
               <span className={`${styles.dashStatValue} ${styles.dashStatDate}`}>{dayStr}</span>
             </div>
             {nextDeadline && (
               <div className={styles.dashStat}>
-                <span className={styles.dashStatLabel}>Next deadline</span>
+                <span className={styles.dashStatLabel}>{t('dashboard.upcomingDeadlines')}</span>
                 <span className={styles.dashStatValue}>
                   {nextDeadline.daysLeft}
                   <span className={styles.unit}>days · {nextDeadline.name.split(' ')[0]}</span>
@@ -803,7 +824,7 @@ export function DashboardPage() {
         {/* ── Your universities ────────────────────────────────────────── */}
         <section className={styles.dashSection}>
           <div className={styles.secHead}>
-            <h2 className={styles.secTitle}>Your universities</h2>
+            <h2 className={styles.secTitle}>{t('dashboard.yourUnis')}</h2>
             <span className={styles.secMeta}>
               {filterUni ? (
                 <a
@@ -813,10 +834,10 @@ export function DashboardPage() {
                     setFilterUni(null)
                   }}
                 >
-                  ← Show all universities
+                  {t('dashboard.showAll')}
                 </a>
               ) : (
-                'Click a card to focus on one university'
+                t('dashboard.filterHint')
               )}
             </span>
           </div>
@@ -882,11 +903,8 @@ export function DashboardPage() {
         {shareDetails !== undefined && (
           <section className={styles.shareSection}>
             <div className={styles.shareSectionLeft}>
-              <div className={styles.shareSectionTitle}>Keep your parents in the loop</div>
-              <p className={styles.shareSectionSub}>
-                Send a read-only link to anyone — parents, mentors, a friend. They&apos;ll see your
-                shortlist and progress, nothing else. No sign-up required.
-              </p>
+              <div className={styles.shareSectionTitle}>{t('dashboard.shareTitle')}</div>
+              <p className={styles.shareSectionSub}>{t('dashboard.shareSub')}</p>
             </div>
             <div className={styles.shareSectionRight}>
               {shareDetails ? (
@@ -895,7 +913,7 @@ export function DashboardPage() {
                   className={styles.shareSectionBtn}
                   onClick={() => setShowShareDialog(true)}
                 >
-                  Manage link →
+                  {t('dashboard.manageLink')}
                 </button>
               ) : (
                 <button
@@ -903,10 +921,12 @@ export function DashboardPage() {
                   className={styles.shareSectionBtn}
                   onClick={() => void handleShare()}
                 >
-                  Create share link →
+                  {t('dashboard.createLink')}
                 </button>
               )}
-              {shareDetails && <span className={styles.shareSectionActive}>Link active</span>}
+              {shareDetails && (
+                <span className={styles.shareSectionActive}>{t('dashboard.linkActive')}</span>
+              )}
             </div>
           </section>
         )}

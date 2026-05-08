@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { useProfile } from '../contexts/ProfileContext'
 import { useApi } from '../contexts/ApiContext'
@@ -90,20 +91,21 @@ interface AccountInfoProps {
 }
 
 function AccountInfo({ name, email, country, targetYear }: Readonly<AccountInfoProps>) {
-  const gradYear = targetYear ? `Class of ${targetYear}` : '—'
+  const { t } = useTranslation()
+  const gradYear = targetYear ? t('profile.classOf', { year: targetYear }) : '—'
 
   return (
     <Block
-      eyebrow="Account"
-      title="Who you are"
-      sub="We use this to personalize your shortlist and address letters of motivation. Nothing here leaves Unipath."
+      eyebrow={t('profile.accountEyebrow')}
+      title={t('profile.accountTitle')}
+      sub={t('profile.accountSub')}
       defaultOpen
     >
       <div className={styles.grid}>
-        <Field label="Full name">{name || '—'}</Field>
-        <Field label="Email">{email}</Field>
-        <Field label="Country">{country || '—'}</Field>
-        <Field label="Graduating">{gradYear}</Field>
+        <Field label={t('profile.fieldName')}>{name || '—'}</Field>
+        <Field label={t('profile.fieldEmail')}>{email}</Field>
+        <Field label={t('profile.fieldCountry')}>{country || '—'}</Field>
+        <Field label={t('profile.fieldGraduating')}>{gradYear}</Field>
       </div>
     </Block>
   )
@@ -132,6 +134,7 @@ function ProfileAnswers({
   whyAbroad,
   onEditAnswers,
 }: Readonly<ProfileAnswersProps>) {
+  const { t } = useTranslation()
   const gpa =
     academicScore != null && academicScoreMax != null
       ? `${academicScore} / ${academicScoreMax}`
@@ -151,26 +154,26 @@ function ProfileAnswers({
 
   return (
     <Block
-      eyebrow="Your profile"
-      title="What you told us"
-      sub="These are the answers we used to build your shortlist. Update anything here and we'll re-check your recommendations."
+      eyebrow={t('profile.answersEyebrow')}
+      title={t('profile.answersTitle')}
+      sub={t('profile.answersSub')}
       action={
         <button className={styles.editLink} onClick={onEditAnswers} type="button">
-          Edit answers
+          {t('profile.editAnswers')}
         </button>
       }
     >
       <div className={styles.grid}>
-        <Field label="Field of study">{careerDirection || '—'}</Field>
-        <Field label="GPA / average">{gpa}</Field>
-        <Field label="English level">{englishLevel}</Field>
-        <Field label="Annual budget">{budget}</Field>
+        <Field label={t('profile.fieldStudy')}>{careerDirection || '—'}</Field>
+        <Field label={t('profile.fieldGpa')}>{gpa}</Field>
+        <Field label={t('profile.fieldEnglish')}>{englishLevel}</Field>
+        <Field label={t('profile.fieldBudget')}>{budget}</Field>
       </div>
 
       <div className={styles.divider} />
 
       <div className={styles.stack}>
-        <div className={styles.fieldLabel}>Regions you&apos;d consider</div>
+        <div className={styles.fieldLabel}>{t('profile.regionsLabel')}</div>
         <div className={styles.chipRow}>
           {regions.length > 0 ? (
             regions.map((r) => (
@@ -186,7 +189,7 @@ function ProfileAnswers({
 
       {whyAbroad && (
         <div className={`${styles.stack} ${styles.stackGap}`}>
-          <div className={styles.fieldLabel}>Why you want to study abroad</div>
+          <div className={styles.fieldLabel}>{t('profile.whyAbroadLabel')}</div>
           <p className={styles.quote}>{whyAbroad}</p>
         </div>
       )}
@@ -232,10 +235,12 @@ function TelegramBlock({
   onConnect,
   onToggleReminders,
 }: Readonly<TelegramBlockProps>) {
+  const { t } = useTranslation()
+
   if (loading) {
     return (
-      <Block eyebrow="Stay on track" title="Connect the Telegram bot">
-        <p className={styles.hint}>Checking connection…</p>
+      <Block eyebrow={t('profile.telegramEyebrow')} title={t('profile.telegramTitle')}>
+        <p className={styles.hint}>{t('profile.checkingConnection')}</p>
       </Block>
     )
   }
@@ -244,26 +249,24 @@ function TelegramBlock({
     const linkedDate = linkedAt ? new Date(linkedAt).toLocaleDateString() : null
     return (
       <Block
-        eyebrow="Stay on track"
-        title="Telegram connected"
+        eyebrow={t('profile.telegramEyebrow')}
+        title={t('profile.telegramConnectedTitle')}
         sub={
           linkedDate
-            ? `Connected on ${linkedDate}. The bot sends your daily check-in — you can pause it any time.`
-            : 'The bot sends your daily check-in — you can pause it any time.'
+            ? t('profile.telegramConnectedSubDate', { date: linkedDate })
+            : t('profile.telegramConnectedSub')
         }
       >
         <ul className={styles.prefList}>
           <li className={styles.prefRow}>
             <div className={styles.prefText}>
-              <div className={styles.prefTitle}>Daily reminders</div>
-              <div className={styles.prefSub}>
-                One message a day with what&apos;s due — sent via Telegram.
-              </div>
+              <div className={styles.prefTitle}>{t('profile.dailyReminders')}</div>
+              <div className={styles.prefSub}>{t('profile.dailyRemindersSub')}</div>
             </div>
             <Toggle
               on={remindersEnabled}
               onChange={(v) => void onToggleReminders(v)}
-              label="Daily reminders"
+              label={t('profile.dailyReminders')}
             />
           </li>
         </ul>
@@ -273,9 +276,9 @@ function TelegramBlock({
 
   return (
     <Block
-      eyebrow="Stay on track"
-      title="Connect the Telegram bot"
-      sub="Daily nudges in your pocket. The bot sends one message a day with what's due — no spam, no marketing. You can pause it any time."
+      eyebrow={t('profile.telegramEyebrow')}
+      title={t('profile.telegramTitle')}
+      sub={t('profile.telegramSub')}
     >
       <button
         className="btn btn-primary"
@@ -283,7 +286,7 @@ function TelegramBlock({
         disabled={generating}
         type="button"
       >
-        {generating ? 'Opening Telegram…' : 'Connect via Telegram'}
+        {generating ? t('profile.connectingTelegram') : t('profile.connectTelegram')}
       </button>
     </Block>
   )
@@ -295,21 +298,24 @@ interface NotificationsProps {
 }
 
 function Notifications({ deadlinesEnabled, onDeadlinesChange }: Readonly<NotificationsProps>) {
+  const { t } = useTranslation()
   return (
     <Block
-      eyebrow="Reminders"
-      title="What we'll nudge you about"
-      sub="The whole point of Unipath is that you actually do the work. Pick what helps and turn off what doesn't."
+      eyebrow={t('profile.remindersEyebrow')}
+      title={t('profile.remindersTitle')}
+      sub={t('profile.remindersSub')}
     >
       <ul className={styles.prefList}>
         <li className={styles.prefRow}>
           <div className={styles.prefText}>
-            <div className={styles.prefTitle}>Deadline countdowns</div>
-            <div className={styles.prefSub}>
-              A heads-up at 7 and 1 day before each application closes.
-            </div>
+            <div className={styles.prefTitle}>{t('profile.deadlineCountdowns')}</div>
+            <div className={styles.prefSub}>{t('profile.deadlineCountdownsSub')}</div>
           </div>
-          <Toggle on={deadlinesEnabled} onChange={onDeadlinesChange} label="Deadline countdowns" />
+          <Toggle
+            on={deadlinesEnabled}
+            onChange={onDeadlinesChange}
+            label={t('profile.deadlineCountdowns')}
+          />
         </li>
       </ul>
     </Block>
@@ -323,24 +329,25 @@ interface SharingBlockProps {
 }
 
 function SharingBlock({ shareDetails, onShare, onManage }: Readonly<SharingBlockProps>) {
+  const { t } = useTranslation()
   return (
     <Block
-      eyebrow="Family & friends"
-      title="Share your progress"
-      sub="Send a read-only view of your dashboard to parents, mentors, or anyone else. They can see your universities and progress but can't change anything or sign up."
+      eyebrow={t('profile.sharingEyebrow')}
+      title={t('profile.sharingTitle')}
+      sub={t('profile.sharingSub')}
     >
       {shareDetails === undefined ? (
-        <p className={styles.hint}>Loading…</p>
+        <p className={styles.hint}>{t('profile.sharingLoading')}</p>
       ) : shareDetails ? (
         <div className={styles.shareRow}>
-          <span className={styles.shareActiveLabel}>Link active</span>
+          <span className={styles.shareActiveLabel}>{t('profile.linkActive')}</span>
           <button type="button" className={styles.shareAction} onClick={onManage}>
-            Manage →
+            {t('profile.manageLink')}
           </button>
         </div>
       ) : (
         <button type="button" className="btn btn-primary" onClick={onShare}>
-          Create shareable link
+          {t('profile.createShareLink')}
         </button>
       )}
     </Block>
@@ -352,6 +359,7 @@ interface DeleteProfileProps {
 }
 
 function DeleteProfile({ onDelete }: Readonly<DeleteProfileProps>) {
+  const { t } = useTranslation()
   const [confirming, setConfirming] = useState(false)
   const [text, setText] = useState('')
   const [deleting, setDeleting] = useState(false)
@@ -367,23 +375,25 @@ function DeleteProfile({ onDelete }: Readonly<DeleteProfileProps>) {
 
   return (
     <Block
-      eyebrow="Danger zone"
-      title="Delete your profile"
-      sub="Permanently deletes your account, shortlist, action plans, task history, and disconnects the Telegram bot. This can't be undone."
+      eyebrow={t('profile.dangerEyebrow')}
+      title={t('profile.dangerTitle')}
+      sub={t('profile.dangerSub')}
       danger
     >
       {!confirming ? (
         <button className={styles.btnDanger} onClick={() => setConfirming(true)} type="button">
-          Delete my profile
+          {t('profile.deleteBtn')}
         </button>
       ) : (
         <div className={styles.dangerConfirm}>
           <div className={styles.fieldLabel}>
-            Type <strong>delete my profile</strong> to confirm
+            {t('profile.deleteConfirmBefore')}
+            <strong>{t('profile.deleteConfirmBold')}</strong>
+            {t('profile.deleteConfirmAfter')}
           </div>
           <input
             className="input"
-            placeholder="delete my profile"
+            placeholder={t('profile.deleteConfirmBold')}
             value={text}
             onChange={(e) => setText(e.target.value)}
             autoFocus
@@ -397,15 +407,15 @@ function DeleteProfile({ onDelete }: Readonly<DeleteProfileProps>) {
               }}
               type="button"
             >
-              Cancel
+              {t('profile.cancel')}
             </button>
             <button
               className={styles.btnDanger}
-              disabled={text.trim().toLowerCase() !== 'delete my profile' || deleting}
+              disabled={text.trim().toLowerCase() !== t('profile.deleteConfirmBold') || deleting}
               onClick={() => void handleDelete()}
               type="button"
             >
-              {deleting ? 'Deleting…' : 'Delete forever'}
+              {deleting ? t('profile.deleting') : t('profile.deleteForever')}
             </button>
           </div>
         </div>
@@ -417,6 +427,7 @@ function DeleteProfile({ onDelete }: Readonly<DeleteProfileProps>) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function ProfilePage() {
+  const { t } = useTranslation()
   const { user, logout } = useAuth()
   const { profile, clearProfile } = useProfile()
   const api = useApi()
@@ -546,7 +557,7 @@ export function ProfilePage() {
       <div className={styles.profPage}>
         {/* Header */}
         <header className={styles.profHeader}>
-          <h1 className={styles.profName}>{name || 'Your Profile'}</h1>
+          <h1 className={styles.profName}>{name || t('profile.title')}</h1>
           <p className={styles.profMeta}>
             <a href={`mailto:${email}`}>{email}</a>
           </p>
