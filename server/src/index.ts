@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import express from 'express'
+import cors from 'cors'
 import type { ErrorRequestHandler } from 'express'
 import { ZodError } from 'zod'
 import profileRouter from './routes/profile.js'
@@ -12,6 +13,14 @@ import { startDeadlineReminderCron } from './services/telegramCron.js'
 const app = express()
 const PORT = process.env.PORT ?? 4000
 
+const allowedOrigins = [
+  'https://joinunipath.com',
+  'https://www.joinunipath.com',
+  'http://localhost:3000',
+  'http://localhost:3001',
+]
+
+app.use(cors({ origin: allowedOrigins, credentials: true }))
 app.use(express.json())
 
 app.get('/api/health', (_req, res) => {
