@@ -10,6 +10,9 @@ interface AuthContextValue {
   signup: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   getToken: () => Promise<string | null>
+  resetPasswordForEmail: (email: string) => Promise<void>
+  updatePassword: (newPassword: string) => Promise<void>
+  loginWithGoogle: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -58,8 +61,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data.session?.access_token ?? null
   }, [])
 
+  const resetPasswordForEmail = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    if (error) throw new Error(error.message)
+  }
+
+  const updatePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) throw new Error(error.message)
+  }
+
+  const loginWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    })
+    if (error) throw new Error(error.message)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, getToken }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        signup,
+        logout,
+        getToken,
+        resetPasswordForEmail,
+        updatePassword,
+        loginWithGoogle,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
