@@ -102,13 +102,15 @@ DEADLINE RULES — apply these strictly before recommending any university:
 3. For universities with 90–180 days until the deadline, flag the tight timeline in the rationale and note the student must act immediately. Still include them if they are otherwise the best fit.
 4. Prefer universities where the student has the most time to prepare.
 
-Use web search to verify that each university's program exists, the tuition is current, and the application deadline is accurate. Drop or replace any candidate that doesn't check out.
+Use web search to verify that each university's program exists, the tuition is current, and the application deadline is accurate. If a candidate does not check out, silently substitute a different university — never annotate the name field with replacement notes.
+
+The "name" field must contain ONLY the official university name — no parenthetical notes, no "via ...", no "replaced by ...", no extra text of any kind.
 
 Respond with ONLY a valid JSON object — no explanation, no markdown, no code fences:
 {
   "universities": [
     {
-      "name": "string",
+      "name": "string (official university name only)",
       "country": "string",
       "city": "string",
       "program": "string",
