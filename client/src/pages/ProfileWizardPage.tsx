@@ -8,6 +8,26 @@ import { AiGeneratingOverlay } from '../components/AiGeneratingOverlay'
 import type { PartialProfile } from '../types'
 import styles from './ProfileWizardPage.module.css'
 
+const AVAILABLE_LANGUAGES = [
+  'English',
+  'German',
+  'French',
+  'Korean',
+  'Arabic',
+  'Japanese',
+  'Chinese',
+]
+
+const LANGUAGE_TESTS: Record<string, string[]> = {
+  English: ['IELTS', 'TOEFL'],
+  German: ['TestDaF', 'Goethe', 'DSH'],
+  French: ['DELF', 'DALF', 'TCF'],
+  Korean: ['TOPIK'],
+  Japanese: ['JLPT'],
+  Chinese: ['HSK'],
+  Arabic: [],
+}
+
 const CIS_COUNTRIES = [
   'Kazakhstan',
   'Kyrgyzstan',
@@ -242,51 +262,90 @@ function StepInterests({ data, onChange, errors }: StepProps) {
 
 function StepLanguages({ data, onChange, errors }: StepProps) {
   const { t } = useTranslation()
-  const levelKeys = ['beginner', 'elementary', 'intermediate', 'advanced', 'native']
-  const languages = data.languages ?? [{ language: 'English', level: '' }]
+  const languages = data.languages ?? []
+  const selectedNames = languages.map((l) => l.language)
 
-  const updateLang = (idx: number, field: 'language' | 'level', value: string) => {
-    const updated = languages.map((l, i) => (i === idx ? { ...l, [field]: value } : l))
-    onChange({ languages: updated })
+  const toggleLanguage = (lang: string) => {
+    if (selectedNames.includes(lang)) {
+      onChange({ languages: languages.filter((l) => l.language !== lang) })
+    } else {
+      onChange({ languages: [...languages, { language: lang }] })
+    }
   }
 
-  const addLang = () => onChange({ languages: [...languages, { language: '', level: '' }] })
+  const updateTest = (lang: string, testName: string) => {
+    onChange({
+      languages: languages.map((l) =>
+        l.language === lang
+          ? { ...l, testName: testName || undefined, testScore: testName ? l.testScore : undefined }
+          : l,
+      ),
+    })
+  }
+
+  const updateScore = (lang: string, testScore: string) => {
+    onChange({
+      languages: languages.map((l) =>
+        l.language === lang ? { ...l, testScore: testScore || undefined } : l,
+      ),
+    })
+  }
 
   return (
     <div className={styles.fields}>
-      <p className={styles.hint}>{t('wizard.languages.hint')}</p>
-      {languages.map((l, idx) => (
-        <div key={idx} className={styles.row}>
-          <div className={styles.field}>
-            <label className={styles.label}>{t('wizard.languages.languageLabel')}</label>
-            <input
-              className="input"
-              value={l.language}
-              onChange={(e) => updateLang(idx, 'language', e.target.value)}
-              placeholder={t('wizard.languages.languagePlaceholder')}
-            />
-          </div>
-          <div className={styles.field}>
-            <label className={styles.label}>{t('wizard.languages.levelLabel')}</label>
-            <select
-              className="input"
-              value={l.level}
-              onChange={(e) => updateLang(idx, 'level', e.target.value)}
+      <div className={styles.field}>
+        <label className={styles.label}>{t('wizard.languages.selectLabel')}</label>
+        <p className={styles.hint}>{t('wizard.languages.hint')}</p>
+        <div className={styles.chips}>
+          {AVAILABLE_LANGUAGES.map((lang) => (
+            <button
+              key={lang}
+              type="button"
+              className={`${styles.chipBtn} ${selectedNames.includes(lang) ? styles.chipBtnActive : ''}`}
+              onClick={() => toggleLanguage(lang)}
             >
-              <option value="">{t('wizard.languages.levelPlaceholder')}</option>
-              {levelKeys.map((key) => (
-                <option key={key} value={t(`wizard.languages.levels.${key}`)}>
-                  {t(`wizard.languages.levels.${key}`)}
-                </option>
-              ))}
-            </select>
-          </div>
+              {lang}
+            </button>
+          ))}
         </div>
-      ))}
-      {errors?.languages && <p className={styles.fieldError}>{errors.languages}</p>}
-      <button type="button" className={`btn btn-ghost ${styles.addBtn}`} onClick={addLang}>
-        {t('wizard.languages.addLanguage')}
-      </button>
+        {errors?.languages && <p className={styles.fieldError}>{errors.languages}</p>}
+      </div>
+      {languages.map((l) => {
+        const tests = LANGUAGE_TESTS[l.language] ?? []
+        if (tests.length === 0) return null
+        return (
+          <div key={l.language} className={styles.row}>
+            <div className={styles.field}>
+              <label className={styles.label}>
+                {l.language} — {t('wizard.languages.testLabel')}
+              </label>
+              <select
+                className="input"
+                value={l.testName ?? ''}
+                onChange={(e) => updateTest(l.language, e.target.value)}
+              >
+                <option value="">{t('wizard.languages.testNone')}</option>
+                {tests.map((test) => (
+                  <option key={test} value={test}>
+                    {test}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {l.testName && (
+              <div className={styles.field}>
+                <label className={styles.label}>{t('wizard.languages.scoreLabel')}</label>
+                <input
+                  className="input"
+                  value={l.testScore ?? ''}
+                  onChange={(e) => updateScore(l.language, e.target.value)}
+                  placeholder={t('wizard.languages.scorePlaceholder')}
+                />
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -351,7 +410,14 @@ function StepBudget({ data, onChange, errors }: StepProps) {
 
 function StepPreferences({ data, onChange, errors }: StepProps) {
   const { t } = useTranslation()
-  const countryOptions = ['USA', 'Canada', 'UK', 'Germany', 'South Korea', 'UAE']
+  const countryOptions = [
+    { value: 'USA', label: '🇺🇸 USA' },
+    { value: 'Canada', label: '🇨🇦 Canada' },
+    { value: 'UK', label: '🇬🇧 UK' },
+    { value: 'Germany', label: '🇩🇪 Germany' },
+    { value: 'South Korea', label: '🇰🇷 South Korea' },
+    { value: 'UAE', label: '🇦🇪 UAE' },
+  ]
   const vibeKeys = ['cityBig', 'citySmall', 'cityTown', 'cityAny'] as const
   const preferred = data.preferredCountries ?? []
   const toggle = (c: string) => {
@@ -368,14 +434,14 @@ function StepPreferences({ data, onChange, errors }: StepProps) {
         <label className={styles.label}>{t('wizard.preferences.countriesLabel')}</label>
         <p className={styles.hint}>{t('wizard.preferences.countriesHint')}</p>
         <div className={styles.chips}>
-          {countryOptions.map((c) => (
+          {countryOptions.map(({ value, label }) => (
             <button
-              key={c}
+              key={value}
               type="button"
-              className={`${styles.chipBtn} ${preferred.includes(c) ? styles.chipBtnActive : ''}`}
-              onClick={() => toggle(c)}
+              className={`${styles.chipBtn} ${preferred.includes(value) ? styles.chipBtnActive : ''}`}
+              onClick={() => toggle(value)}
             >
-              {c}
+              {label}
             </button>
           ))}
         </div>
@@ -500,9 +566,7 @@ function getStepErrors(step: number, data: PartialProfile): Record<string, strin
   }
 
   if (step === 3) {
-    const langs = data.languages ?? []
-    const hasValid = langs.some((l) => l.language.trim() && l.level)
-    if (!hasValid) errs.languages = 'Please add at least one language with a name and level.'
+    if (!data.languages?.length) errs.languages = 'Please select at least one language.'
   }
 
   if (step === 4) {
@@ -536,7 +600,7 @@ export function ProfileWizardPage() {
     country: CIS_COUNTRIES[0],
     grade: 11,
     targetYear: new Date().getFullYear() + 1,
-    languages: [{ language: 'English', level: '' }],
+    languages: [],
     ...(profile ?? {}),
   })
   const [generating, setGenerating] = useState(false)

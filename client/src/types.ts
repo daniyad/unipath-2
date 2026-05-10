@@ -13,7 +13,7 @@ export interface Profile {
   planToReturn: boolean | null
   subjects: string[]
   careerDirection: string
-  languages: Array<{ language: string; level: string }>
+  languages: Array<{ language: string; testName?: string; testScore?: string }>
   tuitionMin: number
   tuitionMax: number
   openToScholarship: boolean
