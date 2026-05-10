@@ -115,7 +115,7 @@ interface ProfileAnswersProps {
   careerDirection: string | undefined
   academicScore: number | undefined
   academicScoreMax: number | undefined
-  languages: Array<{ language: string; level: string }> | undefined
+  languages: Array<{ language: string; testName?: string; testScore?: string }> | undefined
   tuitionMin: number | undefined
   tuitionMax: number | undefined
   preferredCountries: string[] | undefined
@@ -143,7 +143,11 @@ function ProfileAnswers({
   const englishLang = languages?.find(
     (l) => l.language.toLowerCase().includes('english') || l.language.toLowerCase() === 'en',
   )
-  const englishLevel = englishLang ? `${englishLang.language} — ${englishLang.level}` : '—'
+  const englishLevel = englishLang
+    ? englishLang.testName && englishLang.testScore
+      ? `${englishLang.testName} ${englishLang.testScore}`
+      : englishLang.language
+    : '—'
 
   const budget =
     tuitionMin != null && tuitionMax != null
