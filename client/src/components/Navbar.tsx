@@ -15,7 +15,7 @@ export function Navbar({ showBack, showProfileActions }: NavbarProps) {
   const location = useLocation()
   const { user, logout } = useAuth()
 
-  const logoTarget = user ? '/dashboard' : '/login'
+  const logoTarget = user ? '/dashboard' : '/'
 
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + '/')
