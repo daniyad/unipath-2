@@ -1,9 +1,11 @@
 import { callClaude, callClaudeChat } from './claude.js'
 import {
   buildShortlistPrompt,
+  buildAnchoredShortlistPrompt,
   buildPlanPrompt,
   buildChatPrompt,
   shortlistResponseSchema,
+  anchoredShortlistResponseSchema,
   planResponseSchema,
   chatResponseSchema,
   type ShortlistResult,
@@ -17,6 +19,11 @@ import type { StudentProfile, University } from '../types.js'
 
 export type AgentInput =
   | { type: 'shortlist'; profile: StudentProfile }
+  | {
+      type: 'anchored-shortlist'
+      profile: StudentProfile
+      anchoredUniversities: Array<{ name: string; country: string }>
+    }
   | { type: 'plan'; profile: StudentProfile; university: University }
   | (Omit<ChatContext, 'userMessage'> & { type: 'chat'; userMessage: string })
 
@@ -33,6 +40,15 @@ export const runAgent = async (input: AgentInput): Promise<AgentOutput> => {
       const { system, user } = buildShortlistPrompt(input.profile)
       const raw = await callClaude(system, user)
       const result = shortlistResponseSchema.parse(raw)
+      return { type: 'shortlist', result }
+    }
+    case 'anchored-shortlist': {
+      const { system, user } = buildAnchoredShortlistPrompt(
+        input.profile,
+        input.anchoredUniversities,
+      )
+      const raw = await callClaude(system, user)
+      const result = anchoredShortlistResponseSchema.parse(raw)
       return { type: 'shortlist', result }
     }
     case 'plan': {

@@ -25,7 +25,7 @@ export const universitySchema = z.object({
   city: z.string(),
   program: z.string(),
   language: z.string(),
-  tier: z.enum(['Reach', 'Match', 'Safety']),
+  tier: z.enum(['Reach', 'Match', 'Safety', 'Unlikely']),
   rationale: z.string(),
   tuitionUSD: z.number(),
   scholarshipPotential: z.string(),

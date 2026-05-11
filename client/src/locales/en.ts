@@ -274,6 +274,7 @@ export default {
       budget: 'Budget',
       preferences: 'Where & how',
       extracurriculars: 'Outside school',
+      universities: 'Your universities',
     },
     next: 'Next',
     done: 'Done',
@@ -369,6 +370,27 @@ export default {
         science: 'Science / research',
       },
     },
+    universities: {
+      subtitle: 'Last step — how would you like to find your universities?',
+      autoTitle: 'Find the best match for me',
+      autoDesc:
+        'AI picks three universities tailored to your profile — a reach, a match, and a safety school.',
+      manualTitle: 'I already have schools in mind',
+      manualDesc: "Search and choose up to 3. Not sure about the rest? We'll suggest more.",
+      autoConfirmation:
+        "We'll find three universities that fit your profile — one ambitious pick, one solid match, and one where you're a strong candidate. Your chances and the honest picture will be on your dashboard right after.",
+      changeChoice: 'Change',
+      searchLabel: 'Search for a university',
+      searchPlaceholder: 'e.g. University of Toronto, KAIST',
+      searchNoResults: 'No universities found. Try a different name.',
+      selectedLabel: 'Your picks',
+      removeButton: 'Remove',
+      nudge:
+        "Not sure what else to add? We'll suggest {{remaining}} more {{remaining, plural, one {university} other {universities}}} tailored to your profile after you submit.",
+      validationMode: "Please choose how you'd like to find universities.",
+      validationPicks:
+        'Please search for and add at least one university, or switch to letting us find them for you.',
+    },
   },
   profile: {
     title: 'Your profile',
@@ -458,6 +480,7 @@ export default {
       Reach: 'Reach',
       Match: 'Match',
       Safety: 'Safety',
+      Unlikely: 'Unlikely',
     },
   },
   shortlist: {
@@ -479,6 +502,7 @@ export default {
       Reach: 'Reach',
       Match: 'Match',
       Safety: 'Safety',
+      Unlikely: 'Unlikely',
     },
   },
   plan: {

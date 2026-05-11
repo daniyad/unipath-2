@@ -13,6 +13,7 @@ const levelColors: Record<string, string> = {
   Reach: 'chip-amber',
   Match: '',
   Safety: 'chip-success',
+  Unlikely: 'chip-danger',
 }
 
 export function UniversitiesPage() {
