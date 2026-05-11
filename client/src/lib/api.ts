@@ -56,13 +56,6 @@ export const createApi = (getToken: () => Promise<string | null>) => {
     patchProfile: (profile: PartialProfile) =>
       r<{ profile: PartialProfile; staleFields: string[] }>('PATCH', '/api/profile', profile),
 
-    // Universities
-    searchUniversities: (query: string) =>
-      r<Array<{ name: string; country: string; web: string }>>(
-        'GET',
-        `/api/universities/search?q=${encodeURIComponent(query)}`,
-      ),
-
     // Shortlist
     generateShortlist: (profile: PartialProfile) => {
       const lang = localStorage.getItem('unipath_lang') ?? 'en'

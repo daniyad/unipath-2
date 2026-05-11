@@ -382,7 +382,10 @@ export default {
       changeChoice: 'Change',
       searchLabel: 'Search for a university',
       searchPlaceholder: 'e.g. University of Toronto, KAIST',
-      searchNoResults: 'No universities found. Try a different name.',
+      searchCountriesNote:
+        'Covers universities in the UK, USA, Canada, Germany, South Korea, and UAE.',
+      searchNotFound:
+        "Can't find it? No worries — choose what you have and we'll find the rest for you.",
       selectedLabel: 'Your picks',
       removeButton: 'Remove',
       nudge:

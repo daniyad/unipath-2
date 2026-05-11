@@ -380,7 +380,9 @@ export default {
       changeChoice: 'Изменить',
       searchLabel: 'Найди университет',
       searchPlaceholder: 'Например, Университет Торонто, KAIST',
-      searchNoResults: 'Университетов не найдено. Попробуй другое название.',
+      searchCountriesNote:
+        'Охватывает университеты Великобритании, США, Канады, Германии, Южной Кореи и ОАЭ.',
+      searchNotFound: 'Не нашёл? Не волнуйся — добавь что есть, а остальное мы подберём сами.',
       selectedLabel: 'Твои варианты',
       removeButton: 'Удалить',
       nudge:

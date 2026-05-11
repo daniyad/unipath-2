@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useProfile } from '../contexts/ProfileContext'
@@ -7,6 +7,7 @@ import { Navbar } from '../components/Navbar'
 import { AiGeneratingOverlay } from '../components/AiGeneratingOverlay'
 import type { PartialProfile } from '../types'
 import styles from './ProfileWizardPage.module.css'
+import universitiesData from '../data/universities.json'
 
 const CIS_COUNTRIES = [
   'Kazakhstan',
@@ -462,36 +463,21 @@ function StepExtracurriculars({ data, onChange }: StepProps) {
 
 function StepUniversities({ data, onChange, errors }: StepProps) {
   const { t } = useTranslation()
-  const api = useApi()
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<Array<{ name: string; country: string; web: string }>>([])
-  const [searching, setSearching] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
 
   const mode = data.universitySelectionMode
   const picks = data.selectedUniversities ?? []
 
-  useEffect(() => {
+  const filtered = useMemo(() => {
     const trimmed = query.trim()
-    if (trimmed.length < 2) {
-      setResults([])
-      setShowResults(false)
-      return
-    }
-    const timer = setTimeout(() => {
-      setSearching(true)
-      api
-        .searchUniversities(trimmed)
-        .then((res) => {
-          setResults(res)
-          setShowResults(true)
-        })
-        .catch(() => setResults([]))
-        .finally(() => setSearching(false))
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [query, api])
+    if (trimmed.length < 2) return []
+    const lower = trimmed.toLowerCase()
+    return (universitiesData as Array<{ name: string; country: string }>)
+      .filter((u) => u.name.toLowerCase().includes(lower))
+      .slice(0, 20)
+  }, [query])
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -507,13 +493,15 @@ function StepUniversities({ data, onChange, errors }: StepProps) {
     if (picks.length >= 3 || picks.some((p) => p.name === uni.name)) return
     onChange({ selectedUniversities: [...picks, { name: uni.name, country: uni.country }] })
     setQuery('')
-    setResults([])
     setShowResults(false)
   }
 
   const removePick = (name: string) => {
     onChange({ selectedUniversities: picks.filter((p) => p.name !== name) })
   }
+
+  const queryTrimmed = query.trim()
+  const dropdownOpen = showResults && queryTrimmed.length >= 2
 
   if (!mode) {
     return (
@@ -576,18 +564,21 @@ function StepUniversities({ data, onChange, errors }: StepProps) {
       {picks.length < 3 && (
         <div className={styles.field}>
           <label className={styles.label}>{t('wizard.universities.searchLabel')}</label>
+          <p className={styles.hint}>{t('wizard.universities.searchCountriesNote')}</p>
           <div className={styles.searchWrap} ref={searchRef}>
             <input
               className="input"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setShowResults(true)
+              }}
               placeholder={t('wizard.universities.searchPlaceholder')}
-              onFocus={() => results.length > 0 && setShowResults(true)}
+              onFocus={() => setShowResults(true)}
             />
-            {searching && <span className={styles.searchSpinner}>…</span>}
-            {showResults && results.length > 0 && (
+            {dropdownOpen && filtered.length > 0 && (
               <div className={styles.searchResults}>
-                {results.map((r) => (
+                {filtered.map((r) => (
                   <button
                     key={r.name}
                     type="button"
@@ -601,8 +592,8 @@ function StepUniversities({ data, onChange, errors }: StepProps) {
                 ))}
               </div>
             )}
-            {showResults && results.length === 0 && !searching && query.trim().length >= 2 && (
-              <div className={styles.searchEmpty}>{t('wizard.universities.searchNoResults')}</div>
+            {dropdownOpen && filtered.length === 0 && (
+              <div className={styles.searchEmpty}>{t('wizard.universities.searchNotFound')}</div>
             )}
           </div>
         </div>
@@ -616,7 +607,7 @@ function StepUniversities({ data, onChange, errors }: StepProps) {
               <div key={p.name} className={styles.uniPickCard}>
                 <div>
                   <span className={styles.uniPickName}>{p.name}</span>
-                  <span className={styles.uniPickCountry}>{p.country}</span>
+                  {p.country && <span className={styles.uniPickCountry}>{p.country}</span>}
                 </div>
                 <button
                   type="button"
