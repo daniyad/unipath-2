@@ -382,7 +382,7 @@ export default {
       selectedLabel: 'Your picks',
       removeButton: 'Remove',
       nudge:
-        "Not sure what else to add? We'll suggest {{remaining}} more {{remaining, plural, one {university} other {universities}}} tailored to your profile after you submit.",
+        "Not sure what else to add? We'll suggest {{remaining}} more tailored to your profile after you submit.",
       validationMode: "Please choose how you'd like to find universities.",
       validationPicks:
         'Please search for and add at least one university, or switch to letting us find them for you.',

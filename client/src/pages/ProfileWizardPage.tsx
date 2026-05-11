@@ -84,22 +84,33 @@ function StepBasics({ data, onChange, errors }: StepProps) {
             min={16}
             max={25}
             value={data.age ?? ''}
-            onChange={(e) => onChange({ age: Number(e.target.value) })}
+            onChange={(e) =>
+              onChange({ age: e.target.value === '' ? undefined : Number(e.target.value) })
+            }
+            onBlur={(e) => {
+              const v = Number(e.target.value)
+              if (v) onChange({ age: Math.min(25, Math.max(16, v)) })
+            }}
             placeholder="16"
           />
           {errors?.age && <p className={styles.fieldError}>{errors.age}</p>}
         </div>
         <div className={styles.field}>
           <label className={styles.label}>{t('wizard.basics.gradeLabel')}</label>
-          <input
+          <select
             className="input"
-            type="number"
-            min={9}
-            max={12}
             value={data.grade ?? ''}
-            onChange={(e) => onChange({ grade: Number(e.target.value) })}
-            placeholder="11"
-          />
+            onChange={(e) =>
+              onChange({ grade: e.target.value === '' ? undefined : Number(e.target.value) })
+            }
+          >
+            <option value="">—</option>
+            {[9, 10, 11, 12].map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
           {errors?.grade && <p className={styles.fieldError}>{errors.grade}</p>}
         </div>
       </div>
@@ -150,15 +161,17 @@ function StepBasics({ data, onChange, errors }: StepProps) {
       </div>
       <div className={styles.field}>
         <label className={styles.label}>{t('wizard.basics.yearLabel')}</label>
-        <input
+        <select
           className="input"
-          type="number"
-          min={2025}
-          max={2030}
           value={data.targetYear ?? new Date().getFullYear() + 1}
           onChange={(e) => onChange({ targetYear: Number(e.target.value) })}
-          placeholder={String(new Date().getFullYear() + 1)}
-        />
+        >
+          {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() + 1 + i).map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
         {errors?.targetYear && <p className={styles.fieldError}>{errors.targetYear}</p>}
       </div>
     </div>
@@ -368,9 +381,16 @@ function StepBudget({ data, onChange, errors }: StepProps) {
             className="input"
             type="number"
             min={0}
+            max={150000}
             step={1000}
             value={data.tuitionMin ?? ''}
-            onChange={(e) => onChange({ tuitionMin: Number(e.target.value) })}
+            onChange={(e) =>
+              onChange({ tuitionMin: e.target.value === '' ? undefined : Number(e.target.value) })
+            }
+            onBlur={(e) => {
+              const v = Number(e.target.value)
+              if (v) onChange({ tuitionMin: Math.min(150000, Math.max(0, v)) })
+            }}
             placeholder="5000"
           />
         </div>
@@ -380,9 +400,16 @@ function StepBudget({ data, onChange, errors }: StepProps) {
             className="input"
             type="number"
             min={0}
+            max={150000}
             step={1000}
             value={data.tuitionMax ?? ''}
-            onChange={(e) => onChange({ tuitionMax: Number(e.target.value) })}
+            onChange={(e) =>
+              onChange({ tuitionMax: e.target.value === '' ? undefined : Number(e.target.value) })
+            }
+            onBlur={(e) => {
+              const v = Number(e.target.value)
+              if (v) onChange({ tuitionMax: Math.min(150000, Math.max(0, v)) })
+            }}
             placeholder="20000"
           />
           {errors?.tuitionMax && <p className={styles.fieldError}>{errors.tuitionMax}</p>}
@@ -721,11 +748,8 @@ function getStepErrors(step: number, data: PartialProfile): Record<string, strin
     if (!data.age) errs.age = 'Please enter your age.'
     else if (data.age < 16) errs.age = 'You must be at least 16 to use Unipath.'
     else if (data.age > 25) errs.age = 'Age must be 25 or under.'
-    if (!data.grade) errs.grade = 'Please enter your grade.'
-    else if (data.grade < 9 || data.grade > 12) errs.grade = 'Grade must be between 9 and 12.'
-    if (!data.targetYear) errs.targetYear = 'Please enter your target enrollment year.'
-    else if (data.targetYear < 2025 || data.targetYear > 2030)
-      errs.targetYear = 'Year must be between 2025 and 2030.'
+    if (!data.grade) errs.grade = 'Please select your grade.'
+    if (!data.targetYear) errs.targetYear = 'Please select your target enrollment year.'
     if (!data.academicScore) errs.academicScore = 'Please enter your score.'
     else if (data.academicScoreMax && data.academicScore > data.academicScoreMax)
       errs.academicScore = 'Score cannot exceed the maximum.'
