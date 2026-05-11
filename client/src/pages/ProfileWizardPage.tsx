@@ -146,7 +146,7 @@ function StepBasics({ data, onChange, errors }: StepProps) {
           value={data.targetYear ?? new Date().getFullYear() + 1}
           onChange={(e) => onChange({ targetYear: Number(e.target.value) })}
         >
-          {[2025, 2026, 2027, 2028, 2029, 2030].map((y) => (
+          {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() + 1 + i).map((y) => (
             <option key={y} value={y}>
               {y}
             </option>
