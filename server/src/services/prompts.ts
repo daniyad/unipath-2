@@ -3,22 +3,24 @@ import type { StudentProfile, University, ChatMessage } from '../types.js'
 
 // ─── Response validation schemas ───────────────────────────────────────────
 
+const universityEntrySchema = z.object({
+  name: z.string(),
+  country: z.string(),
+  city: z.string(),
+  program: z.string(),
+  language: z.string(),
+  tier: z.enum(['Reach', 'Match', 'Safety', 'Unlikely']),
+  rationale: z.string(),
+  tuitionUSD: z.number(),
+  scholarshipPotential: z.string(),
+})
+
 export const shortlistResponseSchema = z.object({
-  universities: z
-    .array(
-      z.object({
-        name: z.string(),
-        country: z.string(),
-        city: z.string(),
-        program: z.string(),
-        language: z.string(),
-        tier: z.enum(['Reach', 'Match', 'Safety']),
-        rationale: z.string(),
-        tuitionUSD: z.number(),
-        scholarshipPotential: z.string(),
-      }),
-    )
-    .length(3),
+  universities: z.array(universityEntrySchema).length(3),
+})
+
+export const anchoredShortlistResponseSchema = z.object({
+  universities: z.array(universityEntrySchema).min(1).max(3),
 })
 
 export const planResponseSchema = z.object({
@@ -243,6 +245,73 @@ ${shortlistBlock}
 
 --- Upcoming deadlines ---
 ${deadlineBlock}`,
+  }
+}
+
+const ANCHORED_SHORTLIST_SYSTEM = `You are an expert university admissions counselor for Central Asian high school students.
+
+The student has already chosen specific universities they want to apply to. Your job has two parts:
+
+PART 1 — Assess each student-chosen university:
+- Assign a tier honestly: Reach, Match, Safety, or Unlikely
+- Use 'Unlikely' if the student's profile is clearly below typical requirements (e.g. GPA gap > 0.8, language score far below minimum, annual budget far below tuition). Be direct — students need accurate information.
+- Fill in: the best-fit program for their intended major, city, teaching language, current annual tuition (USD), and scholarship opportunities for international students
+- If a deadline has passed or fewer than 90 days remain, note this clearly in the rationale (still include the university — the student chose it)
+- Use web search to verify that the program exists, the tuition is current, and the application deadline status
+
+PART 2 — If fewer than 3 universities were chosen, fill remaining slots to reach exactly 3 total:
+- Suggest universities that complement the student's choices (no duplicates)
+- Follow the same rules as a regular shortlist for AI-suggested slots: apply Reach/Match/Safety tiers only, apply DEADLINE RULES strictly (90+ days required), prefer universities within budget or with scholarships
+- DEADLINE RULES: never include a university where the deadline has passed or fewer than 90 days remain; for 90–180 days flag the tight timeline in the rationale
+
+The "name" field must contain ONLY the official university name — no parenthetical notes, no extra text.
+
+Respond with ONLY a valid JSON object — no explanation, no markdown, no code fences. Return exactly 3 universities total: student-chosen universities first (in order), then AI-suggested ones:
+{
+  "universities": [
+    {
+      "name": "string (official university name only)",
+      "country": "string",
+      "city": "string",
+      "program": "string",
+      "language": "string (teaching language)",
+      "tier": "Reach" | "Match" | "Safety" | "Unlikely",
+      "rationale": "string (2-3 honest sentences about fit and admission chances)",
+      "tuitionUSD": number,
+      "scholarshipPotential": "string"
+    }
+  ]
+}`
+
+export const anchoredShortlistResponseType = anchoredShortlistResponseSchema
+
+export const buildAnchoredShortlistPrompt = (
+  profile: StudentProfile,
+  anchoredUniversities: Array<{ name: string; country: string }>,
+): { system: string; user: string } => {
+  const today = new Date()
+  const slotsToFill = Math.max(0, 3 - anchoredUniversities.length)
+  return {
+    system: ANCHORED_SHORTLIST_SYSTEM,
+    user: `Today's date: ${formatDate(today)}
+Target enrollment year: ${profile.targetYear}
+Response language: ${langLabel(profile.lang)} — write the entire response (all string fields) in ${langLabel(profile.lang)}
+
+Student profile:
+- Name: ${profile.name}
+- Nationality: ${profile.nationality}
+- GPA: ${profile.gpa}/4.0
+- Intended major: ${profile.intendedMajor}
+- Target countries: ${profile.targetCountries.join(', ')}
+- Annual budget (USD): $${profile.budgetUSD.toLocaleString()}
+- Language proficiency: ${formatLanguages(profile.languageProficiency)}
+- Extracurriculars: ${profile.extracurriculars.length > 0 ? profile.extracurriculars.join('; ') : 'None listed'}
+- Special circumstances: ${profile.specialCircumstances ?? 'None'}
+
+Student-chosen universities (assess these first, in this order):
+${anchoredUniversities.map((u, i) => `${i + 1}. ${u.name} (${u.country})`).join('\n')}
+
+${slotsToFill > 0 ? `After assessing the above, add ${slotsToFill} complementary ${slotsToFill === 1 ? 'university' : 'universities'} to reach exactly 3 total. Apply the deadline rules strictly for AI-suggested slots.` : 'Return exactly these 3 universities with full assessment data.'}`,
   }
 }
 

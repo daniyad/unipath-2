@@ -109,6 +109,7 @@ function UniTileCard({ entry, selected, dimmed, onClick, onNavigate }: UniTileCa
     Reach: 'chip chip-amber',
     Match: 'chip',
     Safety: 'chip chip-success',
+    Unlikely: 'chip chip-danger',
   }
 
   const tileClass = [styles.uniTile, selected ? styles.featured : '', dimmed ? styles.dimmed : '']
@@ -631,7 +632,7 @@ export function DashboardPage() {
         country: serverUni?.country ?? '',
         language: serverUni?.language ?? '',
         tuition: serverUni?.tuitionUSD ?? 0,
-        level: (serverUni?.tier ?? 'Match') as 'Reach' | 'Match' | 'Safety',
+        level: (serverUni?.tier ?? 'Match') as 'Reach' | 'Match' | 'Safety' | 'Unlikely',
         whyFit: serverUni?.rationale ?? '',
       }
       const plan = toClientPlan(sp, university)

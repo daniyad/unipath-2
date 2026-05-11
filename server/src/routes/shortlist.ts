@@ -9,16 +9,24 @@ const router = Router()
 
 router.post('/shortlist', authMiddleware, aiRateLimiter, async (req, res, next) => {
   try {
-    const profile = toStudentProfile(req.body as Record<string, unknown>)
-    const output = (await runAgent({ type: 'shortlist', profile })) as Extract<
-      AgentOutput,
-      { type: 'shortlist' }
-    >
-    const saved = await saveShortlist(
-      req.user!.id,
-      req.body as Record<string, unknown>,
-      output.result.universities,
-    )
+    const body = req.body as Record<string, unknown>
+    const profile = toStudentProfile(body)
+    const mode = body.universitySelectionMode as string | undefined
+    const selectedUniversities = body.selectedUniversities as
+      | Array<{ name: string; country: string }>
+      | undefined
+
+    const agentInput =
+      mode === 'manual' && selectedUniversities && selectedUniversities.length > 0
+        ? ({
+            type: 'anchored-shortlist',
+            profile,
+            anchoredUniversities: selectedUniversities,
+          } as const)
+        : ({ type: 'shortlist', profile } as const)
+
+    const output = (await runAgent(agentInput)) as Extract<AgentOutput, { type: 'shortlist' }>
+    const saved = await saveShortlist(req.user!.id, body, output.result.universities)
     res.json({ success: true, data: { id: (saved as { id: string }).id, ...output.result } })
   } catch (err) {
     next(err)

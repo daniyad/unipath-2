@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useProfile } from '../contexts/ProfileContext'
@@ -7,6 +7,7 @@ import { Navbar } from '../components/Navbar'
 import { AiGeneratingOverlay } from '../components/AiGeneratingOverlay'
 import type { PartialProfile } from '../types'
 import styles from './ProfileWizardPage.module.css'
+import universitiesData from '../data/universities.json'
 
 const AVAILABLE_LANGUAGES = [
   'English',
@@ -51,6 +52,7 @@ const STEPS = [
   { key: 'budget' },
   { key: 'preferences' },
   { key: 'extracurriculars' },
+  { key: 'universities' },
 ]
 
 interface StepProps {
@@ -525,6 +527,181 @@ function StepExtracurriculars({ data, onChange }: StepProps) {
   )
 }
 
+function StepUniversities({ data, onChange, errors }: StepProps) {
+  const { t } = useTranslation()
+  const [query, setQuery] = useState('')
+  const [showResults, setShowResults] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  const mode = data.universitySelectionMode
+  const picks = data.selectedUniversities ?? []
+
+  const filtered = useMemo(() => {
+    const trimmed = query.trim()
+    if (trimmed.length < 2) return []
+    const lower = trimmed.toLowerCase()
+    return (universitiesData as Array<{ name: string; country: string }>)
+      .filter((u) => u.name.toLowerCase().includes(lower))
+      .slice(0, 20)
+  }, [query])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowResults(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const addPick = (uni: { name: string; country: string }) => {
+    if (picks.length >= 3 || picks.some((p) => p.name === uni.name)) return
+    onChange({ selectedUniversities: [...picks, { name: uni.name, country: uni.country }] })
+    setQuery('')
+    setShowResults(false)
+  }
+
+  const removePick = (name: string) => {
+    onChange({ selectedUniversities: picks.filter((p) => p.name !== name) })
+  }
+
+  const queryTrimmed = query.trim()
+  const dropdownOpen = showResults && queryTrimmed.length >= 2
+
+  if (!mode) {
+    return (
+      <div className={styles.fields}>
+        <p className={styles.hint}>{t('wizard.universities.subtitle')}</p>
+        <div className={styles.uniModeCards}>
+          <button
+            type="button"
+            className={styles.uniModeCard}
+            onClick={() => onChange({ universitySelectionMode: 'auto' })}
+          >
+            <span className={styles.uniModeTitle}>{t('wizard.universities.autoTitle')}</span>
+            <span className={styles.uniModeDesc}>{t('wizard.universities.autoDesc')}</span>
+          </button>
+          <button
+            type="button"
+            className={styles.uniModeCard}
+            onClick={() => onChange({ universitySelectionMode: 'manual' })}
+          >
+            <span className={styles.uniModeTitle}>{t('wizard.universities.manualTitle')}</span>
+            <span className={styles.uniModeDesc}>{t('wizard.universities.manualDesc')}</span>
+          </button>
+        </div>
+        {errors?.universitySelectionMode && (
+          <p className={styles.fieldError}>{errors.universitySelectionMode}</p>
+        )}
+      </div>
+    )
+  }
+
+  if (mode === 'auto') {
+    return (
+      <div className={styles.fields}>
+        <div className={styles.uniAutoConfirm}>
+          <p className={styles.uniAutoText}>{t('wizard.universities.autoConfirmation')}</p>
+        </div>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          style={{ alignSelf: 'flex-start', fontSize: '13px' }}
+          onClick={() => onChange({ universitySelectionMode: undefined })}
+        >
+          ← {t('wizard.universities.changeChoice')}
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.fields}>
+      <button
+        type="button"
+        className="btn btn-ghost"
+        style={{ alignSelf: 'flex-start', fontSize: '13px' }}
+        onClick={() => onChange({ universitySelectionMode: undefined, selectedUniversities: [] })}
+      >
+        ← {t('wizard.universities.changeChoice')}
+      </button>
+
+      {picks.length < 3 && (
+        <div className={styles.field}>
+          <label className={styles.label}>{t('wizard.universities.searchLabel')}</label>
+          <p className={styles.hint}>{t('wizard.universities.searchCountriesNote')}</p>
+          <div className={styles.searchWrap} ref={searchRef}>
+            <input
+              className="input"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setShowResults(true)
+              }}
+              placeholder={t('wizard.universities.searchPlaceholder')}
+              onFocus={() => setShowResults(true)}
+            />
+            {dropdownOpen && filtered.length > 0 && (
+              <div className={styles.searchResults}>
+                {filtered.map((r) => (
+                  <button
+                    key={r.name}
+                    type="button"
+                    className={styles.searchResult}
+                    onClick={() => addPick(r)}
+                    disabled={picks.some((p) => p.name === r.name)}
+                  >
+                    <span className={styles.searchResultName}>{r.name}</span>
+                    <span className={styles.searchResultCountry}>{r.country}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {dropdownOpen && filtered.length === 0 && (
+              <div className={styles.searchEmpty}>{t('wizard.universities.searchNotFound')}</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {picks.length > 0 && (
+        <div className={styles.field}>
+          <label className={styles.label}>{t('wizard.universities.selectedLabel')}</label>
+          <div className={styles.uniPicks}>
+            {picks.map((p) => (
+              <div key={p.name} className={styles.uniPickCard}>
+                <div>
+                  <span className={styles.uniPickName}>{p.name}</span>
+                  {p.country && <span className={styles.uniPickCountry}>{p.country}</span>}
+                </div>
+                <button
+                  type="button"
+                  className={styles.uniPickRemove}
+                  onClick={() => removePick(p.name)}
+                  aria-label={t('wizard.universities.removeButton')}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {picks.length > 0 && picks.length < 3 && (
+        <p className={styles.uniNudge}>
+          {t('wizard.universities.nudge', { remaining: 3 - picks.length })}
+        </p>
+      )}
+
+      {errors?.selectedUniversities && (
+        <p className={styles.fieldError}>{errors.selectedUniversities}</p>
+      )}
+    </div>
+  )
+}
+
 const stepComponents = [
   StepBasics,
   StepMotivation,
@@ -533,6 +710,7 @@ const stepComponents = [
   StepBudget,
   StepPreferences,
   StepExtracurriculars,
+  StepUniversities,
 ]
 
 function getStepErrors(step: number, data: PartialProfile): Record<string, string> {
@@ -587,6 +765,14 @@ function getStepErrors(step: number, data: PartialProfile): Record<string, strin
     if (!data.cityVibe) errs.cityVibe = 'Please select a city size preference.'
   }
 
+  if (step === 7) {
+    if (!data.universitySelectionMode)
+      errs.universitySelectionMode = "Please choose how you'd like to find universities."
+    if (data.universitySelectionMode === 'manual' && !data.selectedUniversities?.length)
+      errs.selectedUniversities =
+        'Please search for and add at least one university, or switch to letting us find them for you.'
+  }
+
   return errs
 }
 
@@ -636,7 +822,10 @@ export function ProfileWizardPage() {
         const merged = { ...(profile ?? {}), ...localData }
         await saveProfileToAPI(merged)
         const shortlists = await api.getShortlists()
-        if (shortlists.length === 0) {
+        const isManual =
+          merged.universitySelectionMode === 'manual' &&
+          (merged.selectedUniversities?.length ?? 0) > 0
+        if (shortlists.length === 0 || isManual) {
           await api.generateShortlist(merged)
         }
         navigate('/dashboard')

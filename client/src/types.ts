@@ -23,6 +23,8 @@ export interface Profile {
   strengths: string
   academicScore: number
   academicScoreMax: number
+  universitySelectionMode: 'auto' | 'manual'
+  selectedUniversities: Array<{ name: string; country: string }>
 }
 
 export type PartialProfile = Partial<Profile>
@@ -37,7 +39,7 @@ export interface University {
   country: string
   language: string
   tuition: number
-  level: 'Reach' | 'Match' | 'Safety'
+  level: 'Reach' | 'Match' | 'Safety' | 'Unlikely'
   whyFit: string
   scholarshipInfo?: string
   deadline?: string
@@ -63,7 +65,7 @@ export interface UniversityPlan {
   portalUrl: string
   applicationDeadline: string
   tuition: number
-  level: 'Reach' | 'Match' | 'Safety'
+  level: 'Reach' | 'Match' | 'Safety' | 'Unlikely'
   documents: Array<{ name: string; howToGet: string; urgency: 'high' | 'medium' | 'low' }>
   tests: Array<{ name: string; prepTime: string; startBy: string }>
   monthlyTasks: PlanTask[]
@@ -80,7 +82,7 @@ export interface ServerUniversity {
   city: string
   program: string
   language: string
-  tier: 'Reach' | 'Match' | 'Safety'
+  tier: 'Reach' | 'Match' | 'Safety' | 'Unlikely'
   rationale: string
   tuitionUSD: number
   scholarshipPotential: string
@@ -148,7 +150,7 @@ export interface SharedUniversityData {
   country: string
   language: string
   tuition: number
-  level: 'Reach' | 'Match' | 'Safety'
+  level: 'Reach' | 'Match' | 'Safety' | 'Unlikely'
   deadline: string
   totalTasks: number
   completedTasks: number

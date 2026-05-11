@@ -12,6 +12,7 @@ const levelColors: Record<University['level'], string> = {
   Reach: 'chip-amber',
   Match: '',
   Safety: 'chip-success',
+  Unlikely: 'chip-danger',
 }
 
 interface LocationState {
